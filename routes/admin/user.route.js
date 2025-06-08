@@ -7,6 +7,7 @@ const { isAdmin } = require("../../middlewares");
 
 router.get("/", isAdmin, userController.getList);
 router.post("/", userValidation.create, userController.create);
+
 router.get(
   "/list-farm-unassigned",
   isAdmin,
