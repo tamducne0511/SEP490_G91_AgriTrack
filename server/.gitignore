@@ -1,0 +1,16 @@
+node_modules/*
+uploads/categories/*
+!uploads/categories/.gitkeep
+uploads/farms/*
+!uploads/farms/.gitkeep
+uploads/equipments/*
+!uploads/equipments/.gitkeep
+uploads/notifications/*
+!uploads/notifications/.gitkeep
+uploads/gardens/*
+!uploads/gardens/.gitkeep
+uploads/tasks/*
+!uploads/tasks/.gitkeep
+uploads/tasknotes/*
+!uploads/tasknotes/.gitkeep
+

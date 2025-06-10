@@ -1,0 +1,34 @@
+const express = require("express");
+const cors = require("cors");
+const authRoutes = require("./routes/auth.route");
+const notificationRoutes = require("./routes/notification.route");
+const farmRoutes = require("./routes/admin/farm.route");
+const userRoutes = require("./routes/admin/user.route");
+const gardenRoutes = require("./routes/admin/garden.route");
+const equipmentRoutes = require("./routes/admin/equipment.route");
+const taskRoutes = require("./routes/admin/task.route");
+const equipmentCategoryRoutes = require("./routes/admin/equipmentCategory.route");
+const equipmentChangeRoutes = require("./routes/admin/equipmentChange.route");
+
+const taskWebRoutes = require("./routes/web/task.route");
+
+const errorHandler = require("./middlewares/errorHandler");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use("/uploads", express.static("uploads"));
+
+app.use("/auth", authRoutes);
+app.use("/notifications", notificationRoutes);
+app.use("/admin/users", userRoutes);
+
+app.use("/admin/tasks", taskRoutes);
+
+app.use("/web/tasks", taskWebRoutes);
+
+app.use(errorHandler);
+
+module.exports = app;

@@ -1,0 +1,40 @@
+.login-bg {
+  background: url("../../assets/images/background-login.jpg") center/cover
+    no-repeat;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+.login-overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 24px;
+  padding: 40px 32px 32px 32px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  min-width: 360px;
+  max-width: 400px;
+  z-index: 2;
+}
+.login-back-btn {
+  position: absolute;
+  left: 24px;
+  top: 24px;
+  color: #222;
+}
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.login-mascot {
+  position: absolute;
+  right: -120px; /* tuỳ chỉnh nếu cần */
+  bottom: -20px;
+  width: 180px;
+  height: auto;
+  z-index: 3;
+}
