@@ -14,3 +14,4 @@ uploads/tasks/*
 uploads/tasknotes/*
 !uploads/tasknotes/.gitkeep
 
+.env
