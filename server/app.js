@@ -24,8 +24,12 @@ app.use("/uploads", express.static("uploads"));
 app.use("/auth", authRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/admin/users", userRoutes);
-
+app.use("/admin/farms", farmRoutes);
+app.use("/admin/gardens", gardenRoutes);
+app.use("/admin/equipments", equipmentRoutes);
 app.use("/admin/tasks", taskRoutes);
+app.use("/admin/equipment-categories", equipmentCategoryRoutes);
+app.use("/admin/equipment-changes", equipmentChangeRoutes);
 
 app.use("/web/tasks", taskWebRoutes);
 
