@@ -9,6 +9,7 @@ import { useAuthStore } from "@/stores";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 import { RoutePaths } from "@/routes";
+import { HelloNho } from "@/assets/images";
 
 export default function Login() {
   const { login, loading, error, token, user } = useAuthStore(); // lấy thêm token (hoặc user)
@@ -26,14 +27,22 @@ export default function Login() {
 
   React.useEffect(() => {
     if (token) {
-      if (user.role === "admin") navigate(RoutePaths.EXPERT_LIST);
+      if (user.role === "admin") navigate(RoutePaths.DASHBOARD);
       if (user.role === "farm-admin") navigate(RoutePaths.GARDEN_LIST);
+      if (user.role === "farmer") navigate(RoutePaths.MY_TASK_LIST);
+      if (user.role === "expert") navigate(RoutePaths.NOTIFICATION_LIST);
     }
   }, [token, navigate]);
 
   return (
     <div className="login-bg">
       <div className="login-overlay">
+        <img
+          src={HelloNho}
+          className="icon-nho"
+          alt="logo-nho"
+          style={{ width: 200 }}
+        />
         <Button
           type="link"
           icon={<ArrowLeftOutlined />}

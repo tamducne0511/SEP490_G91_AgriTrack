@@ -10,6 +10,17 @@ import FarmAdminList from "@/pages/users/farm-admin";
 import GardenList from "@/pages/gardens";
 import FarmerList from "@/pages/users/farmer";
 import NotificationList from "@/pages/notification";
+import TaskList from "@/pages/tasks";
+import EquipmentCategoryList from "@/pages/equipments/categories";
+import EquipmentList from "@/pages/equipments";
+import FarmerTaskList from "@/pages/my-tasks";
+import FarmDetail from "@/pages/farms/Detail";
+import Dashboard from "@/pages/dashboard";
+import UserProfile from "@/pages/user-profile";
+import ChangePassword from "@/pages/change-password";
+import ExpertDetail from "@/pages/users/expert/Detail";
+import FarmAdminDetail from "@/pages/users/farm-admin/Detail";
+import EquipmentManager from "@/pages/equipments/EquipmentManager";
 
 const router = createBrowserRouter([
   {
@@ -28,6 +39,22 @@ const router = createBrowserRouter([
         element: <FarmList />,
       },
       {
+        path: RoutePaths.EQUIPMENT_MANAGER,
+        element: <EquipmentManager />,
+      },
+      {
+        path: "/farm-detail/:id",
+        element: <FarmDetail />,
+      },
+      {
+        path: "/expert-detail/:id",
+        element: <ExpertDetail />,
+      },
+      {
+        path: "/farm-admin-detail/:id",
+        element: <FarmAdminDetail />,
+      },
+      {
         path: RoutePaths.GARDEN_LIST,
         element: <GardenList />,
       },
@@ -40,8 +67,38 @@ const router = createBrowserRouter([
         element: <NotificationList />,
       },
       {
+        path: RoutePaths.TASK_LIST,
+        element: <TaskList />,
+      },
+      {
+        path: RoutePaths.EQUIPMENT_CATEGORY_LIST,
+        element: <EquipmentCategoryList />,
+      },
+      {
+        path: RoutePaths.EQUIPMENT_LIST,
+        element: <EquipmentList />,
+      },
+      {
         path: RoutePaths.HOME,
-        element: <ExpertList />,
+        element: <LoginPage />,
+      },
+      {
+        path: RoutePaths.CHANGE_PASSWORD,
+        element: <ChangePassword />,
+      },
+      {
+        path: RoutePaths.USER_PROFILE,
+        element: <UserProfile />,
+      },
+      {
+        path: RoutePaths.DASHBOARD,
+        element: <Dashboard />,
+      },
+
+      // Farmer routes
+      {
+        path: RoutePaths.MY_TASK_LIST,
+        element: <FarmerTaskList />,
       },
     ],
   },

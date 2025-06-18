@@ -38,3 +38,8 @@
   height: auto;
   z-index: 3;
 }
+.icon-nho {
+  position: absolute;
+  bottom: -100px;
+  right: -155px;
+}
