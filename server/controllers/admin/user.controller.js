@@ -128,6 +128,16 @@ const removeFarmer = async (req, res, next) => {
   });
 };
 
+// Get detail user
+const getDetail = async (req, res, next) => {
+  const id = req.params.id;
+  const user = await userService.getDetail(id);
+  res.json({
+    message: "Get user detail successfully",
+    data: user,
+  });
+};
+
 module.exports = {
   getList,
   create,
@@ -137,4 +147,5 @@ module.exports = {
   getListFarmer,
   createFarmer,
   removeFarmer,
+  getDetail,
 };

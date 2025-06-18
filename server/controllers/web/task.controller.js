@@ -83,9 +83,18 @@ const createDailyNote = async (req, res, next) => {
   }
 };
 
+const getDailyNote = async (req, res, next) => {
+  const list = await taskDailyNoteService.getListByTaskId(req.params.id);
+  res.json({
+    message: "Get daily note successfully",
+    data: list,
+  });
+};
+
 module.exports = {
   getList,
   find,
   changeStatus,
   createDailyNote,
+  getDailyNote,
 };

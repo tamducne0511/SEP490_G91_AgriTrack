@@ -23,5 +23,6 @@ router.post(
   taskValidation.createDailyNote,
   taskController.createDailyNote
 );
+router.get("/:id/daily-note", isFarmer, taskController.getDailyNote);
 
 module.exports = router;
