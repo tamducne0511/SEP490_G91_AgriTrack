@@ -1,8 +1,10 @@
 const Farm = require("../models/farm.model");
 const User = require("../models/user.model");
+const Task = require("../models/task.model");
 
 const { LIMIT_ITEM_PER_PAGE, USER_ROLE } = require("../constants/app");
 const BadRequestException = require("../middlewares/exceptions/badrequest");
+const mongoose = require("mongoose");
 
 const getListPagination = async (role, page, keyword) => {
   const list = await User.find({
@@ -18,7 +20,7 @@ const getListPagination = async (role, page, keyword) => {
 
 const getListFarmerInFarm = async (farmId, page, keyword) => {
   const list = await User.find({
-    farmId: farmId,
+    farmId: new mongoose.Types.ObjectId(farmId),
     role: USER_ROLE.farmer,
     fullName: { $regex: keyword, $options: "i" },
   })
@@ -40,7 +42,7 @@ const getTotal = async (role, keyword) => {
 
 const getTotalFarmerInFarm = async (farmId, keyword) => {
   const total = await User.countDocuments({
-    farmId: farmId,
+    farmId: new mongoose.Types.ObjectId(farmId),
     role: USER_ROLE.farmer,
     fullName: { $regex: keyword, $options: "i" },
   });
@@ -107,12 +109,33 @@ const update = async (id, payload) => {
   }
 
   user.fullName = payload.fullName || user.fullName;
+  user.phone = payload.phone;
+  user.address = payload.address;
+  user.gender = payload.gender;
+  user.avatar = payload.avatar || user.avatar;
+  user.birthday = new Date(payload.birthday);
   await user.save();
   return user;
 };
 
 const remove = async (id) => {
   return await User.updateOne({ _id: id }, { status: false });
+};
+
+const getDetail = async (id) => {
+  const user = await User.findById(id).select("-password");
+  if (!user) {
+    throw new BadRequestException("User not found");
+  }
+
+  const farm = await Farm.findById(user.farmId);
+  const tasks = await Task.find({ farmerId: id });
+
+  return {
+    user,
+    farm,
+    tasks,
+  };
 };
 
 module.exports = {
@@ -122,6 +145,7 @@ module.exports = {
   remove,
   find,
   update,
+  getDetail,
   assignFarmToUser,
   getListFarmerInFarm,
   getTotalFarmerInFarm,

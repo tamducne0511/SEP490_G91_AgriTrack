@@ -5,6 +5,7 @@ const notificationRoutes = require("./routes/notification.route");
 const farmRoutes = require("./routes/admin/farm.route");
 const userRoutes = require("./routes/admin/user.route");
 const gardenRoutes = require("./routes/admin/garden.route");
+const dashboardRoutes = require("./routes/admin/dashboard.route");
 const equipmentRoutes = require("./routes/admin/equipment.route");
 const taskRoutes = require("./routes/admin/task.route");
 const equipmentCategoryRoutes = require("./routes/admin/equipmentCategory.route");
@@ -24,8 +25,13 @@ app.use("/uploads", express.static("uploads"));
 app.use("/auth", authRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/admin/users", userRoutes);
-
+app.use("/admin/farms", farmRoutes);
+app.use("/admin/gardens", gardenRoutes);
+app.use("/admin/equipments", equipmentRoutes);
+app.use("/admin/dashboards", dashboardRoutes);
 app.use("/admin/tasks", taskRoutes);
+app.use("/admin/equipment-categories", equipmentCategoryRoutes);
+app.use("/admin/equipment-changes", equipmentChangeRoutes);
 
 app.use("/web/tasks", taskWebRoutes);
 

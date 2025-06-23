@@ -47,8 +47,15 @@ const updateProfile = async (req, res, next) => {
 
   try {
     const userId = req.user.id;
-    const { fullName } = req.body;
-    const user = await userService.update(userId, { fullName });
+    const { fullName, phone, address, gender, birthday } = req.body;
+    const user = await userService.update(userId, {
+      fullName,
+      phone,
+      address,
+      gender,
+      birthday,
+      avatar: req.file?.filename ? `/uploads/users/${req.file.filename}` : "",
+    });
     res.json({
       message: "Profile updated successfully",
       data: user,

@@ -25,10 +25,16 @@ const TASK_ASSIGN_STATUS = {
   completed: "completed",
 };
 
+const TASK_TYPE = {
+  collect: "collect",
+  taskCare: "task-care",
+};
+
 module.exports = {
   LIMIT_ITEM_PER_PAGE,
   USER_ROLE,
   EQUIPMENT_CHANGE_STATUS,
   EQUIPMENT_CHANGE_TYPE,
   TASK_ASSIGN_STATUS,
+  TASK_TYPE,
 };
