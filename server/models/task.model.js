@@ -13,6 +13,12 @@ const taskSchema = new mongoose.Schema({
     required: true,
   },
 
+  zoneId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Zone",
+    required: true,
+  },
+
   farmerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

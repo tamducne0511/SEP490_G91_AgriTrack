@@ -1,29 +1,26 @@
 const mongoose = require("mongoose");
 
-const farmSchema = new mongoose.Schema({
-  name: {
-    type: String,
+const zoneSchema = new mongoose.Schema({
+  gardenId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Garden",
     required: true,
   },
 
-  image: {
-    type: String,
-    // required: true,
-  },
-
-  description: {
-    type: String,
+  row: {
+    type: Number,
     required: true,
   },
 
-  address: {
-    type: String,
+  col: {
+    type: Number,
     required: true,
   },
 
   status: {
     type: Boolean,
     default: true,
+    required: true,
   },
 
   createdAt: {
@@ -37,6 +34,6 @@ const farmSchema = new mongoose.Schema({
   },
 });
 
-const Farm = mongoose.model("Farm", farmSchema);
+const Zone = mongoose.model("Zone", zoneSchema);
 
-module.exports = Farm;
+module.exports = Zone;
