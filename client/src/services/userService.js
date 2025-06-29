@@ -29,3 +29,11 @@ export const assignUserToFarmApi = async ({ farmId, userId }) => {
   const res = await client.post("/admin/users/farm/assign", { farmId, userId });
   return res.data;
 };
+
+//UNASSIGN user
+export const unassignExpertFromFarmApi = async (assignedFarmId) => {
+  const res = await client.delete(
+    `/admin/users/unassign/expert-to-farm/${assignedFarmId}`
+  );
+  return res.data;
+};

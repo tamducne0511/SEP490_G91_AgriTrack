@@ -18,7 +18,7 @@ import { ImageBaseUrl } from "@/variables/common";
 export default function ExpertDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { userDetail, fetchUserDetail, updateUser, assignUserToFarm, loading } =
+  const { userDetail, fetchUserDetail, updateUser, assignUserToFarm, loading, unassignExpertFromFarm, } =
     useUserStore();
   const [editModal, setEditModal] = useState(false);
   const [assignModal, setAssignModal] = useState(false);
@@ -56,11 +56,23 @@ export default function ExpertDetail() {
   const handleAssignFarm = async (farmId) => {
     if (!farmId) return;
     try {
-      await assignUserToFarm(farmId, id);
-      message.success("Gán vườn thành công!");
+      await assignExpertToFarm(id, farmId);
+      message.success("Gán trang trại thành công!");
       setAssignModal(false);
       refreshDetail();
-    } catch {}
+    } catch (err) {
+      message.error(err?.message || "Lỗi khi gán trang trại");
+    }
+  };
+
+  const handleUnassignFarm = async (assignedFarmId) => {
+    try {
+      await unassignExpertFromFarm(assignedFarmId); // gọi store
+      message.success("Bỏ gán thành công!");
+      refreshDetail();
+    } catch (err) {
+      message.error(err?.message || "Lỗi khi bỏ gán");
+    }
   };
 
   if (loading) return <Spin />;
@@ -87,7 +99,7 @@ export default function ExpertDetail() {
             Sửa thông tin
           </Button>
           <Button onClick={() => setAssignModal(true)} type="dashed">
-            Gán vườn
+            Gán trang trại
           </Button>
         </Space>
         <Descriptions
@@ -126,53 +138,66 @@ export default function ExpertDetail() {
         />
       </div>
 
-      {/* Cột phải: Info vườn */}
-      <div style={{ flex: 1, minWidth: 320 }}>
+      {/* Cột phải: Info trang trại */}
+      <div style={{ flex: 1.4, minWidth: 340 }}>
         <Card
-          title="Vườn đang quản lý"
+          title="Trang trại đang quản lý"
           style={{
             borderRadius: 10,
             minHeight: 260,
             background: "#f8fafc",
           }}
         >
-          {farm ? (
-            <div style={{ display: "flex", gap: 18 }}>
-              <Image
-                src={ImageBaseUrl + farm.image}
-                width={100}
-                height={100}
+          {Array.isArray(listFarmAssignedExpert) &&
+          listFarmAssignedExpert.length > 0 ? (
+            listFarmAssignedExpert.map((item) => (
+              <div
+                key={item?.farm?._id}
                 style={{
-                  objectFit: "cover",
+                  display: "flex",
+                  gap: 18,
+                  marginBottom: 16,
+                  background: "#fff",
+                  padding: 12,
                   borderRadius: 10,
-                  background: "#eee",
+                  boxShadow: "0 1px 6px #0000000a",
+                  alignItems: "center",
                 }}
-                alt="Ảnh vườn"
-                fallback="https://placehold.co/100x100?text=No+Image"
-                preview
-              />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 6 }}>
-                  {farm.name}
-                </div>
-                <div style={{ marginBottom: 4 }}>
-                  <b>Địa chỉ:</b> {farm.address}
-                </div>
-                <div style={{ marginBottom: 4 }}>
-                  <b>Mô tả:</b> {farm.description}
-                </div>
+              >
+                <Image
+                  src={ImageBaseUrl + item?.farm?.image}
+                  width={100}
+                  height={100}
+                  style={{
+                    objectFit: "cover",
+                    borderRadius: 10,
+                    background: "#eee",
+                  }}
+                  alt="Ảnh trang trại"
+                  fallback="https://placehold.co/100x100?text=No+Image"
+                  preview
+                />
                 <div>
-                  <b>Trạng thái:</b>{" "}
-                  <Tag color={farm.status ? "green" : "red"}>
-                    {farm.status ? "Đang hoạt động" : "Không hoạt động"}
-                  </Tag>
+                  <Typography.Title level={5} style={{ marginBottom: 6 }}>
+                    {item?.farm?.name}
+                  </Typography.Title>
+
+                  <div>
+                    <b>Trạng thái:</b>{" "}
+                    <Tag color={item?.farm?.status ? "green" : "red"}>
+                      {item?.farm?.status
+                        ? "Đang hoạt động"
+                        : "Không hoạt động"}
+                    </Tag>
+                  </div>
                 </div>
+                <Button danger onClick={() => handleUnassignFarm(item._id)}>
+                  Bỏ gán
+                </Button>
               </div>
-            </div>
+            ))
           ) : (
-            <div style={{ color: "#888", fontStyle: "italic", padding: 16 }}>
-              Chưa gán vườn cho chuyên gia này
-            </div>
+            <Empty description="Chưa được gán vào trang trại nào" />
           )}
         </Card>
       </div>

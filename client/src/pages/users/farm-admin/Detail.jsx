@@ -57,10 +57,12 @@ export default function FarmAdminDetail() {
     if (!farmId) return;
     try {
       await assignUserToFarm(farmId, id);
-      message.success("Gán vườn thành công!");
+      message.success("Gán trang trại thành công!");
       setAssignModal(false);
       refreshDetail();
-    } catch {}
+    } catch (er) {
+      message.error(er?.message || "Lỗi khi gán trang trại");
+    }
   };
 
   if (loading) return <Spin />;
@@ -87,7 +89,7 @@ export default function FarmAdminDetail() {
             Sửa thông tin
           </Button>
           <Button onClick={() => setAssignModal(true)} type="dashed">
-            Gán vườn
+            Gán trang trại
           </Button>
         </Space>
         <Descriptions
@@ -126,10 +128,10 @@ export default function FarmAdminDetail() {
         />
       </div>
 
-      {/* Cột phải: Info vườn */}
+      {/* Cột phải: Info trang trại */}
       <div style={{ flex: 1, minWidth: 320 }}>
         <Card
-          title="Vườn đang quản lý"
+          title="Trang trại đang quản lý"
           style={{
             borderRadius: 10,
             minHeight: 260,
@@ -147,7 +149,7 @@ export default function FarmAdminDetail() {
                   borderRadius: 10,
                   background: "#eee",
                 }}
-                alt="Ảnh vườn"
+                alt="Ảnh trang trại"
                 fallback="https://placehold.co/100x100?text=No+Image"
                 preview
               />
@@ -171,7 +173,7 @@ export default function FarmAdminDetail() {
             </div>
           ) : (
             <div style={{ color: "#888", fontStyle: "italic", padding: 16 }}>
-              Chưa gán vườn cho chủ trang trại này
+              Chưa gán trang trại cho chủ trang trại này
             </div>
           )}
         </Card>
