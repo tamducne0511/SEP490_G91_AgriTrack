@@ -2,25 +2,27 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
 import AuthLayout from "@/layouts/AuthLayout";
 import PublicLayout from "@/layouts/PublicLayout";
-import LoginPage from "@/pages/login";
-import { RoutePaths } from "./routes-constants";
-import ExpertList from "@/pages/users/expert/ExpertList";
+import ChangePassword from "@/pages/change-password";
+import Dashboard from "@/pages/dashboard";
+import EquipmentList from "@/pages/equipments";
+import EquipmentCategoryList from "@/pages/equipments/categories";
+import EquipmentManager from "@/pages/equipments/EquipmentManager";
 import FarmList from "@/pages/farms";
-import FarmAdminList from "@/pages/users/farm-admin";
+import FarmDetail from "@/pages/farms/Detail";
 import GardenList from "@/pages/gardens";
-import FarmerList from "@/pages/users/farmer";
+import LoginPage from "@/pages/login";
+import FarmerTaskList from "@/pages/my-tasks";
 import NotificationList from "@/pages/notification";
 import TaskList from "@/pages/tasks";
-import EquipmentCategoryList from "@/pages/equipments/categories";
-import EquipmentList from "@/pages/equipments";
-import FarmerTaskList from "@/pages/my-tasks";
-import FarmDetail from "@/pages/farms/Detail";
-import Dashboard from "@/pages/dashboard";
 import UserProfile from "@/pages/user-profile";
-import ChangePassword from "@/pages/change-password";
 import ExpertDetail from "@/pages/users/expert/Detail";
+import ExpertList from "@/pages/users/expert/ExpertList";
+import FarmAdminList from "@/pages/users/farm-admin";
 import FarmAdminDetail from "@/pages/users/farm-admin/Detail";
-import EquipmentManager from "@/pages/equipments/EquipmentManager";
+import FarmerList from "@/pages/users/farmer";
+import { RoutePaths } from "./routes-constants";
+import FarmerDetail from "@/pages/users/farmer/Detail";
+
 
 const router = createBrowserRouter([
   {
