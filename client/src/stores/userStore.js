@@ -87,4 +87,47 @@ export const useUserStore = create((set, get) => ({
       throw err;
     }
   },
+  getListFarmAssignedExpert: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await getListFarmAssignedExpert(id);
+      set({
+        listFarmAssignedExpert: data?.list,
+        loading: false,
+      });
+      return data.data;
+    } catch (err) {
+      set({
+        error: err?.message || "Lỗi tải danh sách trang trại được gán",
+        loading: false,
+        listFarmAssignedExpert: [],
+      });
+      throw err;
+    }
+  },
+
+  assignExpertToFarm: async (expertId, farmId) => {
+    set({ loading: true, error: null });
+    try {
+      await assignExpertToFarmApi({ expertId, farmId });
+      set({ loading: false });
+    } catch (err) {
+      set({
+        error: err?.message || "Lỗi gán chuyên gia",
+        loading: false,
+      });
+      throw err;
+    }
+  },
+
+  unassignExpertFromFarm: async (assignedFarmId) => {
+    set({ loading: true });
+    try {
+      await unassignExpertFromFarmApi(assignedFarmId);
+      set({ loading: false });
+    } catch (err) {
+      set({ loading: false });
+      throw err;
+    }
+  },
 }));

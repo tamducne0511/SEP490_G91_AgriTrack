@@ -1,7 +1,11 @@
 const { body } = require("express-validator");
 
 const update = [
-  body("fullName").notEmpty().withMessage("fullName is required"),
+  body("fullName").notEmpty().withMessage("FullName is required"),
+  body("phone").notEmpty().withMessage("Phone is required"),
+  body("gender").notEmpty().withMessage("Gender is required"),
+  body("address").notEmpty().withMessage("Address is required"),
+  body("birthday").notEmpty().withMessage("Birthday is required"),
 ];
 
 const changePassword = [
