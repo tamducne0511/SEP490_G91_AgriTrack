@@ -83,7 +83,7 @@ export const useUserStore = create((set, get) => ({
       await assignUserToFarmApi({ farmId, userId });
       set({ loading: false });
     } catch (err) {
-      set({ error: err?.message || "Lỗi gán vườn", loading: false });
+      set({ error: err?.message || "Lỗi gán trang trại", loading: false });
       throw err;
     }
   },
