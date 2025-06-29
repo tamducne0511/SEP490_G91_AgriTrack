@@ -1,9 +1,15 @@
 const mongoose = require("mongoose");
 
-const equipmentSchema = new mongoose.Schema({
-  categoryId: {
+const taskQuestionchema = new mongoose.Schema({
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "EquipmentCategory",
+    ref: "User",
+    required: true,
+  },
+
+  taskId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Task",
     required: true,
   },
 
@@ -13,30 +19,23 @@ const equipmentSchema = new mongoose.Schema({
     required: true,
   },
 
-  name: {
+  title: {
+    type: String,
+    required: true,
+  },
+
+  content: {
     type: String,
     required: true,
   },
 
   image: {
     type: String,
-    // required: true,
-  },
-
-  quantity: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-
-  description: {
-    type: String,
-    required: true,
   },
 
   status: {
     type: Boolean,
-    default: true,
+    required: true,
   },
 
   createdAt: {
@@ -50,6 +49,6 @@ const equipmentSchema = new mongoose.Schema({
   },
 });
 
-const Equipment = mongoose.model("Equipment", equipmentSchema);
+const TaskQuestion = mongoose.model("TaskQuestion", taskQuestionchema);
 
-module.exports = Equipment;
+module.exports = TaskQuestion;

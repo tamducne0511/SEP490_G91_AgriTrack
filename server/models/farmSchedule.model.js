@@ -1,36 +1,40 @@
 const mongoose = require("mongoose");
 
-const equipmentSchema = new mongoose.Schema({
-  categoryId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "EquipmentCategory",
-    required: true,
-  },
-
+const farmScheduleSchema = new mongoose.Schema({
   farmId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Farm",
     required: true,
   },
 
-  name: {
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+
+  title: {
     type: String,
     required: true,
   },
 
   image: {
     type: String,
-    // required: true,
-  },
-
-  quantity: {
-    type: Number,
     required: true,
-    default: 0,
   },
 
   description: {
     type: String,
+    required: true,
+  },
+
+  startAt: {
+    type: Date,
+    required: true,
+  },
+
+  endAt: {
+    type: Date,
     required: true,
   },
 
@@ -50,6 +54,6 @@ const equipmentSchema = new mongoose.Schema({
   },
 });
 
-const Equipment = mongoose.model("Equipment", equipmentSchema);
+const FarmSchedule = mongoose.model("FarmSchedule", farmScheduleSchema);
 
-module.exports = Equipment;
+module.exports = FarmSchedule;
