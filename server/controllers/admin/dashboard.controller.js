@@ -1,4 +1,3 @@
-const { formatPagination } = require("../../utils/format.util");
 const dashboardService = require("../../services/dashboard.service");
 
 const getSummary = async (req, res) => {
@@ -9,6 +8,24 @@ const getSummary = async (req, res) => {
   });
 };
 
+const getHarvest = async (req, res) => {
+  const { farmId, fromDate, toDate } = req.query;
+  const data = await dashboardService.getHarvest(farmId, fromDate, toDate);
+  res.json({
+    data: data,
+  });
+};
+
+const getConsumption = async (req, res) => {
+  const { farmId, fromDate, toDate } = req.query;
+  const data = await dashboardService.getConsumption(farmId, fromDate, toDate);
+  res.json({
+    data: data,
+  });
+};
+
 module.exports = {
   getSummary,
+  getHarvest,
+  getConsumption,
 };
