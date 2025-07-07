@@ -9,7 +9,7 @@ const { USER_ROLE } = require("../../constants/app");
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const keyword = req.query.keyword || "";
-  const role = req.query.role || "farmer";
+  const role = req.query.role;
   const list = await userService.getListPagination(role, page, keyword);
   const total = await userService.getTotal(role, keyword);
   res.json(formatPagination(page, total, list));
@@ -138,6 +138,63 @@ const getDetail = async (req, res, next) => {
   });
 };
 
+// Assign expert to farm
+const assignExpertToFarm = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const payload = {
+    farmId: req.body.farmId,
+    expertId: req.body.expertId,
+  };
+
+  const user = await userService.assignExpertToFarm(payload);
+  res.status(201).json({
+    message: "Assign expert to farm successfully",
+    data: user,
+  });
+};
+
+// Remove assign export to farm
+const removeAssignExpertToFarm = async (req, res, next) => {
+  const id = req.params.id;
+  const user = await userService.removeAssignExpertToFarm(id);
+  res.status(201).json({
+    message: "Remove assign expert to farm successfully",
+    data: user,
+  });
+};
+
+// Get list farm assign to expert
+const getListFarmAssignToExpert = async (req, res, next) => {
+  const expertId = req.params.expertId;
+  const list = await userService.getListFarmAssignToExpert(expertId);
+  res.json({
+    list,
+    message: "Get list farm assign to expert successfully",
+  });
+};
+
+const active = async (req, res) => {
+  const id = req.params.id;
+  const user = await userService.changeStatus(id, true);
+  res.json({
+    user,
+    message: "Active user successfully",
+  });
+};
+
+const deactive = async (req, res) => {
+  const id = req.params.id;
+  const user = await userService.changeStatus(id, false);
+  res.json({
+    user,
+    message: "Deactive user successfully",
+  });
+};
+
 module.exports = {
   getList,
   create,
@@ -148,4 +205,9 @@ module.exports = {
   createFarmer,
   removeFarmer,
   getDetail,
+  assignExpertToFarm,
+  removeAssignExpertToFarm,
+  getListFarmAssignToExpert,
+  active,
+  deactive,
 };
