@@ -10,6 +10,9 @@ const equipmentRoutes = require("./routes/admin/equipment.route");
 const taskRoutes = require("./routes/admin/task.route");
 const equipmentCategoryRoutes = require("./routes/admin/equipmentCategory.route");
 const equipmentChangeRoutes = require("./routes/admin/equipmentChange.route");
+const equipmentCategoryWebRoutes = require("./routes/web/equipmentCategory.route");
+const equipmentWebRoutes = require("./routes/web/equipment.route");
+const treeRoutes = require("./routes/admin/tree.route");
 
 const taskWebRoutes = require("./routes/web/task.route");
 
@@ -30,10 +33,13 @@ app.use("/admin/gardens", gardenRoutes);
 app.use("/admin/equipments", equipmentRoutes);
 app.use("/admin/dashboards", dashboardRoutes);
 app.use("/admin/tasks", taskRoutes);
+app.use("/admin/trees", treeRoutes);
 app.use("/admin/equipment-categories", equipmentCategoryRoutes);
 app.use("/admin/equipment-changes", equipmentChangeRoutes);
 
 app.use("/web/tasks", taskWebRoutes);
+app.use("/web/equipments", equipmentWebRoutes);
+app.use("/web/equipment-categories", equipmentCategoryWebRoutes);
 
 app.use(errorHandler);
 
