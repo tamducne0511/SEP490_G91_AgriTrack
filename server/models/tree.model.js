@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const zoneSchema = new mongoose.Schema({
+const treeSchema = new mongoose.Schema({
   gardenId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Garden",
@@ -34,6 +34,6 @@ const zoneSchema = new mongoose.Schema({
   },
 });
 
-const Zone = mongoose.model("Zone", zoneSchema);
+const Tree = mongoose.model("Tree", treeSchema);
 
-module.exports = Zone;
+module.exports = Tree;
