@@ -11,8 +11,13 @@ const upload = multer({ storage: configUploadFile("uploads/notifications") });
 
 router.get(
   "/",
-  isRoles([USER_ROLE.farmer, USER_ROLE.farmAdmin, USER_ROLE.expert]),
+  isRoles([USER_ROLE.farmer, USER_ROLE.farmAdmin]),
   notificationController.getList
+);
+router.get(
+  "/expert/:farmId",
+  isRoles([USER_ROLE.expert]),
+  notificationController.getListForExpert
 );
 router.post(
   "/",

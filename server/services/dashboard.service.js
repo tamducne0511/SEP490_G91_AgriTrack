@@ -4,7 +4,7 @@ const EquipmentCategory = require("../models/equipmentCategories.model");
 const Garden = require("../models/garden.model");
 const Task = require("../models/task.model");
 const User = require("../models/user.model");
-const TaskDailyNote = require("../models/taskDailyNote.model");
+const TaskDailyNote = require("../models/taskDailyNote.model")
 const TaskDailyNoteEquipment = require("../models/taskDailyNoteEquipment.model");
 const { USER_ROLE, TASK_TYPE } = require("../constants/app");
 
