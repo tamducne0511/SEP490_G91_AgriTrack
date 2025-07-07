@@ -2,6 +2,7 @@ const authService = require("../services/auth.service");
 const userService = require("../services/user.service");
 const farmService = require("../services/farm.service");
 const { validationResult } = require("express-validator");
+const { USER_ROLE } = require("../constants/app");
 
 // Login
 const login = async (req, res, next) => {
@@ -20,15 +21,25 @@ const login = async (req, res, next) => {
 // Get current user
 const getMe = async (req, res) => {
   try {
+    const response = {};
     const user = await userService.find(req.user.id);
-    const farm = await farmService.find(user.farmId);
+    response.user = user;
+
+    if (user.role === USER_ROLE.expert) {
+      response.farms = await await userService.getListFarmAssignToExpert(
+        user.id
+      );
+    } else if (
+      user.role === USER_ROLE.farmer ||
+      user.role === USER_ROLE.farmAdmin
+    ) {
+      response.farm = await farmService.find(user.farmId);
+    }
+
     user.password = undefined;
     res.json({
       message: "User retrieved successfully",
-      data: {
-        user,
-        farm,
-      },
+      data: response,
     });
   } catch (error) {
     res.status(500).json({

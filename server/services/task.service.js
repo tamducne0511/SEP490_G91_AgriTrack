@@ -13,11 +13,17 @@ const TaskHistory = require("../models/taskHistory.model");
 const TaskDailyNote = require("../models/taskDailyNote.model");
 const mongoose = require("mongoose");
 
-const getListPagination = async (farmId, page, keyword) => {
-  const list = await Task.find({
+const getListPagination = async (farmId, gardenId, page, keyword) => {
+  const filter = {
     farmId: farmId,
     name: { $regex: keyword, $options: "i" },
-  })
+  };
+
+  if (gardenId) {
+    filter.gardenId = gardenId;
+  }
+
+  const list = await Task.find(filter)
     .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
     .limit(LIMIT_ITEM_PER_PAGE);
 
@@ -36,12 +42,17 @@ const getListAssignedPagination = async (farmId, farmerId, page, keyword) => {
   return list;
 };
 
-const getTotal = async (farmId, keyword) => {
-  const total = await Task.countDocuments({
+const getTotal = async (farmId, gardenId, keyword) => {
+  const filter = {
     farmId: farmId,
     name: { $regex: keyword, $options: "i" },
-  });
+  };
 
+  if (gardenId) {
+    filter.gardenId = gardenId;
+  }
+
+  const total = await Task.countDocuments(filter);
   return total;
 };
 
@@ -67,6 +78,7 @@ const create = async (data) => {
       throw new NotFoundException("Not found Garden with id: " + data.gardenId);
     }
 
+    data.gardenId = garden._id;
     const task = new Task(data);
     await task.save();
     return task;
@@ -81,6 +93,12 @@ const update = async (id, data) => {
     throw new NotFoundException("Not found task with id: " + id);
   }
 
+  const garden = await Garden.findById(data.gardenId);
+  if (!garden) {
+    throw new NotFoundException("Not found Garden with id: " + data.gardenId);
+  }
+
+  task.gardenId = garden._id;
   task.name = data.name;
   task.image = data.image || task.image;
   task.type = data.type;
@@ -155,7 +173,8 @@ const getDetail = async (id) => {
     },
   ]);
 
-  return { task, histories: listTaskHistory, notes: listDailyNote };
+  const garden = await Garden.findById(task.gardenId);
+  return { task, histories: listTaskHistory, notes: listDailyNote, garden };
 };
 
 const remove = async (id) => {
