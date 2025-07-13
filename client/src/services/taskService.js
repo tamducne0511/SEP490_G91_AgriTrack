@@ -1,0 +1,67 @@
+import { client } from "@/configs";
+
+// Lấy danh sách task (có thể filter theo gardenId)
+export const fetchTasksApi = async (params = {}) => {
+  const res = await client.get("/admin/tasks", { params });
+  return res.data;
+};
+
+export const getTaskDetail = async (id) => {
+  const res = await client.get(`/admin/tasks/${id}`);
+  return res.data;
+};
+
+
+export const createTaskApi = async (payload) => {
+  const formData = new FormData();
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      formData.append(key, value);
+    }
+  });
+  const res = await client.post("/admin/tasks", formData);
+  return res.data;
+};
+
+// Update task
+export const updateTaskApi = async (id, payload) => {
+  const formData = new FormData();
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      formData.append(key, value);
+    }
+  });
+  const res = await client.put(`/admin/tasks/${id}`, formData);
+  return res.data;
+};
+
+// Delete task
+export const deleteTaskApi = async (id) => {
+  const res = await client.delete(`/admin/tasks/${id}`);
+  return res.data;
+};
+
+export const assignTaskToFarmerApi = async (taskId, farmerId) => {
+  const res = await client.post(`/admin/tasks/${taskId}/assign-farmer`, {
+    farmerId,
+  });
+  return res.data;
+};
+
+// Farmer
+export const getAssignedTasksApi = async (params) => {
+  const res = await client.get("/web/tasks", { params });
+  return res.data;
+};
+
+export const getAssignedTaskDetail = async (id) => {
+  const res = await client.get(`/web/tasks/${id}`);
+  return res.data;
+};
+
+export const createDailyNoteApi = async (taskId, formData) => {
+  const res = await client.post(`/web/tasks/${taskId}/daily-note`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
