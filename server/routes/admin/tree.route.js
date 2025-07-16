@@ -8,7 +8,12 @@ const { USER_ROLE } = require("../../constants/app");
 router.post("/generate/:gardenId", isFarmAdmin, treeController.generateTree);
 router.get(
   "/list/:gardenId",
-  isRoles([USER_ROLE.admin, USER_ROLE.expert, USER_ROLE.farmAdmin]),
+  isRoles([
+    USER_ROLE.admin,
+    USER_ROLE.expert,
+    USER_ROLE.farmAdmin,
+    USER_ROLE.farmer,
+  ]),
   treeController.getList
 );
 
