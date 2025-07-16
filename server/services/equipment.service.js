@@ -5,23 +5,34 @@ const EquipmentCategory = require("../models/equipmentCategories.model");
 const { LIMIT_ITEM_PER_PAGE } = require("../constants/app");
 const NotFoundException = require("../middlewares/exceptions/notfound");
 
-const getListPagination = async (farmId, page, keyword) => {
-  const list = await Equipment.find({
+const getListPagination = async (farmId, categoryId, page, keyword) => {
+  const filter = {
     farmId: farmId,
     name: { $regex: keyword, $options: "i" },
-  })
+  };
+
+  if (categoryId) {
+    filter.categoryId = categoryId;
+  }
+
+  const list = await Equipment.find(filter)
     .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
     .limit(LIMIT_ITEM_PER_PAGE);
 
   return list;
 };
 
-const getTotal = async (farmId, keyword) => {
-  const total = await Equipment.countDocuments({
+const getTotal = async (farmId, categoryId, keyword) => {
+  const filter = {
     farmId: farmId,
     name: { $regex: keyword, $options: "i" },
-  });
+  };
 
+  if (categoryId) {
+    filter.categoryId = categoryId;
+  }
+
+  const total = await Equipment.countDocuments(filter);
   return total;
 };
 
