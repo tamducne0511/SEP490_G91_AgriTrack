@@ -38,8 +38,14 @@ const assignFarmToUser = [
   body("farmId").notEmpty().withMessage("Farm ID is required"),
 ];
 
+const assignExpertToFarm = [
+  body("expertId").notEmpty().withMessage("Expert ID is required"),
+  body("farmId").notEmpty().withMessage("Farm ID is required"),
+];
+
 module.exports = {
   create,
   assignFarmToUser,
   createFarmer,
+  assignExpertToFarm,
 };
