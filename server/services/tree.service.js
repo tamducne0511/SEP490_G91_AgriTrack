@@ -1,7 +1,9 @@
 const Tree = require("../models/tree.model");
 const Garden = require("../models/garden.model");
+const Farm = require("../models/farm.model");
 const NotFoundException = require("../middlewares/exceptions/notfound");
 const BadRequestException = require("../middlewares/exceptions/badrequest");
+const mongoose = require("mongoose");
 
 const genArrayData = (row, col) => {
   let data = [];
@@ -43,12 +45,54 @@ const generateTree = async (gardenId, row, col) => {
   }
 };
 
+const getDetail = async (id) => {
+  const tree = await Tree.findById(id);
+  if (!tree) {
+    throw new NotFoundException();
+  }
+
+  const garden = await Garden.findById(tree.gardenId);
+  const farm = await Farm.findById(garden.farmId);
+
+  return {
+    detail: tree,
+    garden,
+    farm,
+  };
+};
+
 const getList = async (gardenId) => {
-  const trees = await Tree.find({ gardenId: gardenId });
+  const trees = await Tree.aggregate([
+    {
+      $match: {
+        gardenId: new mongoose.Types.ObjectId(gardenId),
+      },
+    },
+    {
+      $lookup: {
+        from: "taskquestions",
+        localField: "_id",
+        foreignField: "treeId",
+        as: "questions",
+      },
+    },
+    {
+      $addFields: {
+        questionCount: { $size: "$questions" },
+      },
+    },
+    {
+      $project: {
+        questions: 0,
+      },
+    },
+  ]);
+
   return trees;
 };
 
 module.exports = {
   generateTree,
   getList,
+  getDetail,
 };

@@ -1,7 +1,7 @@
-
 const Farm = require("../models/farm.model");
 const Garden = require("../models/garden.model");
 const Task = require("../models/task.model");
+const Tree = require("../models/tree.model");
 const mongoose = require("mongoose");
 
 const { LIMIT_ITEM_PER_PAGE } = require("../constants/app");
@@ -67,6 +67,7 @@ const find = async (id) => {
 const getDetail = async (id) => {
   try {
     const garden = await Garden.findById(id);
+    const trees = await Tree.find({ gardenId: id });
     const tasks = await Task.aggregate([
       {
         $match: {
@@ -97,6 +98,7 @@ const getDetail = async (id) => {
     return {
       ...garden,
       tasks,
+      trees,
     };
   } catch (error) {
     return null;

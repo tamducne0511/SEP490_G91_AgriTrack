@@ -7,9 +7,9 @@ const taskQuestionchema = new mongoose.Schema({
     required: true,
   },
 
-  taskId: {
+  treeId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Task",
+    ref: "Tree",
     required: true,
   },
 

@@ -74,6 +74,7 @@ const createDailyNote = async (req, res, next) => {
         ? `/uploads/tasknotes/${req.file.filename}`
         : "",
     });
+
     res.json({
       message: "Create daily note successfully",
       data: task,

@@ -26,7 +26,20 @@ const getList = async (req, res, next) => {
   }
 };
 
+const getDetail = async (req, res, next) => {
+  try {
+    const tree = await treeService.getDetail(req.params.id);
+    res.status(200).json({
+      message: "Get detail of tree successfully",
+      data: tree,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   generateTree,
   getList,
+  getDetail,
 };

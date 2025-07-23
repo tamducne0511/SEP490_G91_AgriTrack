@@ -28,6 +28,16 @@ const farmScheduleSchema = new mongoose.Schema({
     required: true,
   },
 
+  treeName: {
+    type: String,
+    required: true,
+  },
+
+  treeDescription: {
+    type: String,
+    required: true,
+  },
+
   startAt: {
     type: Date,
     required: true,

@@ -29,6 +29,8 @@ const create = async (req, res) => {
     startAt: req.body.startAt,
     endAt: req.body.endAt,
     farmId: req.body.farmId,
+    treeName: req.body.treeName,
+    treeDescription: req.body.treeDescription,
     image: req.file?.filename ? `/uploads/schedules/${req.file.filename}` : "",
   };
 
@@ -53,6 +55,8 @@ const update = async (req, res, next) => {
       description: req.body.description,
       startAt: req.body.startAt,
       endAt: req.body.endAt,
+      treeName: req.body.treeName,
+      treeDescription: req.body.treeDescription,
       image: req.file?.filename
         ? `/uploads/schedules/${req.file.filename}`
         : "",
@@ -99,5 +103,5 @@ module.exports = {
   create,
   update,
   remove,
-  find
+  find,
 };

@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 
 const { USER_ROLE } = require("../constants/app");
-const { isRoles, isExpert } = require("../middlewares");
+const { isRoles, isExpert, isLogin } = require("../middlewares");
 const farmScheduleValidation = require("../middlewares/validators/farmSchedule.validation");
 const farmScheduleController = require("../controllers/farmSchedule.controller");
 const { configUploadFile } = require("../utils/upload.util");
