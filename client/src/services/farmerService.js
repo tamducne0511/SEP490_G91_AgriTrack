@@ -2,7 +2,7 @@ import { client } from "@/configs";
 
 // GET list farmers
 export const fetchFarmersApi = async (params = {}) => {
-  const res = await client.get("/admin/users/farmers", { params });
+  const res = await client.get("/admin/users/list/farmers", { params });
   return res.data;
 };
 
