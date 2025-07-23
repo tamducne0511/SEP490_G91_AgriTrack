@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Descriptions, Button, Spin, Tag, Space, Card, message } from "antd";
 import { useFarmerStore, useUserStore, useTaskStore } from "@/stores";
 import FarmerModal from "./FarmerModal";
 import AssignTaskModal from "./AssignTaskModal";
 import { RoutePaths } from "@/routes";
+import { ImageBaseUrl } from "@/variables/common";
 
 export default function FarmerDetail() {
   const { id } = useParams();
@@ -68,7 +69,6 @@ export default function FarmerDetail() {
         display: "flex",
         gap: 32,
         alignItems: "flex-start",
-        margin: "30px auto",
         padding: 24,
         background: "#fff",
         borderRadius: 14,
@@ -156,11 +156,50 @@ export default function FarmerDetail() {
                   <b>Mô tả:</b> {task.description}
                 </div>
                 <div>
-                  <b>Trạng thái:</b>{" "}
-                  <Tag color={task.status ? "green" : "red"}>
-                    {task.status ? "Đang hoạt động" : "Đã hoàn thành"}
+                  <b>Loại công việc:</b>{" "}
+                  <Tag color={task.type === "collect" ? "geekblue" : "green"}>
+                    {task.type === "collect" ? "Thu hoạch" : "Chăm sóc"}
                   </Tag>
                 </div>
+                <div>
+                  <b>Ưu tiên:</b>{" "}
+                  <Tag
+                    color={
+                      task.priority === "high"
+                        ? "red"
+                        : task.priority === "medium"
+                        ? "gold"
+                        : "green"
+                    }
+                  >
+                    {task.priority === "high"
+                      ? "Cao"
+                      : task.priority === "medium"
+                      ? "Trung bình"
+                      : "Thấp"}
+                  </Tag>
+                </div>
+                <div>
+                  <b>Trạng thái:</b>{" "}
+                  <Tag color={task.status === "assigned" ? "blue" : "green"}>
+                    {task.status === "assigned"
+                      ? "Đang hoạt động"
+                      : "Hoàn thành"}
+                  </Tag>
+                </div>
+                {task.image && (
+                  <div style={{ marginTop: 8 }}>
+                    <img
+                      src={
+                        task.image.startsWith("http")
+                          ? task.image
+                          : ImageBaseUrl + task.image
+                      }
+                      alt="Task"
+                      style={{ width: "100%", maxWidth: 300, borderRadius: 8 }}
+                    />
+                  </div>
+                )}
               </Card>
             ))
           ) : (
