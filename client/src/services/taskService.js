@@ -11,27 +11,15 @@ export const getTaskDetail = async (id) => {
   return res.data;
 };
 
-
+// Tạo mới task (có thể gửi FormData nếu có ảnh)
 export const createTaskApi = async (payload) => {
-  const formData = new FormData();
-  Object.entries(payload).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      formData.append(key, value);
-    }
-  });
-  const res = await client.post("/admin/tasks", formData);
+  const res = await client.post("/admin/tasks", payload);
   return res.data;
 };
 
 // Update task
 export const updateTaskApi = async (id, payload) => {
-  const formData = new FormData();
-  Object.entries(payload).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      formData.append(key, value);
-    }
-  });
-  const res = await client.put(`/admin/tasks/${id}`, formData);
+  const res = await client.put(`/admin/tasks/${id}`, payload);
   return res.data;
 };
 
@@ -63,5 +51,11 @@ export const createDailyNoteApi = async (taskId, formData) => {
   const res = await client.post(`/web/tasks/${taskId}/daily-note`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return res.data;
+};
+
+
+export const fetchFarmEquipmentApi = async (params = {}) => {
+  const res = await client.get("/web/equipments", { params });
   return res.data;
 };
