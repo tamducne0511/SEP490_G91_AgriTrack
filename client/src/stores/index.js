@@ -5,3 +5,4 @@ export * from "./farmerStore";
 export * from "./gardenStore";
 export * from "./notificationStore";
 export * from "./taskStore";
+export * from "./equipmentCategoryStore";
