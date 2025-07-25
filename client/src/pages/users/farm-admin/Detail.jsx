@@ -14,6 +14,7 @@ import FarmAdminModal from "./FarmAdminModal";
 import AssignFarmModal from "./AssignFarmModal";
 import { useUserStore } from "@/stores";
 import { ImageBaseUrl } from "@/variables/common";
+import { RoutePaths } from "@/routes";
 
 export default function FarmAdminDetail() {
   const { id } = useParams();
@@ -32,13 +33,12 @@ export default function FarmAdminDetail() {
       await fetchUserDetail(id);
     } catch {
       message.error("Không tìm thấy chủ trang trại!");
-      navigate("/farm-admins");
+      navigate(RoutePaths.FARM_ADMIN_LIST);
     }
   };
 
   useEffect(() => {
     refreshDetail();
-    // eslint-disable-next-line
   }, [id]);
 
   const handleEdit = async (values) => {
@@ -48,6 +48,7 @@ export default function FarmAdminDetail() {
       message.success("Cập nhật chủ trang trại thành công!");
       setEditModal(false);
       refreshDetail();
+    } catch {
     } finally {
       setConfirmLoading(false);
     }
@@ -60,9 +61,7 @@ export default function FarmAdminDetail() {
       message.success("Gán trang trại thành công!");
       setAssignModal(false);
       refreshDetail();
-    } catch (er) {
-      message.error(er?.message || "Lỗi khi gán trang trại");
-    }
+    } catch {}
   };
 
   if (loading) return <Spin />;
@@ -74,7 +73,6 @@ export default function FarmAdminDetail() {
         display: "flex",
         gap: 32,
         alignItems: "flex-start",
-        margin: "30px auto",
         padding: 24,
         background: "#fff",
         borderRadius: 14,
@@ -85,9 +83,7 @@ export default function FarmAdminDetail() {
       <div style={{ flex: 1, minWidth: 320 }}>
         <Space style={{ marginBottom: 18 }}>
           <Button onClick={() => navigate(-1)}>Quay lại</Button>
-          <Button onClick={() => setEditModal(true)} type="primary">
-            Sửa thông tin
-          </Button>
+          <Button type="primary">Thông tin</Button>
           <Button onClick={() => setAssignModal(true)} type="dashed">
             Gán trang trại
           </Button>

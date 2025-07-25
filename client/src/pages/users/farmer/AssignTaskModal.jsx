@@ -1,4 +1,3 @@
-// components/AssignTaskModal.jsx
 import { Modal, Select } from "antd";
 import { useEffect, useState } from "react";
 import { useTaskStore } from "@/stores";
@@ -23,7 +22,12 @@ export default function AssignTaskModal({
     <Modal
       title="Gán công việc cho nông dân"
       open={open}
-      onOk={() => onOk(selectedTask)}
+      onOk={() => {
+        if (!selectedTask) {
+          return;
+        }
+        onOk(selectedTask);
+      }}
       onCancel={onCancel}
       okText="Gán"
       cancelText="Huỷ"
