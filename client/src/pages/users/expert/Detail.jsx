@@ -1,57 +1,52 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  Descriptions,
-  Button,
-  Spin,
-  Tag,
-  Space,
-  Card,
-  Image,
-  message,
-} from "antd";
-import ExpertModal from "./ExpertModal";
-import AssignFarmModal from "./AssignFarmModal";
+import { RoutePaths } from "@/routes";
 import { useUserStore } from "@/stores";
 import { ImageBaseUrl } from "@/variables/common";
+import {
+  Button,
+  Card,
+  Descriptions,
+  Image,
+  message,
+  Space,
+  Spin,
+  Tag,
+  Typography,
+  Empty,
+} from "antd";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import AssignFarmModal from "./AssignFarmModal";
 
 export default function ExpertDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { userDetail, fetchUserDetail, updateUser, assignUserToFarm, loading, unassignExpertFromFarm, } =
-    useUserStore();
-  const [editModal, setEditModal] = useState(false);
+  const {
+    userDetail,
+    fetchUserDetail,
+    assignExpertToFarm,
+    getListFarmAssignedExpert,
+    listFarmAssignedExpert,
+    loading,
+    unassignExpertFromFarm,
+  } = useUserStore();
+
   const [assignModal, setAssignModal] = useState(false);
-  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const expert = userDetail?.user || {};
-  const farm = userDetail?.farm || null;
 
   const refreshDetail = async () => {
     try {
       await fetchUserDetail(id);
+      await getListFarmAssignedExpert(id);
     } catch {
       message.error("Không tìm thấy chuyên gia!");
-      navigate("/experts");
+      navigate(RoutePaths.EXPERT_LIST);
     }
   };
 
   useEffect(() => {
     refreshDetail();
-    // eslint-disable-next-line
   }, [id]);
-
-  const handleEdit = async (values) => {
-    setConfirmLoading(true);
-    try {
-      await updateUser(id, values);
-      message.success("Cập nhật chuyên gia thành công!");
-      setEditModal(false);
-      refreshDetail();
-    } finally {
-      setConfirmLoading(false);
-    }
-  };
 
   const handleAssignFarm = async (farmId) => {
     if (!farmId) return;
@@ -61,10 +56,9 @@ export default function ExpertDetail() {
       setAssignModal(false);
       refreshDetail();
     } catch (err) {
-      message.error(err?.message || "Lỗi khi gán trang trại");
+      // message.error(err?.message || "Lỗi khi gán trang trại");
     }
   };
-
   const handleUnassignFarm = async (assignedFarmId) => {
     try {
       await unassignExpertFromFarm(assignedFarmId); // gọi store
@@ -74,34 +68,30 @@ export default function ExpertDetail() {
       message.error(err?.message || "Lỗi khi bỏ gán");
     }
   };
-
   if (loading) return <Spin />;
   if (!expert?._id) return null;
-
   return (
     <div
       style={{
         display: "flex",
         gap: 32,
         alignItems: "flex-start",
-        margin: "30px auto",
         padding: 24,
         background: "#fff",
         borderRadius: 14,
         boxShadow: "0 4px 24px #0001",
       }}
     >
-      {/* Cột trái: Info chuyên gia */}
+      {/* Left: Expert info */}
       <div style={{ flex: 1, minWidth: 320 }}>
         <Space style={{ marginBottom: 18 }}>
           <Button onClick={() => navigate(-1)}>Quay lại</Button>
-          <Button onClick={() => setEditModal(true)} type="primary">
-            Sửa thông tin
-          </Button>
+          <Button type="primary">Thông tin</Button>
           <Button onClick={() => setAssignModal(true)} type="dashed">
             Gán trang trại
           </Button>
         </Space>
+
         <Descriptions
           bordered
           column={1}
@@ -122,14 +112,6 @@ export default function ExpertDetail() {
           </Descriptions.Item>
         </Descriptions>
 
-        <ExpertModal
-          open={editModal}
-          isEdit={true}
-          initialValues={expert}
-          confirmLoading={confirmLoading}
-          onOk={handleEdit}
-          onCancel={() => setEditModal(false)}
-        />
         <AssignFarmModal
           open={assignModal}
           userId={id}
@@ -138,7 +120,7 @@ export default function ExpertDetail() {
         />
       </div>
 
-      {/* Cột phải: Info trang trại */}
+      {/* Right: Assigned Farms */}
       <div style={{ flex: 1.4, minWidth: 340 }}>
         <Card
           title="Trang trại đang quản lý"
@@ -181,15 +163,21 @@ export default function ExpertDetail() {
                   <Typography.Title level={5} style={{ marginBottom: 6 }}>
                     {item?.farm?.name}
                   </Typography.Title>
-
-                  <div>
+                  <Typography.Text level={5} style={{ marginBottom: 6 }}>
+                    {item?.farm?.description || "Không có mô tả"}
+                  </Typography.Text>
+                  <Typography.Text level={5} style={{ marginBottom: 6 }}>
+                    {" "}
+                    ({item?.farm?.address || "Không có địa chỉ"})
+                  </Typography.Text>
+                  {/* <div>
                     <b>Trạng thái:</b>{" "}
                     <Tag color={item?.farm?.status ? "green" : "red"}>
                       {item?.farm?.status
                         ? "Đang hoạt động"
                         : "Không hoạt động"}
                     </Tag>
-                  </div>
+                  </div> */}
                 </div>
                 <Button danger onClick={() => handleUnassignFarm(item._id)}>
                   Bỏ gán
