@@ -29,19 +29,12 @@ export default function EquipmentCategoryList() {
   const [page, setPage] = useState(1);
   // Fetch all categories on mount & khi search
   useEffect(() => {
-    fetchCategories({ page, name: keyword });
+    fetchCategories({ page, keyword });
   }, [page, keyword, fetchCategories]);
 
   useEffect(() => {
     if (error) message.error(error);
   }, [error]);
-
-  // Filter hiển thị client-side theo tên
-  const filteredData = categories.filter(
-    (c) =>
-      c.name?.toLowerCase().includes(keyword.trim().toLowerCase()) ||
-      c.description?.toLowerCase().includes(keyword.trim().toLowerCase())
-  );
 
   // Modal submit
   const handleOk = async (values) => {
