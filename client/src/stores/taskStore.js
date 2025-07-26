@@ -1,15 +1,20 @@
-import { create } from "zustand";
+// taskStore.js
 import {
-  fetchTasksApi,
-  createTaskApi,
-  updateTaskApi,
-  deleteTaskApi,
   assignTaskToFarmerApi,
+  changeTaskStatusApi,
   createDailyNoteApi,
+  createQuestionApi,
+  createTaskApi,
+  deleteTaskApi,
+  fetchDailyNoteDetailApi,
+  fetchFarmEquipmentApi,
+  fetchTasksApi,
+  getAssignedTaskDetail,
   getAssignedTasksApi,
   getTaskDetail,
-  getAssignedTaskDetail,
+  updateTaskApi,
 } from "@/services";
+import { create } from "zustand";
 
 export const useTaskStore = create((set, get) => ({
   tasks: [],
@@ -18,7 +23,23 @@ export const useTaskStore = create((set, get) => ({
   error: null,
   taskDetail: null,
   myTask: null,
-
+  equipmentList: [],
+  dailyNoteDetail: null,
+  fetchDailyNoteDetail: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await fetchDailyNoteDetailApi(id);
+      set({ dailyNoteDetail: res.data, loading: false }); // Lưu cả taskDailyNote & equipments
+      return res.data;
+    } catch (err) {
+      set({
+        error: err?.message || "Lỗi lấy chi tiết ghi chú",
+        loading: false,
+        dailyNoteDetail: null,
+      });
+      throw err;
+    }
+  },
   fetchTasks: async (params = {}) => {
     set({ loading: true, error: null });
     try {
@@ -65,8 +86,8 @@ export const useTaskStore = create((set, get) => ({
     try {
       await updateTaskApi(id, payload);
       set({ loading: false });
-      const { pagination, fetchTasks } = get();
-      fetchTasks({ page: pagination.page });
+      const { fetchTaskDetail } = get();
+      fetchTaskDetail(id);
     } catch (err) {
       set({ error: err?.message || "Lỗi cập nhật task", loading: false });
       throw err;
@@ -97,7 +118,6 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  // Farmer methods
   fetchTasksFarmer: async (params) => {
     set({ loading: true, error: null });
     try {
@@ -134,6 +154,42 @@ export const useTaskStore = create((set, get) => ({
       return await createDailyNoteApi(taskId, formData);
     } catch (err) {
       set({ error: err?.message });
+      throw err;
+    }
+  },
+
+  fetchFarmEquipment: async (params = {}) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await fetchFarmEquipmentApi(params);
+      set({ equipmentList: data.data || [], loading: false });
+    } catch (err) {
+      set({
+        error: err?.message || "Lỗi tải danh sách thiết bị",
+        loading: false,
+      });
+    }
+  },
+
+  createQuestion: async (taskId, formData) => {
+    try {
+      return await createQuestionApi(taskId, formData);
+    } catch (err) {
+      set({ error: err?.message });
+      throw err;
+    }
+  },
+
+  changeTaskStatus: async (taskId, status) => {
+    set({ loading: true, error: null });
+    try {
+      await changeTaskStatusApi(taskId, status);
+      set({ loading: false });
+      // Optionally, reload task detail nếu muốn tự động update view
+      const { fetchAssignedTaskDetail } = get();
+      fetchAssignedTaskDetail(taskId);
+    } catch (err) {
+      set({ error: err?.message || "Lỗi đổi trạng thái task", loading: false });
       throw err;
     }
   },

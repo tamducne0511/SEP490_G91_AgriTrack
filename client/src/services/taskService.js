@@ -54,8 +54,26 @@ export const createDailyNoteApi = async (taskId, formData) => {
   return res.data;
 };
 
+export const createQuestionApi = async (taskId, formData) => {
+  const res = await client.post(`/web/tasks/${taskId}/questions`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
 
 export const fetchFarmEquipmentApi = async (params = {}) => {
   const res = await client.get("/web/equipments", { params });
+  return res.data;
+};
+
+export const changeTaskStatusApi = async (taskId, status) => {
+  const res = await client.post(`/web/tasks/${taskId}/change-status`, {
+    status,
+  });
+  return res.data;
+};
+
+export const fetchDailyNoteDetailApi = async (id) => {
+  const res = await client.get(`/web/tasks/daily-note/${id}`);
   return res.data;
 };
