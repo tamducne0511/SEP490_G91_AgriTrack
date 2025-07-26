@@ -1,5 +1,4 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
-
 import AuthLayout from "@/layouts/AuthLayout";
 import PublicLayout from "@/layouts/PublicLayout";
 import ChangePassword from "@/pages/change-password";

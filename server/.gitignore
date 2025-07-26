@@ -13,5 +13,10 @@ uploads/tasks/*
 !uploads/tasks/.gitkeep
 uploads/tasknotes/*
 !uploads/tasknotes/.gitkeep
-
+uploads/users/*
+!uploads/users/.gitkeep
+uploads/schedules/*
+!uploads/schedules/.gitkeep
+uploads/questions/*
+!uploads/questions/.gitkeep
 .env

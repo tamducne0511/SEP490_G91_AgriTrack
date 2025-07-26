@@ -4,3 +4,5 @@ export * from "./farmStore";
 export * from "./farmerStore";
 export * from "./gardenStore";
 export * from "./notificationStore";
+export * from "./dashboardStore";
+export * from "./taskStore"

@@ -56,6 +56,8 @@ const update = async (id, data) => {
   farmSchedule.description = data.description;
   farmSchedule.startAt = data.startAt;
   farmSchedule.endAt = data.endAt;
+  farmSchedule.treeName = data.treeName;
+  farmSchedule.treeDescription = data.treeDescription;
   await farmSchedule.save();
   return farmSchedule;
 };
@@ -72,7 +74,6 @@ const find = async (id) => {
 const remove = async (id) => {
   return await FarmSchedule.updateOne({ _id: id }, { status: false });
 };
-
 
 module.exports = {
   getListPagination,

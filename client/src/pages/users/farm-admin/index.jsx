@@ -1,21 +1,14 @@
 import { RoutePaths } from "@/routes";
 import { useUserStore } from "@/stores";
 import { EyeOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Input, Table, Tag, Tooltip } from "antd";
+import { Button, Input, message, Table, Tag, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FarmAdminModal from "./FarmAdminModal";
 
 export default function FarmAdminList() {
-  const {
-    users,
-    pagination,
-    loading,
-    error,
-    fetchUsers,
-    createUser,
-    deleteUser,
-  } = useUserStore();
+  const { users, pagination, loading, fetchUsers, createUser, deleteUser } =
+    useUserStore();
 
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
@@ -24,7 +17,7 @@ export default function FarmAdminList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUsers({ page, role: "farm-admin", name: keyword });
+    fetchUsers({ page, role: "farm-admin", keyword });
   }, [page, keyword, fetchUsers]);
 
   const handleAdd = async (values) => {

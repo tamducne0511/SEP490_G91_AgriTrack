@@ -5,10 +5,20 @@ const multer = require("multer");
 const gardenValidation = require("../../middlewares/validators/garden.validation");
 const gardenController = require("../../controllers/admin/garden.controller");
 const { configUploadFile } = require("../../utils/upload.util");
-const { isFarmAdmin } = require("../../middlewares");
+const { isFarmAdmin, isRoles } = require("../../middlewares");
+const { USER_ROLE } = require("../../constants/app");
 const upload = multer({ storage: configUploadFile("uploads/gardens") });
 
-router.get("/", isFarmAdmin, gardenController.getList);
+router.get(
+  "/",
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.farmer]),
+  gardenController.getList
+);
+router.get(
+  "/farm/:farmId",
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.farmer, USER_ROLE.expert]),
+  gardenController.getListByFarmId
+);
 router.post(
   "/",
   isFarmAdmin,

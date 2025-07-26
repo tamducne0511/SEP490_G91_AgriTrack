@@ -6,7 +6,7 @@ const { configUploadFile } = require("../../utils/upload.util");
 const upload = multer({ storage: configUploadFile("uploads/tasknotes") });
 const taskController = require("../../controllers/web/task.controller");
 const taskValidation = require("../../middlewares/validators/task.validation");
-const { isFarmer } = require("../../middlewares");
+const { isFarmer, isLogin } = require("../../middlewares");
 
 router.get("/", isFarmer, taskController.getList);
 router.post(
@@ -23,6 +23,7 @@ router.post(
   taskValidation.createDailyNote,
   taskController.createDailyNote
 );
-router.get("/:id/daily-note", isFarmer, taskController.getDailyNote);
+router.get("/:id/daily-note", isLogin, taskController.getDailyNote);
+router.get("/daily-note/:id", isLogin, taskController.getDetailDailyNote);
 
 module.exports = router;
