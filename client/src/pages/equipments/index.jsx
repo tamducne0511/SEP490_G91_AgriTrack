@@ -1,14 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Input, Popconfirm, Select, Tag, message } from "antd";
+import {
+  Table,
+  Button,
+  Input,
+  Popconfirm,
+  Select,
+  Tag,
+  message,
+  Tooltip,
+} from "antd";
 import {
   PlusOutlined,
-  EditOutlined,
+  EyeOutlined,
   DeleteOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import { useEquipmentStore, useEquipmentCategoryStore } from "@/stores";
-import EquipmentModal from "./EquipmentModal";
+import { useNavigate } from "react-router-dom";
+import { RoutePaths } from "@/routes";
 import { ImageBaseUrl } from "@/variables/common";
+import EquipmentModal from "./EquipmentModal";
 
 export default function EquipmentList() {
   // Store hooks
@@ -18,19 +29,18 @@ export default function EquipmentList() {
     loading,
     error,
     fetchEquipments,
-    createEquipment,
-    updateEquipment,
     deleteEquipment,
+    createEquipment,
   } = useEquipmentStore();
 
   const { categories, fetchCategories } = useEquipmentCategoryStore();
 
-  // State
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [categoryFilter, setCategoryFilter] = useState(undefined);
   const [modal, setModal] = useState({ open: false, edit: false, initial: {} });
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const navigate = useNavigate();
 
   // Fetch category on mount
   useEffect(() => {
@@ -41,7 +51,7 @@ export default function EquipmentList() {
   useEffect(() => {
     fetchEquipments({
       page,
-      name: keyword,
+      keyword,
       categoryId: categoryFilter,
     });
   }, [page, keyword, categoryFilter, fetchEquipments]);
@@ -50,34 +60,30 @@ export default function EquipmentList() {
     if (error) message.error(error);
   }, [error]);
 
-  // Modal submit
+  // Modal OK handler
   const handleOk = async (values) => {
     setConfirmLoading(true);
     try {
-      if (modal.edit) {
-        await updateEquipment(modal.initial._id, values);
-        message.success("Cập nhật thiết bị thành công!");
-      } else {
-        await createEquipment(values);
-        message.success("Thêm thiết bị thành công!");
-      }
+      await createEquipment(values);
+      message.success("Thêm thiết bị thành công!");
       setModal({ open: false, edit: false, initial: {} });
-      // Refresh list
-      fetchEquipments({ page, name: keyword, categoryId: categoryFilter });
-    } catch {}
-    setConfirmLoading(false);
+      fetchEquipments({ page, keyword, categoryId: categoryFilter });
+    } catch (err) {
+      message.error("Đã xảy ra lỗi");
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
-  // Xoá
+  // Xoá thiết bị
   const handleDelete = async (record) => {
     try {
       await deleteEquipment(record._id);
       message.success("Xoá thiết bị thành công!");
-      fetchEquipments({ page, name: keyword, categoryId: categoryFilter });
+      fetchEquipments({ page, keyword, categoryId: categoryFilter });
     } catch {}
   };
 
-  // Table columns
   const columns = [
     {
       title: "STT",
@@ -127,37 +133,58 @@ export default function EquipmentList() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <span>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() =>
-              setModal({ open: true, edit: true, initial: record })
-            }
-          />
-          <Popconfirm
-            title="Bạn chắc chắn muốn xoá thiết bị này?"
-            okText="Xoá"
-            cancelText="Huỷ"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button type="link" icon={<DeleteOutlined />} danger />
-          </Popconfirm>
-        </span>
+        <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+          <Tooltip title="Xem chi tiết">
+            <Button
+              type="text"
+              icon={<EyeOutlined style={{ fontSize: 18, color: "#23643A" }} />}
+              onClick={() => navigate(RoutePaths.EQUIPMENT_DETAIL(record._id))} // Navigate to equipment detail page
+            />
+          </Tooltip>
+
+          <Tooltip title="Xoá thiết bị">
+            <Popconfirm
+              title="Bạn chắc chắn muốn xoá thiết bị này?"
+              okText="Xoá"
+              cancelText="Huỷ"
+              onConfirm={() => handleDelete(record)}
+            >
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined style={{ fontSize: 18, color: "red" }} />}
+              />
+            </Popconfirm>
+          </Tooltip>
+        </div>
       ),
       width: 120,
     },
   ];
 
+  const tableHeaderStyle = {
+    backgroundColor: "#23643A", // Đổi màu nền của header thành xanh
+    color: "#fff",
+    fontWeight: 600,
+    fontSize: 16,
+    textAlign: "center",
+  };
+
   return (
-    <div>
-      {/* Toolbar */}
+    <div
+      style={{
+        background: "#fff",
+        padding: 24,
+        borderRadius: 12,
+        boxShadow: "0 2px 12px rgba(0, 0, 0, 0.1)",
+      }}
+    >
       <div style={{ display: "flex", gap: 12, marginBottom: 18 }}>
         <Button
           type="primary"
           icon={<PlusOutlined />}
-          style={{ background: "#23643A" }}
-          onClick={() => setModal({ open: true, edit: false, initial: {} })}
+          style={{ background: "#23643A", borderRadius: 8 }}
+          onClick={() => setModal({ open: true, edit: false, initial: {} })} // Modal thêm thiết bị
         >
           Thêm thiết bị
         </Button>
@@ -165,13 +192,18 @@ export default function EquipmentList() {
           allowClear
           prefix={<SearchOutlined />}
           placeholder="Tìm theo tên thiết bị"
-          style={{ width: 220 }}
+          style={{
+            width: 280,
+            borderRadius: 8,
+            border: "1.5px solid #23643A",
+            background: "#f8fafb",
+          }}
           onChange={(e) => setKeyword(e.target.value)}
           value={keyword}
         />
         <Select
           allowClear
-          style={{ width: 220 }}
+          style={{ width: 220, borderRadius: 8 }}
           placeholder="Lọc theo danh mục"
           value={categoryFilter}
           options={categories.map((c) => ({
@@ -195,14 +227,24 @@ export default function EquipmentList() {
           showSizeChanger: false,
         }}
         bordered
+        components={{
+          header: {
+            cell: (props) => (
+              <th {...props} style={{ ...props.style, ...tableHeaderStyle }}>
+                {props.children}
+              </th>
+            ),
+          },
+        }}
       />
+
       {/* Modal */}
       <EquipmentModal
         open={modal.open}
         isEdit={modal.edit}
         initialValues={modal.initial}
         confirmLoading={confirmLoading}
-        onOk={handleOk}
+        onOk={handleOk} // Handle form submission
         onCancel={() => setModal({ open: false, edit: false, initial: {} })}
         categories={categories}
       />

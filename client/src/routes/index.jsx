@@ -5,6 +5,7 @@ import ChangePassword from "@/pages/change-password";
 import Dashboard from "@/pages/dashboard";
 import EquipmentList from "@/pages/equipments";
 import EquipmentCategoryList from "@/pages/equipments/categories";
+import EquipmentDetail from "@/pages/equipments/Detail";
 import EquipmentManager from "@/pages/equipments/EquipmentManager";
 import FarmList from "@/pages/farms";
 import FarmDetail from "@/pages/farms/Detail";
@@ -19,14 +20,17 @@ import ExpertList from "@/pages/users/expert/ExpertList";
 import FarmAdminList from "@/pages/users/farm-admin";
 import FarmAdminDetail from "@/pages/users/farm-admin/Detail";
 import FarmerList from "@/pages/users/farmer";
+import RedirectHome from "./RedirectHome";
 import { RoutePaths } from "./routes-constants";
 import FarmerDetail from "@/pages/users/farmer/Detail";
-
-
 const router = createBrowserRouter([
   {
     element: <AuthLayout />,
     children: [
+      {
+        path: "/",
+        element: <RedirectHome />,
+      },
       {
         path: RoutePaths.EXPERT_LIST,
         element: <ExpertList />,
@@ -56,6 +60,10 @@ const router = createBrowserRouter([
         element: <FarmAdminDetail />,
       },
       {
+        path: "/equipment-detail/:id",
+        element: <EquipmentDetail />,
+      },
+      {
         path: RoutePaths.GARDEN_LIST,
         element: <GardenList />,
       },
@@ -80,10 +88,6 @@ const router = createBrowserRouter([
         element: <EquipmentList />,
       },
       {
-        path: RoutePaths.HOME,
-        element: <LoginPage />,
-      },
-      {
         path: RoutePaths.CHANGE_PASSWORD,
         element: <ChangePassword />,
       },
@@ -96,7 +100,6 @@ const router = createBrowserRouter([
         element: <Dashboard />,
       },
 
-      // Farmer routes
       {
         path: RoutePaths.MY_TASK_LIST,
         element: <FarmerTaskList />,
@@ -107,6 +110,10 @@ const router = createBrowserRouter([
   {
     element: <PublicLayout />,
     children: [
+      {
+        path: "/",
+        element: <RedirectHome />,
+      },
       {
         path: RoutePaths.LOGIN,
         element: <LoginPage />,
