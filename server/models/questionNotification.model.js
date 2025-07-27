@@ -1,9 +1,15 @@
 const mongoose = require("mongoose");
 
-const taskQuestionchema = new mongoose.Schema({
-  userId: {
+const questionNotificationSchema = new mongoose.Schema({
+  questionId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "TaskQuestion",
+    required: true,
+  },
+
+  farmId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Farm",
     required: true,
   },
 
@@ -13,9 +19,9 @@ const taskQuestionchema = new mongoose.Schema({
     required: true,
   },
 
-  farmId: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Farm",
+    ref: "User",
     required: true,
   },
 
@@ -29,19 +35,9 @@ const taskQuestionchema = new mongoose.Schema({
     required: true,
   },
 
-  image: {
-    type: String,
-  },
-
   status: {
     type: Boolean,
-    required: true,
-  },
-
-  parentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "TaskQuestion",
-    default: null,
+    default: true,
   },
 
   createdAt: {
@@ -55,6 +51,9 @@ const taskQuestionchema = new mongoose.Schema({
   },
 });
 
-const TaskQuestion = mongoose.model("TaskQuestion", taskQuestionchema);
+const QuestionNotification = mongoose.model(
+  "QuestionNotification",
+  questionNotificationSchema
+);
 
-module.exports = TaskQuestion;
+module.exports = QuestionNotification;
