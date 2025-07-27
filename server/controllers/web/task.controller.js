@@ -74,6 +74,7 @@ const createDailyNote = async (req, res, next) => {
         ? `/uploads/tasknotes/${req.file.filename}`
         : "",
     });
+
     res.json({
       message: "Create daily note successfully",
       data: task,
@@ -91,10 +92,23 @@ const getDailyNote = async (req, res, next) => {
   });
 };
 
+const getDetailDailyNote = async (req, res, next) => {
+  const id = req.params.id;
+  const dailyNote = await taskDailyNoteService.getDetail(id);
+  if (!dailyNote) {
+    return next(new NotFoundException("Not found daily note with id: " + id));
+  }
+  res.json({
+    message: "Daily note found successfully",
+    data: dailyNote,
+  });
+};
+
 module.exports = {
   getList,
   find,
   changeStatus,
   createDailyNote,
   getDailyNote,
+  getDetailDailyNote,
 };

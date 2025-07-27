@@ -1,16 +1,22 @@
 const Farm = require("../models/farm.model");
 const User = require("../models/user.model");
 const Task = require("../models/task.model");
+const ExpertFarm = require("../models/expertFarm.model");
 
 const { LIMIT_ITEM_PER_PAGE, USER_ROLE } = require("../constants/app");
 const BadRequestException = require("../middlewares/exceptions/badrequest");
 const mongoose = require("mongoose");
 
 const getListPagination = async (role, page, keyword) => {
-  const list = await User.find({
-    role: role,
+  const filter = {
     fullName: { $regex: keyword, $options: "i" },
-  })
+  };
+
+  if (role) {
+    filter.role = role;
+  }
+
+  const list = await User.find(filter)
     .select("-password")
     .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
     .limit(LIMIT_ITEM_PER_PAGE);
@@ -138,6 +144,64 @@ const getDetail = async (id) => {
   };
 };
 
+const assignExpertToFarm = async ({ farmId, expertId }) => {
+  const expert = await User.findById(expertId);
+  if (!expert) {
+    throw new BadRequestException("Expert not found");
+  }
+
+  if (expert.role !== USER_ROLE.expert) {
+    throw new BadRequestException("User is not an expert");
+  }
+
+  const farm = await Farm.findById(farmId);
+  if (!farm) {
+    throw new BadRequestException("Farm not found");
+  }
+
+  const expertFarm = await ExpertFarm.findOne({
+    expertId: expert._id,
+    farmId: farm._id,
+  });
+
+  if (expertFarm) {
+    throw new BadRequestException("Expert already assigned to this farm");
+  }
+
+  const newExpertFarm = new ExpertFarm({
+    expertId: expert._id,
+    farmId: farm._id,
+  });
+
+  await newExpertFarm.save();
+};
+
+const removeAssignExpertToFarm = (id) => {
+  return ExpertFarm.deleteOne({ _id: id });
+};
+
+const getListFarmAssignToExpert = async (expertId) => {
+  const farms = await ExpertFarm.find({ expertId: expertId })
+    .populate("farmId", "name image description address")
+    .select("farmId");
+
+  return farms.map((doc) => ({
+    _id: doc._id,
+    farm: doc.farmId,
+  }));
+};
+
+const changeStatus = async (id, status) => {
+  const user = await User.findById(id);
+  if (!user) {
+    throw new BadRequestException("User not found");
+  }
+
+  user.status = status;
+  await user.save();
+  return user;
+};
+
 module.exports = {
   getListPagination,
   getTotal,
@@ -149,4 +213,8 @@ module.exports = {
   assignFarmToUser,
   getListFarmerInFarm,
   getTotalFarmerInFarm,
+  assignExpertToFarm,
+  removeAssignExpertToFarm,
+  getListFarmAssignToExpert,
+  changeStatus,
 };

@@ -19,16 +19,16 @@ const requestHandler = (config) => {
 };
 
 const responseErrorHandler = async (err) => {
-  if (err?.response?.status === 401) {
-    localStorage.clear();
-    window.location.pathname = RoutePaths.LOGIN;
-    return;
-  }
+  // if (err?.response?.status === 401) {
+  //   localStorage.clear();
+  //   window.location.pathname = RoutePaths.LOGIN;
+  //   return;
+  // }
 
-  if (err?.response?.status === 403) {
-    window.location.pathname = RoutePaths.LOGIN;
-    return;
-  }
+  // if (err?.response?.status === 403) {
+  //   window.location.pathname = RoutePaths.LOGIN;
+  //   return;
+  // }
 
   return Promise.reject(err.response?.data);
 };

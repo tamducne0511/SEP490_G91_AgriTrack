@@ -16,6 +16,19 @@ const getList = async (req, res) => {
   res.json(formatPagination(page, total, list));
 };
 
+// Get list garden of farm with pagination and keyword search
+const getListByFarmId = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const keyword = req.query.keyword || "";
+  const list = await gardenService.getListPagination(
+    req.params.farmId,
+    page,
+    keyword
+  );
+  const total = await gardenService.getTotal(req.params.farmId, keyword);
+  res.json(formatPagination(page, total, list));
+};
+
 // Create new garden
 const create = async (req, res) => {
   const errors = validationResult(req);
@@ -94,4 +107,5 @@ module.exports = {
   update,
   remove,
   find,
+  getListByFarmId,
 };

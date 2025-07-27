@@ -1,5 +1,4 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
-
 import AuthLayout from "@/layouts/AuthLayout";
 import PublicLayout from "@/layouts/PublicLayout";
 import ChangePassword from "@/pages/change-password";
@@ -23,7 +22,7 @@ import FarmAdminDetail from "@/pages/users/farm-admin/Detail";
 import FarmerList from "@/pages/users/farmer";
 import RedirectHome from "./RedirectHome";
 import { RoutePaths } from "./routes-constants";
-
+import FarmerDetail from "@/pages/users/farmer/Detail";
 const router = createBrowserRouter([
   {
     element: <AuthLayout />,

@@ -4,7 +4,11 @@ const EquipmentCategory = require("../models/equipmentCategories.model");
 const Garden = require("../models/garden.model");
 const Task = require("../models/task.model");
 const User = require("../models/user.model");
+const TaskDailyNote = require("../models/taskDailyNote.model");
+const TaskDailyNoteEquipment = require("../models/taskDailyNoteEquipment.model");
 const { USER_ROLE, TASK_TYPE } = require("../constants/app");
+
+const mongoose = require("mongoose");
 
 const getSummary = async () => {
   const totalFarm = await Farm.countDocuments();
@@ -36,6 +40,121 @@ const getSummary = async () => {
   };
 };
 
+const getHarvest = async (farmId, fromDate, toDate) => {
+  const filter = {
+    type: "harvest",
+  };
+
+  if (farmId) {
+    filter["task.farmId"] = new mongoose.Types.ObjectId(farmId);
+  }
+
+  if (fromDate && toDate) {
+    filter.createdAt = {
+      $gte: new Date(fromDate),
+      $lte: new Date(toDate),
+    };
+  } else if (fromDate) {
+    filter.createdAt = { $gte: new Date(fromDate) };
+  } else if (toDate) {
+    filter.createdAt = { $lte: new Date(toDate) };
+  }
+
+  const result = await TaskDailyNote.aggregate([
+    {
+      $lookup: {
+        from: "tasks",
+        localField: "taskId",
+        foreignField: "_id",
+        as: "task",
+      },
+    },
+    {
+      $unwind: "$task",
+    },
+    {
+      $match: filter,
+    },
+    {
+      $group: {
+        _id: null,
+        totalQuantity: { $sum: "$quantity" },
+      },
+    },
+  ]);
+
+  if (result.length === 0) {
+    return { totalQuantity: 0 };
+  }
+
+  return {
+    totalQuantity: result[0].totalQuantity || 0,
+  };
+};
+
+const getConsumption = async (farmId, fromDate, toDate) => {
+  const filter = {};
+
+  if (farmId) {
+    filter["task.farmId"] = new mongoose.Types.ObjectId(farmId);
+  }
+
+  if (fromDate && toDate) {
+    filter.createdAt = {
+      $gte: new Date(fromDate),
+      $lte: new Date(toDate),
+    };
+  } else if (fromDate) {
+    filter.createdAt = { $gte: new Date(fromDate) };
+  } else if (toDate) {
+    filter.createdAt = { $lte: new Date(toDate) };
+  }
+
+  const result = await TaskDailyNoteEquipment.aggregate([
+    {
+      $lookup: {
+        from: "taskdailynotes",
+        localField: "dailyId",
+        foreignField: "_id",
+        as: "note",
+      },
+    },
+    {
+      $unwind: "$note",
+    },
+    {
+      $lookup: {
+        from: "tasks",
+        localField: "note.taskId",
+        foreignField: "_id",
+        as: "task",
+      },
+    },
+    {
+      $unwind: "$task",
+    },
+    {
+      $match: filter,
+    },
+    {
+      $group: {
+        _id: null,
+        totalQuantity: { $sum: "$quantity" },
+      },
+    },
+  ]);
+
+  if (result.length === 0) {
+    return { totalQuantity: 0 };
+  }
+
+  return {
+    totalQuantity: result[0].totalQuantity || 0,
+  };
+};
+
 module.exports = {
   getSummary,
+  getHarvest,
+  getConsumption,
 };

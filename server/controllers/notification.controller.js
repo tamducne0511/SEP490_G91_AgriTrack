@@ -15,6 +15,19 @@ const getList = async (req, res) => {
   res.json(formatPagination(page, total, list));
 };
 
+// Get list notification with pagination and keyword search
+const getListForExpert = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const keyword = req.query.keyword || "";
+  const list = await notificationService.getListPagination(
+    req.params.farmId,
+    page,
+    keyword
+  );
+  const total = await notificationService.getTotal(req.user.farmId, keyword);
+  res.json(formatPagination(page, total, list));
+};
+
 // Create new notification
 const create = async (req, res) => {
   const errors = validationResult(req);
@@ -25,7 +38,7 @@ const create = async (req, res) => {
   const payload = {
     title: req.body.title,
     content: req.body.content,
-    farmId: req.user.farmId,
+    farmId: req.body.farmId,
     image: req.file?.filename
       ? `/uploads/notifications/${req.file.filename}`
       : "",
@@ -93,6 +106,7 @@ const find = async (req, res, next) => {
 
 module.exports = {
   getList,
+  getListForExpert,
   create,
   update,
   remove,

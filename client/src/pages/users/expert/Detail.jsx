@@ -1,95 +1,97 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  Descriptions,
-  Button,
-  Spin,
-  Tag,
-  Space,
-  Card,
-  Image,
-  message,
-} from "antd";
-import ExpertModal from "./ExpertModal";
-import AssignFarmModal from "./AssignFarmModal";
+import { RoutePaths } from "@/routes";
 import { useUserStore } from "@/stores";
 import { ImageBaseUrl } from "@/variables/common";
+import {
+  Button,
+  Card,
+  Descriptions,
+  Image,
+  message,
+  Space,
+  Spin,
+  Tag,
+  Typography,
+  Empty,
+} from "antd";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import AssignFarmModal from "./AssignFarmModal";
 
 export default function ExpertDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { userDetail, fetchUserDetail, updateUser, assignUserToFarm, loading } =
-    useUserStore();
-  const [editModal, setEditModal] = useState(false);
+  const {
+    userDetail,
+    fetchUserDetail,
+    assignExpertToFarm,
+    getListFarmAssignedExpert,
+    listFarmAssignedExpert,
+    loading,
+    unassignExpertFromFarm,
+  } = useUserStore();
+
   const [assignModal, setAssignModal] = useState(false);
-  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const expert = userDetail?.user || {};
-  const farm = userDetail?.farm || null;
 
   const refreshDetail = async () => {
     try {
       await fetchUserDetail(id);
+      await getListFarmAssignedExpert(id);
     } catch {
       message.error("Không tìm thấy chuyên gia!");
-      navigate("/experts");
+      navigate(RoutePaths.EXPERT_LIST);
     }
   };
 
   useEffect(() => {
     refreshDetail();
-    // eslint-disable-next-line
   }, [id]);
-
-  const handleEdit = async (values) => {
-    setConfirmLoading(true);
-    try {
-      await updateUser(id, values);
-      message.success("Cập nhật chuyên gia thành công!");
-      setEditModal(false);
-      refreshDetail();
-    } finally {
-      setConfirmLoading(false);
-    }
-  };
 
   const handleAssignFarm = async (farmId) => {
     if (!farmId) return;
     try {
-      await assignUserToFarm(farmId, id);
-      message.success("Gán vườn thành công!");
+      await assignExpertToFarm(id, farmId);
+      message.success("Gán trang trại thành công!");
       setAssignModal(false);
       refreshDetail();
-    } catch {}
+    } catch (err) {
+      // message.error(err?.message || "Lỗi khi gán trang trại");
+    }
   };
-
+  const handleUnassignFarm = async (assignedFarmId) => {
+    try {
+      await unassignExpertFromFarm(assignedFarmId); // gọi store
+      message.success("Bỏ gán thành công!");
+      refreshDetail();
+    } catch (err) {
+      message.error(err?.message || "Lỗi khi bỏ gán");
+    }
+  };
   if (loading) return <Spin />;
   if (!expert?._id) return null;
-
   return (
     <div
       style={{
         display: "flex",
         gap: 32,
         alignItems: "flex-start",
-        margin: "30px auto",
         padding: 24,
         background: "#fff",
         borderRadius: 14,
         boxShadow: "0 4px 24px #0001",
       }}
     >
-      {/* Cột trái: Info chuyên gia */}
+      {/* Left: Expert info */}
       <div style={{ flex: 1, minWidth: 320 }}>
         <Space style={{ marginBottom: 18 }}>
           <Button onClick={() => navigate(-1)}>Quay lại</Button>
-          <Button onClick={() => setEditModal(true)} type="primary">
-            Sửa thông tin
-          </Button>
+          <Button type="primary">Thông tin</Button>
           <Button onClick={() => setAssignModal(true)} type="dashed">
-            Gán vườn
+            Gán trang trại
           </Button>
         </Space>
+
         <Descriptions
           bordered
           column={1}
@@ -110,14 +112,6 @@ export default function ExpertDetail() {
           </Descriptions.Item>
         </Descriptions>
 
-        <ExpertModal
-          open={editModal}
-          isEdit={true}
-          initialValues={expert}
-          confirmLoading={confirmLoading}
-          onOk={handleEdit}
-          onCancel={() => setEditModal(false)}
-        />
         <AssignFarmModal
           open={assignModal}
           userId={id}
@@ -126,53 +120,72 @@ export default function ExpertDetail() {
         />
       </div>
 
-      {/* Cột phải: Info vườn */}
-      <div style={{ flex: 1, minWidth: 320 }}>
+      {/* Right: Assigned Farms */}
+      <div style={{ flex: 1.4, minWidth: 340 }}>
         <Card
-          title="Vườn đang quản lý"
+          title="Trang trại đang quản lý"
           style={{
             borderRadius: 10,
             minHeight: 260,
             background: "#f8fafc",
           }}
         >
-          {farm ? (
-            <div style={{ display: "flex", gap: 18 }}>
-              <Image
-                src={ImageBaseUrl + farm.image}
-                width={100}
-                height={100}
+          {Array.isArray(listFarmAssignedExpert) &&
+          listFarmAssignedExpert.length > 0 ? (
+            listFarmAssignedExpert.map((item) => (
+              <div
+                key={item?.farm?._id}
                 style={{
-                  objectFit: "cover",
+                  display: "flex",
+                  gap: 18,
+                  marginBottom: 16,
+                  background: "#fff",
+                  padding: 12,
                   borderRadius: 10,
-                  background: "#eee",
+                  boxShadow: "0 1px 6px #0000000a",
+                  alignItems: "center",
                 }}
-                alt="Ảnh vườn"
-                fallback="https://placehold.co/100x100?text=No+Image"
-                preview
-              />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 6 }}>
-                  {farm.name}
-                </div>
-                <div style={{ marginBottom: 4 }}>
-                  <b>Địa chỉ:</b> {farm.address}
-                </div>
-                <div style={{ marginBottom: 4 }}>
-                  <b>Mô tả:</b> {farm.description}
-                </div>
+              >
+                <Image
+                  src={ImageBaseUrl + item?.farm?.image}
+                  width={100}
+                  height={100}
+                  style={{
+                    objectFit: "cover",
+                    borderRadius: 10,
+                    background: "#eee",
+                  }}
+                  alt="Ảnh trang trại"
+                  fallback="https://placehold.co/100x100?text=No+Image"
+                  preview
+                />
                 <div>
-                  <b>Trạng thái:</b>{" "}
-                  <Tag color={farm.status ? "green" : "red"}>
-                    {farm.status ? "Đang hoạt động" : "Không hoạt động"}
-                  </Tag>
+                  <Typography.Title level={5} style={{ marginBottom: 6 }}>
+                    {item?.farm?.name}
+                  </Typography.Title>
+                  <Typography.Text level={5} style={{ marginBottom: 6 }}>
+                    {item?.farm?.description || "Không có mô tả"}
+                  </Typography.Text>
+                  <Typography.Text level={5} style={{ marginBottom: 6 }}>
+                    {" "}
+                    ({item?.farm?.address || "Không có địa chỉ"})
+                  </Typography.Text>
+                  {/* <div>
+                    <b>Trạng thái:</b>{" "}
+                    <Tag color={item?.farm?.status ? "green" : "red"}>
+                      {item?.farm?.status
+                        ? "Đang hoạt động"
+                        : "Không hoạt động"}
+                    </Tag>
+                  </div> */}
                 </div>
+                <Button danger onClick={() => handleUnassignFarm(item._id)}>
+                  Bỏ gán
+                </Button>
               </div>
-            </div>
+            ))
           ) : (
-            <div style={{ color: "#888", fontStyle: "italic", padding: 16 }}>
-              Chưa gán vườn cho chuyên gia này
-            </div>
+            <Empty description="Chưa được gán vào trang trại nào" />
           )}
         </Card>
       </div>

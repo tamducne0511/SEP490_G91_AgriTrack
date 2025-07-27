@@ -6,12 +6,14 @@ const taskService = require("../../services/task.service");
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const keyword = req.query.keyword || "";
+  const gardenId = req.query.gardenId || null;
   const list = await taskService.getListPagination(
     req.user.farmId,
+    gardenId,
     page,
     keyword
   );
-  const total = await taskService.getTotal(req.user.farmId, keyword);
+  const total = await taskService.getTotal(req.user.farmId, gardenId, keyword);
   res.json(formatPagination(page, total, list));
 };
 
@@ -27,8 +29,8 @@ const create = async (req, res) => {
     description: req.body.description,
     type: req.body.type,
     priority: req.body.priority,
-    gardenId: req.body.gardenId,
     farmId: req.user.farmId,
+    gardenId: req.body.gardenId,
     image: req.file?.filename ? `/uploads/tasks/${req.file.filename}` : "",
   };
 

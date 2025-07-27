@@ -32,6 +32,12 @@ const taskDailyNoteSchema = new mongoose.Schema({
     default: 0,
   },
 
+  type: {
+    type: String,
+    enum: ["harvest", "consumption"],
+    default: "harvest",
+  },
+
   status: {
     type: Boolean,
     default: true,

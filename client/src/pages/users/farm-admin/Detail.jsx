@@ -14,6 +14,7 @@ import FarmAdminModal from "./FarmAdminModal";
 import AssignFarmModal from "./AssignFarmModal";
 import { useUserStore } from "@/stores";
 import { ImageBaseUrl } from "@/variables/common";
+import { RoutePaths } from "@/routes";
 
 export default function FarmAdminDetail() {
   const { id } = useParams();
@@ -32,13 +33,12 @@ export default function FarmAdminDetail() {
       await fetchUserDetail(id);
     } catch {
       message.error("Không tìm thấy chủ trang trại!");
-      navigate("/farm-admins");
+      navigate(RoutePaths.FARM_ADMIN_LIST);
     }
   };
 
   useEffect(() => {
     refreshDetail();
-    // eslint-disable-next-line
   }, [id]);
 
   const handleEdit = async (values) => {
@@ -48,6 +48,7 @@ export default function FarmAdminDetail() {
       message.success("Cập nhật chủ trang trại thành công!");
       setEditModal(false);
       refreshDetail();
+    } catch {
     } finally {
       setConfirmLoading(false);
     }
@@ -57,7 +58,7 @@ export default function FarmAdminDetail() {
     if (!farmId) return;
     try {
       await assignUserToFarm(farmId, id);
-      message.success("Gán vườn thành công!");
+      message.success("Gán trang trại thành công!");
       setAssignModal(false);
       refreshDetail();
     } catch {}
@@ -72,7 +73,6 @@ export default function FarmAdminDetail() {
         display: "flex",
         gap: 32,
         alignItems: "flex-start",
-        margin: "30px auto",
         padding: 24,
         background: "#fff",
         borderRadius: 14,
@@ -83,11 +83,9 @@ export default function FarmAdminDetail() {
       <div style={{ flex: 1, minWidth: 320 }}>
         <Space style={{ marginBottom: 18 }}>
           <Button onClick={() => navigate(-1)}>Quay lại</Button>
-          <Button onClick={() => setEditModal(true)} type="primary">
-            Sửa thông tin
-          </Button>
+          <Button type="primary">Thông tin</Button>
           <Button onClick={() => setAssignModal(true)} type="dashed">
-            Gán vườn
+            Gán trang trại
           </Button>
         </Space>
         <Descriptions
@@ -126,10 +124,10 @@ export default function FarmAdminDetail() {
         />
       </div>
 
-      {/* Cột phải: Info vườn */}
+      {/* Cột phải: Info trang trại */}
       <div style={{ flex: 1, minWidth: 320 }}>
         <Card
-          title="Vườn đang quản lý"
+          title="Trang trại đang quản lý"
           style={{
             borderRadius: 10,
             minHeight: 260,
@@ -147,7 +145,7 @@ export default function FarmAdminDetail() {
                   borderRadius: 10,
                   background: "#eee",
                 }}
-                alt="Ảnh vườn"
+                alt="Ảnh trang trại"
                 fallback="https://placehold.co/100x100?text=No+Image"
                 preview
               />
@@ -171,7 +169,7 @@ export default function FarmAdminDetail() {
             </div>
           ) : (
             <div style={{ color: "#888", fontStyle: "italic", padding: 16 }}>
-              Chưa gán vườn cho chủ trang trại này
+              Chưa gán trang trại cho chủ trang trại này
             </div>
           )}
         </Card>

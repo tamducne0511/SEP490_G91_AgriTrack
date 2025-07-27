@@ -50,6 +50,11 @@ const changeStatus = [
 const createDailyNote = [
   body("title").notEmpty().withMessage("Title is required"),
   body("comment").notEmpty().withMessage("Comment is required"),
+  body("type")
+    .notEmpty()
+    .withMessage("Type is required")
+    .isIn(["harvest", "consumption"])
+    .withMessage("Type must be harvest or consumption"),
   body("quantity")
     .optional()
     .isNumeric()

@@ -6,11 +6,11 @@ export const fetchTasksApi = async (params = {}) => {
   return res.data;
 };
 
+// Lấy chi tiết 1 task
 export const getTaskDetail = async (id) => {
   const res = await client.get(`/admin/tasks/${id}`);
   return res.data;
 };
-
 // Tạo mới task (có thể gửi FormData nếu có ảnh)
 export const createTaskApi = async (payload) => {
   const res = await client.post("/admin/tasks", payload);
@@ -28,7 +28,7 @@ export const deleteTaskApi = async (id) => {
   const res = await client.delete(`/admin/tasks/${id}`);
   return res.data;
 };
-
+// Gán task cho farmer
 export const assignTaskToFarmerApi = async (taskId, farmerId) => {
   const res = await client.post(`/admin/tasks/${taskId}/assign-farmer`, {
     farmerId,
@@ -75,5 +75,9 @@ export const changeTaskStatusApi = async (taskId, status) => {
 
 export const fetchDailyNoteDetailApi = async (id) => {
   const res = await client.get(`/web/tasks/daily-note/${id}`);
+  
+// Đổi trạng thái task (cho farmer)
+export const changeTaskStatusApi = async (taskId, status) => {
+  const res = await client.post(`/web/tasks/${taskId}/change-status`, { status });
   return res.data;
 };

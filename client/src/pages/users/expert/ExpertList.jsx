@@ -24,7 +24,7 @@ export default function ExpertList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUsers({ page, role: "expert", name: keyword });
+    fetchUsers({ page, role: "expert", keyword });
   }, [page, keyword, fetchUsers]);
 
   useEffect(() => {

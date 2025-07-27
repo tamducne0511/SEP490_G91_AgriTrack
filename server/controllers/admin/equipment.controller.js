@@ -6,9 +6,15 @@ const equipmentService = require("../../services/equipment.service");
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const keyword = req.query.keyword || "";
+  const category = req.query.category || null;
   const farmId = req.user.farmId;
-  const list = await equipmentService.getListPagination(farmId, page, keyword);
-  const total = await equipmentService.getTotal(farmId, keyword);
+  const list = await equipmentService.getListPagination(
+    farmId,
+    category,
+    page,
+    keyword
+  );
+  const total = await equipmentService.getTotal(farmId, category, keyword);
   res.json(formatPagination(page, total, list));
 };
 

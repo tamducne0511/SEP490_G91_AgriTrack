@@ -5,3 +5,5 @@ export * from "./farmService";
 export * from "./notificationService";
 export * from "./farmerService";
 export * from "./taskStore";
+export * from "./dashboardService";
+export * from "./taskService";

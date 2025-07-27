@@ -9,6 +9,7 @@ export const RoutePaths = {
   FARMER_LIST: "/farmer-list",
   FARMER_DETAIL: (id) => `/farm-detail/${id}`,
   FARM_LIST: "/farm-list",
+  FARM_DETAIL: (id) => `/farm-detail/${id}`,
   FARM_ADMIN_LIST: "/farm-admin-list",
   FARM_ADMIN_DETAIL: (id) => `/farm-admin-detail/${id}`,
   GARDEN_LIST: "/garden-list",

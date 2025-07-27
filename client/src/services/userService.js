@@ -29,3 +29,29 @@ export const assignUserToFarmApi = async ({ farmId, userId }) => {
   const res = await client.post("/admin/users/farm/assign", { farmId, userId });
   return res.data;
 };
+
+export const fetchUserDetailApi = async (id) => {
+  const res = await client.get(`/admin/users/${id}`);
+  return res.data;
+};
+
+// Expert
+export const getListFarmAssignedExpert = async (id) => {
+  const res = await client.get(`/admin/users/assign/expert-to-farm/${id}`);
+  return res.data;
+};
+
+export const assignExpertToFarmApi = async ({ expertId, farmId }) => {
+  const res = await client.post("/admin/users/assign/expert-to-farm", {
+    expertId,
+    farmId,
+  });
+  return res.data;
+};
+
+export const unassignExpertFromFarmApi = async (assignedFarmId) => {
+  const res = await client.delete(
+    `/admin/users/unassign/expert-to-farm/${assignedFarmId}`
+  );
+  return res.data;
+};
