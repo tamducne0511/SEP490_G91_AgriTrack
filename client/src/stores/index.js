@@ -7,4 +7,5 @@ export * from "./notificationStore";
 export * from "./taskStore";
 export * from "./equipmentCategoryStore";
 export * from "./dashboardStore";
-
+export * from "./equipmentStore";
+export * from "./questionStore";

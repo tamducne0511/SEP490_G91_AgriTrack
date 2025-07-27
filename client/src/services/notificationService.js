@@ -2,13 +2,33 @@ import { client } from "@/configs";
 
 // Lấy danh sách notification
 export const fetchNotificationsApi = async (params = {}) => {
-  const res = await client.get("/admin/notifications", { params });
+  const res = await client.get("/notifications", { params });
+  return res.data;
+};
+
+export const fetchNotificationsQuesApi = async (id, params = {}) => {
+  const res = await client.get(`/question-notifications/${id}`, { params });
+  return res.data;
+};
+export const fetchNotificationsExpertQuesApi = async (params = {}) => {
+  const { farmId, ...rest } = params;
+  const res = await client.get(`/question-notifications/`, {
+    params,
+  });
+  return res.data;
+};
+
+export const fetchNotificationsExpertApi = async (params = {}) => {
+  const { farmId, ...rest } = params;
+  const res = await client.get(`/notifications/expert/${farmId}`, {
+    params,
+  });
   return res.data;
 };
 
 // Tạo notification (form-data)
 export const createNotificationApi = async (payload) => {
-  const res = await client.post("/admin/notifications", payload, {
+  const res = await client.post("/notifications", payload, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return res.data;
@@ -16,7 +36,7 @@ export const createNotificationApi = async (payload) => {
 
 // Cập nhật notification (form-data)
 export const updateNotificationApi = async (id, payload) => {
-  const res = await client.put(`/admin/notifications/${id}`, payload, {
+  const res = await client.put(`/notifications/${id}`, payload, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return res.data;
@@ -24,6 +44,11 @@ export const updateNotificationApi = async (id, payload) => {
 
 // Xoá notification
 export const deleteNotificationApi = async (id) => {
-  const res = await client.delete(`/admin/notifications/${id}`);
+  const res = await client.delete(`/notifications/${id}`);
+  return res.data;
+};
+
+export const fetchNotificationDetailApi = async (id) => {
+  const res = await client.get(`/notifications/${id}`);
   return res.data;
 };

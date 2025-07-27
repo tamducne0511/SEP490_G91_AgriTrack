@@ -24,6 +24,7 @@ import {
 } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { socket } from "@/services/socket";
 
 const { Title, Text } = Typography;
 
@@ -80,7 +81,24 @@ export default function TreeQuestionDetail() {
     if (treeId) {
       fetchQuestionsByTree(treeId);
     }
-  }, [treeId]); // Giữ treeId trong dependency array
+  }, [treeId]);
+
+  // Lắng nghe realtime với socket
+  useEffect(() => {
+    if (!treeId) return;
+    const handleNewQuestion = (data) => {
+      if (data.treeId === treeId) fetchQuestionsByTree(treeId);
+    };
+    const handleNewAnswer = (data) => {
+      if (data.treeId === treeId) fetchQuestionsByTree(treeId);
+    };
+    socket.on("new-question", handleNewQuestion);
+    socket.on("new-answer", handleNewAnswer);
+    return () => {
+      socket.off("new-question", handleNewQuestion);
+      socket.off("new-answer", handleNewAnswer);
+    };
+  }, [treeId]);
 
   useEffect(() => {
     if (treeId) fetchTreeDetail(treeId);

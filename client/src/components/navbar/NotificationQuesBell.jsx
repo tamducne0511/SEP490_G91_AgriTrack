@@ -1,38 +1,40 @@
-import { useNotificationStore } from "@/stores";
-import { BellOutlined } from "@ant-design/icons";
+import { useAuthStore, useNotificationStore } from "@/stores";
+import { BellOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { Badge, Button, Dropdown, List, Spin, Modal, Image } from "antd";
 import { useEffect, useState } from "react";
 import { ImageBaseUrl } from "@/variables/common";
 
-const NotificationBell = () => {
-  const { notifications, loading, fetchNotifications, pagination } =
+const NotificationQuesBell = () => {
+  // THAY ĐỔI 1: Sử dụng state và action dành cho "Questions" từ store
+  const { notificationQues, loading, fetchNotificationsQues, paginationQues } =
     useNotificationStore();
-  const [visible, setVisible] = useState(false);
+  const { user, farm } = useAuthStore();
 
-  // State cho modal preview
+  const [visible, setVisible] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState(null);
 
-  // Số thông báo (có thể là chưa đọc hoặc tổng số)
-  const notificationCount = pagination?.total || notifications?.length || 0;
+  // THAY ĐỔI 2: Tính toán số thông báo dựa trên dữ liệu "Questions"
+  const notificationCount =
+    paginationQues?.total || notificationQues?.length || 0;
 
   useEffect(() => {
-    fetchNotifications({ page: 1 });
-
+    // THAY ĐỔI 3: Gọi hàm fetchNotificationsQues thay vì fetchNotifications
+    fetchNotificationsQues({ role: user?.role, id: farm?.id }); // Có thể truyền params nếu cần, ví dụ: fetchNotificationsQues({role: user?.role, id: farm?.id}{ role: 'expert' })
     const intervalId = setInterval(() => {
-      fetchNotifications({ page: 1 });
-    }, 5000);
+      fetchNotificationsQues({ role: user?.role, id: farm?._id });
+    }, 5000); // Lặp lại mỗi 5 giây
 
     return () => {
       clearInterval(intervalId);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
-  // Hàm mở modal preview
   const handlePreview = (item) => {
     setPreviewData(item);
     setPreviewOpen(true);
-    setVisible(false); // Đóng dropdown khi mở modal
+    setVisible(false);
   };
 
   const dropdownContent = (
@@ -49,14 +51,15 @@ const NotificationBell = () => {
       }}
     >
       <Spin spinning={loading}>
-        {!notifications || notifications.length === 0 ? (
+        {/* THAY ĐỔI 4: Kiểm tra và hiển thị dữ liệu từ notificationQues */}
+        {!notificationQues || notificationQues.length === 0 ? (
           <div style={{ padding: 20, textAlign: "center" }}>
             Không có thông báo
           </div>
         ) : (
           <List
             itemLayout="horizontal"
-            dataSource={notifications}
+            dataSource={notificationQues} // Sử dụng notificationQues làm nguồn dữ liệu
             renderItem={(item) => (
               <List.Item
                 style={{
@@ -144,7 +147,9 @@ const NotificationBell = () => {
           <Button
             shape="circle"
             size="large"
-            icon={<BellOutlined style={{ fontSize: 28, color: "#fff" }} />}
+            icon={
+              <QuestionCircleOutlined style={{ fontSize: 28, color: "#fff" }} />
+            }
             style={{
               background: "none",
               border: "none",
@@ -154,7 +159,7 @@ const NotificationBell = () => {
         </Badge>
       </Dropdown>
 
-      {/* Modal Preview notification */}
+      {/* Modal Preview - Giữ nguyên không đổi */}
       <Modal
         open={previewOpen}
         footer={null}
@@ -199,4 +204,4 @@ const NotificationBell = () => {
   );
 };
 
-export default NotificationBell;
+export default NotificationQuesBell;
