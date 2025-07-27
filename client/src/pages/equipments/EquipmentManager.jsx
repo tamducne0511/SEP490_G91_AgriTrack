@@ -2,6 +2,7 @@ import { Tabs } from "antd";
 import EquipmentCategoryPage from "./categories"; // index.jsx trong categories là category list
 import EquipmentListPage from "./index"; // index.jsx ngoài cùng là equipment list
 import { AppstoreOutlined, DatabaseOutlined } from "@ant-design/icons";
+import EquipmentChangeList from "./ListChangeEquip";
 
 export default function EquipmentManager() {
   return (
@@ -35,6 +36,15 @@ export default function EquipmentManager() {
               </span>
             ),
             children: <EquipmentListPage />,
+          },
+           {
+            key: "equip-changes",
+            label: (
+              <span>
+                <DatabaseOutlined /> Xuất / Nhập thiết bị
+              </span>
+            ),
+            children: <EquipmentChangeList />,
           },
         ]}
       />

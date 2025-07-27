@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { changePasswordApi, getMeApi, loginApi, updateProfileApi } from "@/services";
+import {
+  changePasswordApi,
+  getMeApi,
+  loginApi,
+  updateProfileApi,
+} from "@/services";
 import { EAuthToken, EFarm, EUser } from "@/variables/common";
 
 export const useAuthStore = create((set) => ({

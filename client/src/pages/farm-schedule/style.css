@@ -1,0 +1,16 @@
+.editor-content {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.editor-content strong {
+  font-weight: bold;
+}
+
+.editor-content em {
+  font-style: italic;
+}
+
+.editor-content span {
+  text-decoration: underline;
+}

@@ -67,11 +67,10 @@ export default function UserProfile() {
   return (
     <div
       style={{
-        margin: "40px auto",
         background: "#fff",
         borderRadius: 18,
         boxShadow: "0 8px 32px rgba(42,80,180,0.09)",
-        padding: 48,
+        padding: 24,
         position: "relative",
       }}
     >

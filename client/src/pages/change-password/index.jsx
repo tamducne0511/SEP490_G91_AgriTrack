@@ -37,7 +37,6 @@ export default function ChangePassword() {
   return (
     <div
       style={{
-        margin: "40px auto",
         background: "#fff",
         borderRadius: 18,
         boxShadow: "0 8px 32px rgba(42,80,180,0.09)",

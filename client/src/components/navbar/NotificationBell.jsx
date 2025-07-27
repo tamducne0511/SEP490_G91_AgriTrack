@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { ImageBaseUrl } from "@/variables/common";
 
 const NotificationBell = () => {
-  const { notifications, loading, fetchNotifications, pagination } = useNotificationStore();
+  const { notifications, loading, fetchNotifications, pagination } =
+    useNotificationStore();
   const [visible, setVisible] = useState(false);
 
   // State cho modal preview
@@ -17,7 +18,14 @@ const NotificationBell = () => {
 
   useEffect(() => {
     fetchNotifications({ page: 1 });
-    // eslint-disable-next-line
+
+    const intervalId = setInterval(() => {
+      fetchNotifications({ page: 1 });
+    }, 5000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, []);
 
   // Hàm mở modal preview
@@ -42,7 +50,9 @@ const NotificationBell = () => {
     >
       <Spin spinning={loading}>
         {!notifications || notifications.length === 0 ? (
-          <div style={{ padding: 20, textAlign: "center" }}>Không có thông báo</div>
+          <div style={{ padding: 20, textAlign: "center" }}>
+            Không có thông báo
+          </div>
         ) : (
           <List
             itemLayout="horizontal"
@@ -57,11 +67,15 @@ const NotificationBell = () => {
                   cursor: "pointer",
                 }}
                 onClick={() => handlePreview(item)}
-                onMouseOver={(e) => (e.currentTarget.style.background = "#f8fafb")}
-                onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
+                onMouseOver={(e) =>
+                  (e.currentTarget.style.background = "#f8fafb")
+                }
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.background = "transparent")
+                }
               >
                 <List.Item.Meta
-                style={{alignItems: 'center'}}
+                  style={{ alignItems: "center" }}
                   avatar={
                     item.image ? (
                       <Image
@@ -97,7 +111,8 @@ const NotificationBell = () => {
                         {item.content}
                       </span>
                       <span style={{ color: "#999", fontSize: 12 }}>
-                        {item.createdAt && new Date(item.createdAt).toLocaleString("vi-VN")}
+                        {item.createdAt &&
+                          new Date(item.createdAt).toLocaleString("vi-VN")}
                       </span>
                     </span>
                   }
@@ -120,7 +135,12 @@ const NotificationBell = () => {
         onOpenChange={setVisible}
         arrow
       >
-        <Badge count={notificationCount} size="small" overflowCount={99} offset={[0, 6]}>
+        <Badge
+          count={notificationCount}
+          size="small"
+          overflowCount={99}
+          offset={[0, 6]}
+        >
           <Button
             shape="circle"
             size="large"
@@ -161,10 +181,16 @@ const NotificationBell = () => {
                 />
               </div>
             ) : null}
-            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 6 }}>{previewData.title}</div>
-            <div style={{ color: "#666", marginBottom: 12 }}>{previewData.content}</div>
+            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 6 }}>
+              {previewData.title}
+            </div>
+            <div style={{ color: "#666", marginBottom: 12 }}>
+              {previewData.content}
+            </div>
             <div style={{ color: "#888", fontSize: 13 }}>
-              Ngày tạo: {previewData.createdAt && new Date(previewData.createdAt).toLocaleString("vi-VN")}
+              Ngày tạo:{" "}
+              {previewData.createdAt &&
+                new Date(previewData.createdAt).toLocaleString("vi-VN")}
             </div>
           </div>
         )}

@@ -1,14 +1,23 @@
-import React, { useEffect, useState } from "react";
-import { Button, Input, Popconfirm, Table, Tag, message, Select } from "antd";
+import { RoutePaths } from "@/routes";
+import { useGardenStore, useTaskStore } from "@/stores";
 import {
-  PlusOutlined,
-  EditOutlined,
   DeleteOutlined,
+  EyeOutlined,
+  PlusOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { useGardenStore, useTaskStore } from "@/stores"; // Store để lấy danh sách vườn
-import TaskModal from "./TaskModal";
-import { ImageBaseUrl } from "@/variables/common";
+import {
+  Button,
+  Input,
+  message,
+  Popconfirm,
+  Select,
+  Table,
+  Tag,
+  Tooltip,
+} from "antd";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const typeLabel = {
   collect: "Thu hoạch",
@@ -16,102 +25,65 @@ const typeLabel = {
 };
 
 const typeColor = {
-  collect: "geekblue", // Xanh đậm
-  "task-care": "green", // Xanh lá
+  collect: "geekblue",
+  "task-care": "green",
 };
 
+// Hàm getRowLabel để tạo label hàng (A, B, C, ...)
+const getRowLabel = (index) => String.fromCharCode(65 + index); // A, B, C, ...
+
 export default function TaskList() {
-  // Store
-  const {
-    tasks,
-    pagination,
-    loading,
-    error,
-    fetchTasks,
-    createTask,
-    updateTask,
-    deleteTask,
-  } = useTaskStore();
+  const { tasks, pagination, loading, error, fetchTasks, deleteTask } =
+    useTaskStore();
 
   const { gardens, fetchGardens } = useGardenStore();
-
-  // State
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
-  const [gardenFilter, setGardenFilter] = useState(undefined);
-  const [modal, setModal] = useState({ open: false, edit: false, initial: {} });
-  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [selectedGardenId, setSelectedGardenId] = useState(undefined);
+  const [zoneFilter, setZoneFilter] = useState(undefined); // Remove zone filter
+  const navigate = useNavigate();
 
-  // Fetch vườn khi mount
   useEffect(() => {
     fetchGardens();
   }, [fetchGardens]);
 
-  // Fetch task mỗi khi filter thay đổi
   useEffect(() => {
-    fetchTasks({
-      page,
-      name: keyword,
-      gardenId: gardenFilter,
-    });
-  }, [page, keyword, gardenFilter, fetchTasks]);
+    fetchTasks({ page, keyword, gardenId: selectedGardenId }); // Filter by gardenId only
+  }, [page, keyword, selectedGardenId, fetchTasks]);
 
   useEffect(() => {
     if (error) message.error(error);
   }, [error]);
 
-  // Submit modal
-  const handleOk = async (values) => {
-    setConfirmLoading(true);
-    try {
-      if (modal.edit) {
-        await updateTask(modal.initial._id, values);
-        message.success("Cập nhật công việc thành công");
-      } else {
-        await createTask(values);
-        message.success("Tạo công việc mới thành công");
-      }
-      setModal({ open: false, edit: false, initial: {} });
-      fetchTasks({ page, name: keyword, gardenId: gardenFilter });
-    } catch {
-    } finally {
-      setConfirmLoading(false);
-    }
-  };
-
-  // Xoá task
   const handleDelete = async (record) => {
     try {
       await deleteTask(record._id);
       message.success("Xoá công việc thành công!");
-      fetchTasks({ page, name: keyword, gardenId: gardenFilter });
+      fetchTasks({ page, keyword, gardenId: selectedGardenId });
     } catch {}
   };
 
-  // Table columns
   const columns = [
     {
       title: "STT",
+      dataIndex: "stt",
+      key: "stt",
+      align: "center",
+      width: 60,
       render: (_, __, idx) =>
         (page - 1) * (pagination.pageSize || 10) + idx + 1,
-      width: 60,
-      align: "center",
     },
-    { title: "Tên", dataIndex: "name", key: "name" },
-    { title: "Mô tả", dataIndex: "description", key: "description" },
     {
-      title: "Vườn",
-      dataIndex: "gardenId",
-      key: "gardenId",
-      render: (gardenId) => {
-        const g = gardens.find((g) => g._id === gardenId);
-        return g ? g.name : "";
-      },
+      title: "Tên",
+      dataIndex: "name",
+      key: "name",
     },
+    // Removed the "Zone" column
     {
       title: "Loại",
       dataIndex: "type",
       key: "type",
+      align: "center",
       render: (type) => (
         <Tag color={typeColor[type] || "default"}>
           {typeLabel[type] || type}
@@ -119,70 +91,82 @@ export default function TaskList() {
       ),
     },
     {
-      title: "Độ ưu tiên",
+      title: "Ưu tiên",
       dataIndex: "priority",
       key: "priority",
+      align: "center",
       render: (priority) => {
         let color = "blue";
-        if (priority === "high") color = "red";
-        else if (priority === "medium") color = "gold";
-        else if (priority === "low") color = "green";
-        return <Tag color={color}>{priority}</Tag>;
+        let label = priority; // Mặc định giữ nguyên
+        if (priority === "high") {
+          color = "red";
+          label = "Cao";
+        } else if (priority === "medium") {
+          color = "gold";
+          label = "Trung bình";
+        } else if (priority === "low") {
+          color = "green";
+          label = "Thấp";
+        }
+        return <Tag color={color}>{label}</Tag>;
       },
-    },
-    {
-      title: "Ảnh",
-      dataIndex: "image",
-      key: "image",
-      render: (url) =>
-        url ? (
-          <img
-            src={ImageBaseUrl + url}
-            alt="Ảnh task"
-            style={{ width: 60, borderRadius: 4 }}
-          />
-        ) : (
-          <span style={{ color: "#ccc" }}>Không có</span>
-        ),
-      width: 80,
-      align: "center",
     },
     {
       title: "Chức năng",
       key: "action",
       align: "center",
+      width: 140,
       render: (_, record) => (
-        <span>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() =>
-              setModal({ open: true, edit: true, initial: record })
-            }
-          />
+        <div style={{ display: "flex", justifyContent: "center", gap: 16 }}>
+          <Tooltip title="Xem chi tiết">
+            <Button
+              type="text"
+              icon={<EyeOutlined style={{ color: "#23643A", fontSize: 18 }} />}
+              onClick={() => navigate(RoutePaths.TASK_DETAIL(record._id))}
+            />
+          </Tooltip>
           <Popconfirm
             title="Bạn chắc chắn muốn xoá công việc này?"
             okText="Xoá"
             cancelText="Huỷ"
             onConfirm={() => handleDelete(record)}
           >
-            <Button type="link" icon={<DeleteOutlined />} danger />
+            <Tooltip title="Xoá">
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined style={{ color: "red", fontSize: 18 }} />}
+              />
+            </Tooltip>
           </Popconfirm>
-        </span>
+        </div>
       ),
-      width: 100,
     },
   ];
 
+  const tableHeaderStyle = {
+    background: "#23643A",
+    color: "#fff",
+    fontWeight: 600,
+    fontSize: 16,
+    textAlign: "center",
+  };
+
   return (
-    <div>
-      {/* Toolbar */}
+    <div
+      style={{
+        background: "#fff",
+        padding: 24,
+        borderRadius: 12,
+        boxShadow: "0 2px 12px #e0e6ed80",
+      }}
+    >
       <div style={{ display: "flex", gap: 12, marginBottom: 18 }}>
         <Button
           type="primary"
           icon={<PlusOutlined />}
-          style={{ background: "#23643A" }}
-          onClick={() => setModal({ open: true, edit: false, initial: {} })}
+          style={{ background: "#23643A", border: 0, borderRadius: 8 }}
+          onClick={() => navigate(RoutePaths.TASK_CREATE)}
         >
           Thêm công việc
         </Button>
@@ -190,20 +174,25 @@ export default function TaskList() {
           allowClear
           prefix={<SearchOutlined />}
           placeholder="Tìm kiếm theo tên"
-          style={{ width: 220 }}
+          style={{
+            width: 240,
+            borderRadius: 8,
+            border: "1.5px solid #23643A",
+            background: "#f8fafb",
+          }}
           onChange={(e) => setKeyword(e.target.value)}
           value={keyword}
         />
         <Select
           allowClear
-          style={{ width: 220 }}
-          placeholder="Lọc theo vườn"
-          value={gardenFilter}
+          style={{ width: 240 }}
+          placeholder="Chọn vườn"
+          value={selectedGardenId}
           options={gardens.map((g) => ({ value: g._id, label: g.name }))}
-          onChange={setGardenFilter}
+          onChange={setSelectedGardenId}
         />
       </div>
-      {/* Table */}
+
       <Table
         rowKey="_id"
         columns={columns}
@@ -217,16 +206,18 @@ export default function TaskList() {
           showSizeChanger: false,
         }}
         bordered
-      />
-      {/* Modal */}
-      <TaskModal
-        open={modal.open}
-        isEdit={modal.edit}
-        initialValues={modal.initial}
-        confirmLoading={confirmLoading}
-        onOk={handleOk}
-        onCancel={() => setModal({ open: false, edit: false, initial: {} })}
-        gardens={gardens}
+        size="middle"
+        scroll={{ x: true }}
+        style={{ background: "#fff" }}
+        components={{
+          header: {
+            cell: (props) => (
+              <th {...props} style={{ ...props.style, ...tableHeaderStyle }}>
+                {props.children}
+              </th>
+            ),
+          },
+        }}
       />
     </div>
   );

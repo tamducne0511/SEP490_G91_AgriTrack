@@ -4,6 +4,8 @@ export * from "./gardenService";
 export * from "./farmService";
 export * from "./notificationService";
 export * from "./farmerService";
-export * from "./dashboardService";
 export * from "./taskService";
-
+export * from "./equipmentCategoryService";
+export * from "./dashboardService";
+export * from "./equipmentService";
+export * from "./questionService";
