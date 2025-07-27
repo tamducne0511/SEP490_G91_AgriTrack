@@ -38,6 +38,12 @@ const taskQuestionchema = new mongoose.Schema({
     required: true,
   },
 
+  parentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "TaskQuestion",
+    default: null,
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,

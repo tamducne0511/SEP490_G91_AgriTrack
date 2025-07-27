@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const { formatPagination } = require("../utils/format.util");
 const taskQuestionService = require("../services/taskQuestion.service");
+const { io } = require("../app");
 
 // Get list task question with pagination and keyword search
 const getList = async (req, res) => {
@@ -58,9 +59,16 @@ const create = async (req, res) => {
     farmId: req.body.farmId,
     treeId: req.body.treeId,
     image: req.file?.filename ? `/uploads/questions/${req.file.filename}` : "",
+    parentId: req.body.parentId || null,
   };
 
   const taskQuestion = await taskQuestionService.create(req.user.id, payload);
+  // Emit socket: nếu có parentId là trả lời, không có là câu hỏi mới
+  if (payload.parentId) {
+    io.emit("new-answer", taskQuestion);
+  } else {
+    io.emit("new-question", taskQuestion);
+  }
   res.status(201).json({
     message: "Task question created successfully",
     data: taskQuestion,
