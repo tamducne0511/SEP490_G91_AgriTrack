@@ -110,7 +110,7 @@ const update = async (id, data) => {
 
 const find = async (id) => {
   try {
-    const task = await Task.findById(id);
+    const task = await Task.findById(id).populate("farmerId", "-password");
     return task;
   } catch (error) {
     return null;

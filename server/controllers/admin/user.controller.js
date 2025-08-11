@@ -4,6 +4,7 @@ const userService = require("../../services/user.service");
 const farmService = require("../../services/farm.service");
 const { hashPassword } = require("../../utils/auth.util");
 const { USER_ROLE } = require("../../constants/app");
+const NotFoundException = require("../../middlewares/exceptions/notfound");
 
 // Get list user with pagination and keyword search
 const getList = async (req, res) => {
@@ -114,7 +115,7 @@ const remove = async (req, res) => {
 const removeFarmer = async (req, res, next) => {
   const id = req.params.id;
   const user = await userService.find(id);
-  if (!user || user.farmId !== req.user.farmId) {
+  if (!user || user.farmId.toString() !== req.user.farmId) {
     return next(new NotFoundException("Not found user with id: " + id));
   }
 

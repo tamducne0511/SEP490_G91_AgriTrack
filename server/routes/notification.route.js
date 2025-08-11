@@ -15,6 +15,16 @@ router.get(
   notificationController.getList
 );
 router.get(
+  "/unread/total",
+  isRoles([USER_ROLE.farmer, USER_ROLE.farmAdmin]),
+  notificationController.getTotalUnread
+);
+router.get(
+  "/:id/mark-read",
+  isRoles([USER_ROLE.farmer, USER_ROLE.farmAdmin]),
+  notificationController.markRead
+);
+router.get(
   "/expert/:farmId",
   isRoles([USER_ROLE.expert]),
   notificationController.getListForExpert
