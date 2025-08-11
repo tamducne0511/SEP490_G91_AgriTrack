@@ -9,9 +9,11 @@ import {
   Modal,
   Input,
   InputNumber,
+  Image,
 } from "antd";
 import { useEquipmentCategoryStore, useEquipmentStore } from "@/stores"; // Import the category store
 import { RoutePaths } from "@/routes";
+import { ImageBaseUrl } from "@/variables/common";
 
 const EquipmentDetail = () => {
   const { id } = useParams();
@@ -119,7 +121,7 @@ const EquipmentDetail = () => {
       );
     }
   };
-
+  console.log("equipmentDetail?.image", equipmentDetail?.image);
   if (loading) return <Spin style={{ margin: 80 }} />; // Loading state
   if (!equipmentDetail) return <div>Không tìm thấy thiết bị.</div>; // If no equipment found
   return (
@@ -140,6 +142,24 @@ const EquipmentDetail = () => {
           Quay lại
         </Button>
         <Card>
+          {equipmentDetail?.image ? (
+            <Image
+              src={
+                equipmentDetail?.image.startsWith("http")
+                  ? equipmentDetail?.image
+                  : ImageBaseUrl + equipmentDetail?.image
+              }
+              alt="Ảnh"
+              style={{
+                height: 300,
+                marginBottom: 12,
+                borderRadius: 4,
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <span style={{ color: "#ccc" }}>Không có</span>
+          )}
           <Descriptions bordered column={1} title="Thông tin thiết bị">
             <Descriptions.Item label="Tên thiết bị">
               {isEditing ? (

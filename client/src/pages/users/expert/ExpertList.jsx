@@ -1,7 +1,7 @@
 import { RoutePaths } from "@/routes";
 import { useUserStore } from "@/stores";
 import { EyeOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Input, message, Table, Tag, Tooltip } from "antd";
+import { Button, Input, message, Popconfirm, Table, Tag, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ExpertModal from "./ExpertModal";
@@ -15,6 +15,7 @@ export default function ExpertList() {
     fetchUsers,
     createUser,
     deleteUser,
+    activeUser,
   } = useUserStore();
 
   const [page, setPage] = useState(1);
@@ -45,7 +46,14 @@ export default function ExpertList() {
   const handleDelete = async (record) => {
     try {
       await deleteUser(record._id, "expert");
-      message.success("Xoá chuyên gia thành công!");
+      message.success("Vô hiệu hoá chuyên gia thành công!");
+    } catch {}
+  };
+
+  const handleActive = async (record) => {
+    try {
+      await activeUser(record._id, "expert");
+      message.success("Kích hoạt chuyên gia thành công!");
     } catch {}
   };
 
@@ -106,21 +114,50 @@ export default function ExpertList() {
               onClick={() => navigate(RoutePaths.EXPERT_DETAIL(record._id))}
             />
           </Tooltip>
-          <Tooltip title="Xoá">
-            <Button
-              type="text"
-              danger
-              icon={
-                <span
-                  className="anticon"
-                  style={{ color: "red", fontSize: 18 }}
-                >
-                  🗑️
-                </span>
-              }
-              onClick={() => handleDelete(record)}
-            />
-          </Tooltip>
+          {record.status ? (
+            <Tooltip title="Vô hiệu hoá">
+              <Popconfirm
+                title="Bạn chắc chắn muốn vô hiệu hoá chuyên gia này?"
+                okText="Vô hiệu hoá"
+                cancelText="Huỷ"
+                onConfirm={() => handleDelete(record)}
+              >
+                <Button
+                  type="text"
+                  danger
+                  icon={
+                    <span
+                      className="anticon"
+                      style={{ color: "red", fontSize: 18 }}
+                    >
+                      🗑️
+                    </span>
+                  }
+                />
+              </Popconfirm>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Kích hoạt lại">
+              <Popconfirm
+                title="Bạn chắc chắn muốn kích hoạt lại chuyên gia này?"
+                okText="Kích hoạt"
+                cancelText="Huỷ"
+                onConfirm={() => handleActive(record)}
+              >
+                <Button
+                  type="text"
+                  icon={
+                    <span
+                      className="anticon"
+                      style={{ color: "green", fontSize: 18 }}
+                    >
+                      🔄
+                    </span>
+                  }
+                />
+              </Popconfirm>
+            </Tooltip>
+          )}
         </div>
       ),
     },

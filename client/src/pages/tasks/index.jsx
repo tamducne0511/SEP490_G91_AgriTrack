@@ -29,6 +29,24 @@ const typeColor = {
   "task-care": "green",
 };
 
+const statusLabel = {
+  "un-assign": "Chưa giao",
+  assigned: "Chờ thực hiện",
+  "in-progress": "Đang thực hiện",
+  canceled: "Đã huỷ",
+  completed: "Hoàn thành",
+  false: "Đã xoá",
+};
+
+const statusColor = {
+  "un-assign": "default",
+  assigned: "blue",
+  "in-progress": "orange",
+  canceled: "red",
+  completed: "green",
+  false: "grey",
+};
+
 // Hàm getRowLabel để tạo label hàng (A, B, C, ...)
 const getRowLabel = (index) => String.fromCharCode(65 + index); // A, B, C, ...
 
@@ -112,6 +130,17 @@ export default function TaskList() {
       },
     },
     {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      align: "center",
+      render: (status) => (
+        <Tag color={statusColor[status] || "default"}>
+          {statusLabel[status] || status?.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
       title: "Chức năng",
       key: "action",
       align: "center",
@@ -135,7 +164,14 @@ export default function TaskList() {
               <Button
                 type="text"
                 danger
-                icon={<DeleteOutlined style={{ color: "red", fontSize: 18 }} />}
+                icon={
+                  <span
+                    className="anticon"
+                    style={{ color: "red", fontSize: 18 }}
+                  >
+                    🗑️
+                  </span>
+                }
               />
             </Tooltip>
           </Popconfirm>

@@ -8,6 +8,7 @@ import {
   getListFarmAssignedExpert,
   unassignExpertFromFarmApi,
   assignExpertToFarmApi,
+  activeUserApi,
 } from "@/services";
 import { message } from "antd";
 import { create } from "zustand";
@@ -88,6 +89,20 @@ export const useUserStore = create((set, get) => ({
       fetchUsers({ page: pagination.page, role });
     } catch (err) {
       message.error(err?.message || "Lỗi xoá người dùng");
+      set({ loading: false });
+      throw err;
+    }
+  },
+
+  activeUser: async (id, role) => {
+    set({ loading: true });
+    try {
+      await activeUserApi(id);
+      set({ loading: false });
+      const { pagination, fetchUsers } = get();
+      fetchUsers({ page: pagination.page, role });
+    } catch (err) {
+      message.error(err?.message || "Lỗi kích hoạt người dùng");
       set({ loading: false });
       throw err;
     }

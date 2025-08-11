@@ -24,6 +24,11 @@ export const deleteFarmerApi = async (id) => {
   return res.data;
 };
 
+export const activeFarmerApi = async (id) => {
+  const res = await client.post(`/admin/users/farmer/${id}/active`);
+  return res.data;
+};
+
 // ASSIGN farmer to garden
 export const assignFarmerToGardenApi = async ({ gardenId, farmerId }) => {
   const res = await client.post("/admin/users/garden/assign", {

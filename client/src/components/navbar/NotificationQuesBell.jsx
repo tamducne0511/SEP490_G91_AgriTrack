@@ -3,24 +3,28 @@ import { BellOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { Badge, Button, Dropdown, List, Spin, Modal, Image } from "antd";
 import { useEffect, useState } from "react";
 import { ImageBaseUrl } from "@/variables/common";
+import { useNavigate } from "react-router-dom";
 
 const NotificationQuesBell = () => {
   // THAY ĐỔI 1: Sử dụng state và action dành cho "Questions" từ store
-  const { notificationQues, loading, fetchNotificationsQues, paginationQues } =
-    useNotificationStore();
+  const {
+    notificationQues,
+    loading,
+    fetchNotificationsQues,
+    totalQuesNotiUnread,
+    markQuesNotificationAsRead,
+    fetchQuesTotalNotiUnread,
+  } = useNotificationStore();
   const { user, farm } = useAuthStore();
 
   const [visible, setVisible] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState(null);
 
-  // THAY ĐỔI 2: Tính toán số thông báo dựa trên dữ liệu "Questions"
-  const notificationCount =
-    paginationQues?.total || notificationQues?.length || 0;
-
   useEffect(() => {
     // THAY ĐỔI 3: Gọi hàm fetchNotificationsQues thay vì fetchNotifications
     fetchNotificationsQues({ role: user?.role, id: farm?.id }); // Có thể truyền params nếu cần, ví dụ: fetchNotificationsQues({role: user?.role, id: farm?.id}{ role: 'expert' })
+
     const intervalId = setInterval(() => {
       fetchNotificationsQues({ role: user?.role, id: farm?._id });
     }, 5000); // Lặp lại mỗi 5 giây
@@ -31,10 +35,16 @@ const NotificationQuesBell = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  const notificationCount =
+    notificationQues?.filter((noti) => !noti.readBy.includes(user?._id))
+      ?.length || 0;
+
+  const navigate = useNavigate();
   const handlePreview = (item) => {
-    setPreviewData(item);
-    setPreviewOpen(true);
+    markQuesNotificationAsRead(item._id);
+
     setVisible(false);
+    navigate(`/request-detail/${item.tree._id}`);
   };
 
   const dropdownContent = (
@@ -51,7 +61,6 @@ const NotificationQuesBell = () => {
       }}
     >
       <Spin spinning={loading}>
-        {/* THAY ĐỔI 4: Kiểm tra và hiển thị dữ liệu từ notificationQues */}
         {!notificationQues || notificationQues.length === 0 ? (
           <div style={{ padding: 20, textAlign: "center" }}>
             Không có thông báo
@@ -68,14 +77,11 @@ const NotificationQuesBell = () => {
                   padding: 8,
                   transition: "background 0.2s",
                   cursor: "pointer",
+                  background: item.readBy.includes(user?._id)
+                    ? "white"
+                    : "rgb(217, 248, 180)",
                 }}
                 onClick={() => handlePreview(item)}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.background = "#f8fafb")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
               >
                 <List.Item.Meta
                   style={{ alignItems: "center" }}

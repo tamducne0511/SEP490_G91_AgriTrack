@@ -44,6 +44,7 @@ const statusLabel = {
   "in-progress": "Đang thực hiện",
   canceled: "Đã huỷ",
   completed: "Hoàn thành",
+  false: "Đã bị xoá",
 };
 const statusColor = {
   "un-assign": "default",
@@ -51,6 +52,7 @@ const statusColor = {
   "in-progress": "orange",
   canceled: "red",
   completed: "green",
+  false: "grey",
 };
 
 export default function FarmerTaskDetail() {
@@ -167,24 +169,6 @@ export default function FarmerTaskDetail() {
       message.error(err?.message || "Không thể gửi ghi chú");
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleSubmitQuestion = async () => {
-    try {
-      const values = await questionForm.validateFields();
-      const formData = new FormData();
-      formData.append("title", values.title);
-      formData.append("content", values.content);
-      if (values.image?.file) formData.append("image", values.image.file);
-      setQuestionSubmitting(true);
-      await createQuestion(id, formData);
-      message.success("Câu hỏi đã được gửi");
-      questionForm.resetFields();
-    } catch (err) {
-      message.error(err?.message || "Không thể gửi câu hỏi");
-    } finally {
-      setQuestionSubmitting(false);
     }
   };
 
@@ -425,6 +409,7 @@ export default function FarmerTaskDetail() {
                   type="primary"
                   onClick={handleSubmitNote}
                   loading={submitting}
+                  disabled={task?.status === "false"}
                   style={{
                     backgroundColor: "#23643A",
                     borderRadius: 8,

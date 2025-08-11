@@ -14,7 +14,7 @@ const AssignFarmModal = ({ open, onOk, onCancel, userId }) => {
   return (
     <Modal
       open={open}
-      title="Chọn vườn để gán chuyên gia"
+      title="Chọn trang trại để gán chuyên gia"
       onOk={() => onOk(farmId)}
       onCancel={onCancel}
       okText="Xác nhận"
@@ -23,12 +23,12 @@ const AssignFarmModal = ({ open, onOk, onCancel, userId }) => {
     >
       <Form layout="vertical">
         <Form.Item
-          label="Vườn"
+          label="Trang trại"
           required
-          rules={[{ required: true, message: "Chọn vườn!" }]}
+          rules={[{ required: true, message: "Chọn trang trại!" }]}
         >
           <Select
-            placeholder="Chọn vườn"
+            placeholder="Chọn trang trại"
             value={farmId}
             onChange={setFarmId}
             options={farms.map((f) => ({

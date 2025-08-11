@@ -1,6 +1,15 @@
 import { useTaskStore } from "@/stores/taskStore";
 import { SearchOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Button, Input, Table, Tag, message, Typography, Tooltip, Popconfirm } from "antd";
+import {
+  Button,
+  Input,
+  Table,
+  Tag,
+  message,
+  Typography,
+  Tooltip,
+  Popconfirm,
+} from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RoutePaths } from "@/routes";
@@ -13,6 +22,7 @@ const statusLabel = {
   "in-progress": "Đang thực hiện",
   canceled: "Đã huỷ",
   completed: "Hoàn thành",
+  false: "Đã bị xoá",
 };
 
 const statusColor = {
@@ -21,10 +31,12 @@ const statusColor = {
   "in-progress": "orange",
   canceled: "red",
   completed: "green",
+  false: "grey",
 };
 
 export default function FarmerTaskList() {
-  const { tasks, pagination, loading, error, fetchTasksFarmer, deleteTask } = useTaskStore();
+  const { tasks, pagination, loading, error, fetchTasksFarmer, deleteTask } =
+    useTaskStore();
 
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
@@ -53,7 +65,8 @@ export default function FarmerTaskList() {
       title: "STT",
       align: "center",
       width: 60,
-      render: (_, __, idx) => (page - 1) * (pagination.pageSize || 10) + idx + 1,
+      render: (_, __, idx) =>
+        (page - 1) * (pagination.pageSize || 10) + idx + 1,
     },
     {
       title: "Tên công việc",
@@ -71,7 +84,9 @@ export default function FarmerTaskList() {
       key: "status",
       align: "center",
       render: (status) => (
-        <Tag color={statusColor[status] || "default"}>{statusLabel[status] || status?.toUpperCase()}</Tag>
+        <Tag color={statusColor[status] || "default"}>
+          {statusLabel[status] || status?.toUpperCase()}
+        </Tag>
       ),
     },
     {
@@ -89,11 +104,11 @@ export default function FarmerTaskList() {
             />
           </Tooltip>
 
-          <Tooltip title="Xoá công việc">
+          {/* <Tooltip title="Xoá công việc">
             <Popconfirm title="Xoá công việc này?" okText="Xoá" cancelText="Huỷ" onConfirm={() => handleDelete(record)}>
               <Button type="text" danger icon={<DeleteOutlined style={{ color: "red", fontSize: 18 }} />} />
             </Popconfirm>
-          </Tooltip>
+          </Tooltip> */}
         </div>
       ),
     },

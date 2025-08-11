@@ -174,7 +174,7 @@ export default function ExpertTaskQuestionPage() {
                                 disabled={!cell}
                                 onClick={() => {
                                   if (cell)
-                                    navigate(`/request-detail/${cell._id}`); // <-- truyền treeId
+                                    navigate(`/request-detail/${cell._id}`);
                                 }}
                               >
                                 {cell
@@ -188,14 +188,21 @@ export default function ExpertTaskQuestionPage() {
                                       position: "absolute",
                                       top: 4,
                                       right: 10,
-                                      background: "#ff4d4f",
+                                      background:
+                                        cell?.latestQuestion?.user?.role ===
+                                        "expert"
+                                          ? "green"
+                                          : "#ff4d4f",
                                       color: "#fff",
                                       borderRadius: 9,
                                       fontSize: 12,
-                                      padding: "0 7px",
+                                      padding: "2px 7px",
                                     }}
                                   >
-                                    {cell.questionCount}
+                                    {cell?.latestQuestion?.user?.role ===
+                                    "expert"
+                                      ? " ✅ "
+                                      : "!"}
                                   </span>
                                 )}
                               </Button>
