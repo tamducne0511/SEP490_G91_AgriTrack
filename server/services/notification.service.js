@@ -15,6 +15,25 @@ const getListPagination = async (farmId, page, keyword) => {
   return list;
 };
 
+const markRead = async (notificationId, userId) => {
+  await Notification.findByIdAndUpdate(
+    notificationId,
+    {
+      $addToSet: { readBy: userId },
+    },
+    { new: true }
+  );
+};
+
+const getTotalUnread = async (userId, farmId) => {
+  const total = await Notification.countDocuments({
+    farmId: farmId,
+    readBy: { $ne: userId },
+  });
+
+  return total;
+};
+
 const getTotal = async (farmId, keyword) => {
   const total = await Notification.countDocuments({
     farmId: farmId,
@@ -72,4 +91,6 @@ module.exports = {
   find,
   update,
   remove,
+  markRead,
+  getTotalUnread,
 };

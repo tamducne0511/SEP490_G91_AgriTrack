@@ -23,6 +23,7 @@ router.post(
   userController.createFarmer
 );
 router.delete("/farmers/:id", isFarmAdmin, userController.removeFarmer);
+router.post("/farmer/:id/active", isFarmAdmin, userController.active);
 router.get(
   "/list/farm-unassigned",
   isAdmin,
