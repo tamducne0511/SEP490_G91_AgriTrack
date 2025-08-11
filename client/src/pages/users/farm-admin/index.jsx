@@ -1,14 +1,21 @@
 import { RoutePaths } from "@/routes";
 import { useUserStore } from "@/stores";
 import { EyeOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Input, message, Table, Tag, Tooltip } from "antd";
+import { Button, Input, message, Popconfirm, Table, Tag, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FarmAdminModal from "./FarmAdminModal";
 
 export default function FarmAdminList() {
-  const { users, pagination, loading, fetchUsers, createUser, deleteUser } =
-    useUserStore();
+  const {
+    users,
+    pagination,
+    loading,
+    fetchUsers,
+    createUser,
+    deleteUser,
+    activeUser,
+  } = useUserStore();
 
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
@@ -34,6 +41,13 @@ export default function FarmAdminList() {
   const handleDelete = async (record) => {
     try {
       await deleteUser(record._id, "farm-admin");
+      message.success("Vô hiệu hoá trang trại thành công!");
+    } catch {}
+  };
+  const handleActive = async (record) => {
+    try {
+      await activeUser(record._id, "farm-admin");
+      message.success("Kích hoạt chủ trang trại thành công!");
     } catch {}
   };
 
@@ -94,21 +108,50 @@ export default function FarmAdminList() {
               onClick={() => navigate(RoutePaths.FARM_ADMIN_DETAIL(record._id))}
             />
           </Tooltip>
-          <Tooltip title="Xoá">
-            <Button
-              type="text"
-              danger
-              icon={
-                <span
-                  className="anticon"
-                  style={{ color: "red", fontSize: 18 }}
-                >
-                  🗑️
-                </span>
-              }
-              onClick={() => handleDelete(record)}
-            />
-          </Tooltip>
+          {record.status ? (
+            <Tooltip title="Vô hiệu hoá">
+              <Popconfirm
+                title="Bạn chắc chắn muốn vô hiệu hoá chủ trang trại này?"
+                okText="Vô hiệu hoá"
+                cancelText="Huỷ"
+                onConfirm={() => handleDelete(record)}
+              >
+                <Button
+                  type="text"
+                  danger
+                  icon={
+                    <span
+                      className="anticon"
+                      style={{ color: "red", fontSize: 18 }}
+                    >
+                      🗑️
+                    </span>
+                  }
+                />
+              </Popconfirm>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Kích hoạt lại">
+              <Popconfirm
+                title="Bạn chắc chắn muốn kích hoạt lại chủ trang trại này?"
+                okText="Kích hoạt"
+                cancelText="Huỷ"
+                onConfirm={() => handleActive(record)}
+              >
+                <Button
+                  type="text"
+                  icon={
+                    <span
+                      className="anticon"
+                      style={{ color: "green", fontSize: 18 }}
+                    >
+                      🔄
+                    </span>
+                  }
+                />
+              </Popconfirm>
+            </Tooltip>
+          )}
         </div>
       ),
     },

@@ -10,6 +10,7 @@ export const fetchNotificationsQuesApi = async (id, params = {}) => {
   const res = await client.get(`/question-notifications/${id}`, { params });
   return res.data;
 };
+
 export const fetchNotificationsExpertQuesApi = async (params = {}) => {
   const { farmId, ...rest } = params;
   const res = await client.get(`/question-notifications/`, {
@@ -21,7 +22,7 @@ export const fetchNotificationsExpertQuesApi = async (params = {}) => {
 export const fetchNotificationsExpertApi = async (params = {}) => {
   const { farmId, ...rest } = params;
   const res = await client.get(`/notifications/expert/${farmId}`, {
-    params,
+    params: rest,
   });
   return res.data;
 };
@@ -52,3 +53,22 @@ export const fetchNotificationDetailApi = async (id) => {
   const res = await client.get(`/notifications/${id}`);
   return res.data;
 };
+
+export const fetchTotalNotiUnread = async () => {
+  const res = await client.get(`/notifications/unread/total`);
+  return res.data;
+};
+
+export const markNotificationAsRead = async (id) => {
+  const res = await client.get(`/notifications/${id}/mark-read`);
+  return res.data;
+}
+export const fetchTotalQuesNotiUnread = async () => {
+  const res = await client.get(`/question-notifications/unread/total`);
+  return res.data;
+};
+
+export const marQueskNotificationAsRead = async (id) => {
+  const res = await client.get(`/question-notifications/${id}/mark-read`);
+  return res.data;
+}

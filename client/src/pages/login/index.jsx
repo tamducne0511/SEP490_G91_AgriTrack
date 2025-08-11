@@ -43,13 +43,7 @@ export default function Login() {
           alt="logo-nho"
           style={{ width: 200 }}
         />
-        <Button
-          type="link"
-          icon={<ArrowLeftOutlined />}
-          className="login-back-btn"
-        >
-          Back
-        </Button>
+
         <Typography.Title
           level={2}
           style={{ textAlign: "center", marginBottom: 32 }}

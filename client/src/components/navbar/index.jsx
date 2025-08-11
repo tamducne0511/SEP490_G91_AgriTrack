@@ -284,7 +284,9 @@ const Navbar = ({ children }) => {
 
           <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
             {role === "farmer" && <NotificationBell />}
-            {<NotificationQuesBell />}
+            {["farmer", "expert", "farm-admin"].includes(role) && (
+              <NotificationQuesBell />
+            )}
 
             <Dropdown
               overlay={userMenu}

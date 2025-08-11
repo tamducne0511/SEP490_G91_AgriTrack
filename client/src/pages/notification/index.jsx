@@ -16,7 +16,15 @@ import { useNotificationStore, useUserStore, useAuthStore } from "@/stores";
 import NotificationModal from "./NotificationModal";
 import { ImageBaseUrl } from "@/variables/common";
 import { socket } from "@/services/socket";
+const statusLabel = {
+  false: "Đã xoá",
+  true: "Hoạt động",
+};
 
+const statusColor = {
+  false: "red",
+  true: "green",
+};
 export default function NotificationList() {
   const {
     notifications,
@@ -101,8 +109,7 @@ export default function NotificationList() {
   const handleDelete = async (record) => {
     try {
       await deleteNotification(record._id);
-      message.success("Xoá thông báo thành công!");
-      // Fetch lại cho đúng filter hiện tại
+
       if (user?.role === "expert") {
         fetchNotifications({
           page,
@@ -117,6 +124,7 @@ export default function NotificationList() {
           role: user?.role,
         });
       }
+      message.success("Xoá thông báo thành công!");
     } catch {}
   };
 
@@ -184,6 +192,17 @@ export default function NotificationList() {
       width: 140,
       render: (value) =>
         value ? new Date(value).toLocaleDateString("vi-VN") : "",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      align: "center",
+      render: (status) => (
+        <Tag color={statusColor[status] || "default"}>
+          {statusLabel[status] || status?.toUpperCase()}
+        </Tag>
+      ),
     },
     {
       title: "Chức năng",

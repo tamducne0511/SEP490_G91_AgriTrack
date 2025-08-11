@@ -161,7 +161,7 @@ export const useTaskStore = create((set, get) => ({
   fetchFarmEquipment: async (params = {}) => {
     set({ loading: true, error: null });
     try {
-      const data = await fetchFarmEquipmentApi(params);
+      const data = await fetchFarmEquipmentApi({...params, status: 1});
       set({ equipmentList: data.data || [], loading: false });
     } catch (err) {
       set({

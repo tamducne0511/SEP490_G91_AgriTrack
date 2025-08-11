@@ -6,12 +6,20 @@ import {
   PlusOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { Button, Input, message, Popconfirm, Table, Tooltip } from "antd";
+import { Button, Input, message, Popconfirm, Table, Tag, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GardenModal from "./GardenModal";
 import { RoutePaths } from "@/routes";
+const statusLabel = {
+  false: "Đã xoá",
+  true: "Hoạt động",
+};
 
+const statusColor = {
+  false: "red",
+  true: "green",
+};
 export default function GardenList() {
   const {
     gardens,
@@ -110,6 +118,17 @@ export default function GardenList() {
         ),
     },
     {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      align: "center",
+      render: (status) => (
+        <Tag color={statusColor[status] || "default"}>
+          {statusLabel[status] || status?.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
       title: "Chức năng",
       key: "action",
       align: "center",
@@ -119,7 +138,7 @@ export default function GardenList() {
           <Tooltip title="Xem chi tiết">
             <Button
               type="link"
-              icon={<EyeOutlined />}
+              icon={<EyeOutlined style={{ color: "#23643A", fontSize: 18 }} />}
               style={{ color: "#23643A", fontWeight: 700, borderRadius: 6 }}
               onClick={() => navigate(RoutePaths.GARDEN_DETAIL(record._id))}
             />
@@ -133,7 +152,14 @@ export default function GardenList() {
             <Tooltip title="Xóa">
               <Button
                 type="link"
-                icon={<DeleteOutlined />}
+                icon={
+                  <span
+                    className="anticon"
+                    style={{ color: "red", fontSize: 18 }}
+                  >
+                    🗑️
+                  </span>
+                }
                 danger
                 style={{
                   color: "#b8000b",

@@ -55,7 +55,6 @@ export default function TaskDetail() {
   const [form] = Form.useForm();
   const { fetchTaskDetail, taskDetail, updateTask, loading } = useTaskStore();
   const { gardens, fetchGardens } = useGardenStore();
-  const { fetchUserDetail, userDetail, loading: userLoading } = useUserStore();
   const [fileList, setFileList] = useState([]);
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -86,12 +85,6 @@ export default function TaskDetail() {
       setSelectedGardenId(taskDetail.gardenId);
     }
   }, [taskDetail, form]);
-
-  useEffect(() => {
-    if (taskDetail?.farmerId) {
-      fetchUserDetail(taskDetail.farmerId);
-    }
-  }, [taskDetail, fetchUserDetail]);
 
   const handleSave = async () => {
     try {
@@ -412,6 +405,9 @@ export default function TaskDetail() {
               </Descriptions.Item>
               <Descriptions.Item label="Ngày tạo">
                 {new Date(taskDetail.createdAt).toLocaleString("vi-VN")}
+              </Descriptions.Item>
+              <Descriptions.Item label="Được giao cho">
+                {taskDetail?.farmerId?.fullName} - {taskDetail?.farmerId?.email}
               </Descriptions.Item>
             </Descriptions>
           </Card>

@@ -20,7 +20,15 @@ import { useNavigate } from "react-router-dom";
 import { RoutePaths } from "@/routes";
 import { ImageBaseUrl } from "@/variables/common";
 import EquipmentModal from "./EquipmentModal";
+const statusLabel = {
+  false: "Đã xoá",
+  true: "Hoạt động",
+};
 
+const statusColor = {
+  false: "red",
+  true: "green",
+};
 export default function EquipmentList() {
   // Store hooks
   const {
@@ -52,7 +60,7 @@ export default function EquipmentList() {
     fetchEquipments({
       page,
       keyword,
-      categoryId: categoryFilter,
+      category: categoryFilter,
     });
   }, [page, keyword, categoryFilter, fetchEquipments]);
 
@@ -111,22 +119,33 @@ export default function EquipmentList() {
         return cat ? <Tag color="geekblue">{cat.name}</Tag> : "";
       },
     },
+    // {
+    //   title: "Ảnh",
+    //   dataIndex: "image",
+    //   key: "image",
+    //   render: (img) =>
+    //     img ? (
+    //       <img
+    //         src={img.startsWith("http") ? img : ImageBaseUrl + img}
+    //         alt="Ảnh"
+    //         style={{ width: 60, borderRadius: 4, objectFit: "cover" }}
+    //       />
+    //     ) : (
+    //       <span style={{ color: "#ccc" }}>Không có</span>
+    //     ),
+    //   width: 80,
+    //   align: "center",
+    // },
     {
-      title: "Ảnh",
-      dataIndex: "image",
-      key: "image",
-      render: (img) =>
-        img ? (
-          <img
-            src={img.startsWith("http") ? img : ImageBaseUrl + img}
-            alt="Ảnh"
-            style={{ width: 60, borderRadius: 4, objectFit: "cover" }}
-          />
-        ) : (
-          <span style={{ color: "#ccc" }}>Không có</span>
-        ),
-      width: 80,
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
       align: "center",
+      render: (status) => (
+        <Tag color={statusColor[status] || "default"}>
+          {statusLabel[status] || status?.toUpperCase()}
+        </Tag>
+      ),
     },
     {
       title: "Chức năng",
@@ -152,7 +171,14 @@ export default function EquipmentList() {
               <Button
                 type="text"
                 danger
-                icon={<DeleteOutlined style={{ fontSize: 18, color: "red" }} />}
+                icon={
+                  <span
+                    className="anticon"
+                    style={{ color: "red", fontSize: 18 }}
+                  >
+                    🗑️
+                  </span>
+                }
               />
             </Popconfirm>
           </Tooltip>

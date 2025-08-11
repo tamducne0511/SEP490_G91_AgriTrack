@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
-import { useGardenStore, useTaskQuestionStore } from "@/stores";
-import { Form, Input, Button, Select, Upload, message, Spin, Card, Typography } from "antd";
+import { useAuthStore, useGardenStore, useTaskQuestionStore } from "@/stores";
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  Upload,
+  message,
+  Spin,
+  Card,
+  Typography,
+} from "antd";
 import { ArrowLeftOutlined, UploadOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { createNotificationQuesApi } from "@/services";
 
 const { Title, Text } = Typography;
 
@@ -11,8 +22,15 @@ const getRowLabel = (row) => String.fromCharCode(65 + row);
 
 export default function AddTaskQuestion() {
   const [form] = Form.useForm();
-  const { gardens, fetchGardens, trees, fetchTreesByGardenId, loading: gardenLoading } = useGardenStore();
+  const {
+    gardens,
+    fetchGardens,
+    trees,
+    fetchTreesByGardenId,
+    loading: gardenLoading,
+  } = useGardenStore();
   const { creating, createQuestion } = useTaskQuestionStore();
+  const { user } = useAuthStore();
 
   const [selectedGarden, setSelectedGarden] = useState();
   const [selectedTree, setSelectedTree] = useState();
@@ -75,7 +93,9 @@ export default function AddTaskQuestion() {
                 borderRadius: 7,
                 fontWeight: 600,
                 fontSize: 15,
-                boxShadow: isSelected ? "0 2px 6px #23643A20" : "0 1px 2px #eaeaea70",
+                boxShadow: isSelected
+                  ? "0 2px 6px #23643A20"
+                  : "0 1px 2px #eaeaea70",
                 transition: "all 0.18s",
                 outline: "none",
               }}
@@ -100,8 +120,14 @@ export default function AddTaskQuestion() {
     if (values.image?.file) formData.append("image", values.image.file);
 
     try {
-      await createQuestion(formData);
+      const res = await createQuestion(formData);
+
       message.success("Gửi câu hỏi thành công!");
+      await createNotificationQuesApi({
+        questionId: res._id,
+        title: `${user?.fullName} đã gửi một câu hỏi cho chuyên gia`,
+        content: res?.content || "N/A",
+      });
       form.resetFields();
       setSelectedGarden(undefined);
       setSelectedTree(undefined);
@@ -141,13 +167,25 @@ export default function AddTaskQuestion() {
           >
             Quay lại
           </Button>
-          <Title level={4} style={{ color: "#23643A", margin: 0,  textAlign: "center" }}>
+          <Title
+            level={4}
+            style={{ color: "#23643A", margin: 0, textAlign: "center" }}
+          >
             Đặt câu hỏi mới
           </Title>
         </div>
 
-        <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 16 }}>
-          <Form.Item label={<b>Chọn vườn</b>} required rules={[{ required: true, message: "Chọn vườn" }]}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          style={{ marginTop: 16 }}
+        >
+          <Form.Item
+            label={<b>Chọn vườn</b>}
+            required
+            rules={[{ required: true, message: "Chọn vườn" }]}
+          >
             <Select
               value={selectedGarden}
               onChange={(val) => {
@@ -167,7 +205,11 @@ export default function AddTaskQuestion() {
             />
           </Form.Item>
           {selectedGarden && (
-            <Form.Item label={<b>Chọn cây (dạng lưới)</b>} required style={{ marginBottom: 10 }}>
+            <Form.Item
+              label={<b>Chọn cây (dạng lưới)</b>}
+              required
+              style={{ marginBottom: 10 }}
+            >
               {gardenLoading ? (
                 <Spin />
               ) : trees.length ? (
@@ -176,7 +218,9 @@ export default function AddTaskQuestion() {
                 <Text type="secondary">Không có dữ liệu cây.</Text>
               )}
               {selectedTree === undefined && (
-                <div style={{ color: "#eb2f06", marginTop: 4 }}>* Vui lòng chọn một cây</div>
+                <div style={{ color: "#eb2f06", marginTop: 4 }}>
+                  * Vui lòng chọn một cây
+                </div>
               )}
             </Form.Item>
           )}

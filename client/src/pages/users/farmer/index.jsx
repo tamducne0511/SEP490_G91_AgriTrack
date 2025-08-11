@@ -1,10 +1,11 @@
 import { RoutePaths } from "@/routes";
 import { useFarmerStore } from "@/stores";
 import { EyeOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Input, message, Table, Tag, Tooltip } from "antd";
+import { Button, Input, message, Popconfirm, Table, Tag, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FarmerModal from "./FarmerModal";
+import { activeFarmerApi } from "@/services";
 
 export default function FarmerList() {
   const {
@@ -45,8 +46,18 @@ export default function FarmerList() {
   const handleDelete = async (record) => {
     try {
       await deleteFarmer(record._id);
-      message.success("Xoá nông dân thành công!");
+      message.success("Vô hiệu hoá nông dân thành công!");
     } catch {}
+  };
+  const handleActive = async (record) => {
+    try {
+      await activeFarmerApi(record._id);
+      fetchFarmers({ page, keyword });
+
+      message.success("Kích hoạt lại nông dân thành công!");
+    } catch (error) {
+      message.error("Có lỗi xảy ra!");
+    }
   };
 
   const columns = [
@@ -106,21 +117,51 @@ export default function FarmerList() {
               onClick={() => navigate(RoutePaths.FARMER_DETAIL(record._id))}
             />
           </Tooltip>
-          <Tooltip title="Xoá">
-            <Button
-              type="text"
-              danger
-              icon={
-                <span
-                  className="anticon"
-                  style={{ color: "red", fontSize: 18 }}
-                >
-                  🗑️
-                </span>
-              }
-              onClick={() => handleDelete(record)}
-            />
-          </Tooltip>
+          {record.status ? (
+            // Trường hợp Farmer đang active -> Hiển thị nút Deactivate
+            <Tooltip title="Vô hiệu hoá">
+              <Popconfirm
+                title="Bạn chắc chắn muốn vô hiệu hoá nông dân này?"
+                okText="Vô hiệu hoá"
+                cancelText="Huỷ"
+                onConfirm={() => handleDelete(record)}
+              >
+                <Button
+                  type="text"
+                  danger
+                  icon={
+                    <span
+                      className="anticon"
+                      style={{ color: "red", fontSize: 18 }}
+                    >
+                      🗑️
+                    </span>
+                  }
+                />
+              </Popconfirm>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Kích hoạt lại">
+              <Popconfirm
+                title="Bạn chắc chắn muốn kích hoạt lại nông dân này?"
+                okText="Kích hoạt"
+                cancelText="Huỷ"
+                onConfirm={() => handleActive(record)}
+              >
+                <Button
+                  type="text"
+                  icon={
+                    <span
+                      className="anticon"
+                      style={{ color: "green", fontSize: 18 }}
+                    >
+                      🔄
+                    </span>
+                  }
+                />
+              </Popconfirm>
+            </Tooltip>
+          )}
         </div>
       ),
     },

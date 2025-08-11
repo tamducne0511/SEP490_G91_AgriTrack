@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Input, Popconfirm, message } from "antd";
+import { Table, Button, Input, Popconfirm, message, Tag } from "antd";
 import {
   PlusOutlined,
   EditOutlined,
@@ -9,7 +9,15 @@ import {
 import { useEquipmentCategoryStore } from "@/stores";
 import EquipmentCategoryModal from "./CategoryModal";
 import { ImageBaseUrl } from "@/variables/common";
+const statusLabel = {
+  false: "Đã xoá",
+  true: "Hoạt động",
+};
 
+const statusColor = {
+  false: "red",
+  true: "green",
+};
 export default function EquipmentCategoryList() {
   const {
     categories,
@@ -98,6 +106,17 @@ export default function EquipmentCategoryList() {
       align: "center",
     },
     {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      align: "center",
+      render: (status) => (
+        <Tag color={statusColor[status] || "default"}>
+          {statusLabel[status] || status?.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
       title: "Chức năng",
       key: "action",
       align: "center",
@@ -116,7 +135,18 @@ export default function EquipmentCategoryList() {
             cancelText="Huỷ"
             onConfirm={() => handleDelete(record)}
           >
-            <Button type="link" icon={<DeleteOutlined />} danger />
+            <Button
+              type="link"
+              icon={
+                <span
+                  className="anticon"
+                  style={{ color: "red", fontSize: 18 }}
+                >
+                  🗑️
+                </span>
+              }
+              danger
+            />
           </Popconfirm>
         </span>
       ),

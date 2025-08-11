@@ -1,26 +1,34 @@
-import { useNotificationStore } from "@/stores";
+import { useAuthStore, useNotificationStore } from "@/stores";
 import { BellOutlined } from "@ant-design/icons";
 import { Badge, Button, Dropdown, List, Spin, Modal, Image } from "antd";
 import { useEffect, useState } from "react";
 import { ImageBaseUrl } from "@/variables/common";
 
 const NotificationBell = () => {
-  const { notifications, loading, fetchNotifications, pagination } =
-    useNotificationStore();
+  const {
+    notifications,
+    loading,
+    fetchNotifications,
+    pagination,
+    fetchTotalNotiUnread,
+    totalUnread,
+    markNotificationAsRead,
+  } = useNotificationStore();
   const [visible, setVisible] = useState(false);
+
+  const { user } = useAuthStore();
 
   // State cho modal preview
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState(null);
 
-  // Số thông báo (có thể là chưa đọc hoặc tổng số)
-  const notificationCount = pagination?.total || notifications?.length || 0;
-
   useEffect(() => {
     fetchNotifications({ page: 1 });
+    fetchTotalNotiUnread();
 
     const intervalId = setInterval(() => {
       fetchNotifications({ page: 1 });
+      fetchTotalNotiUnread();
     }, 5000);
 
     return () => {
@@ -32,7 +40,8 @@ const NotificationBell = () => {
   const handlePreview = (item) => {
     setPreviewData(item);
     setPreviewOpen(true);
-    setVisible(false); // Đóng dropdown khi mở modal
+    setVisible(false);
+    markNotificationAsRead(item._id);
   };
 
   const dropdownContent = (
@@ -65,14 +74,11 @@ const NotificationBell = () => {
                   padding: 8,
                   transition: "background 0.2s",
                   cursor: "pointer",
+                  background: item.readBy.includes(user?._id)
+                    ? "white"
+                    : "rgb(217, 248, 180)",
                 }}
                 onClick={() => handlePreview(item)}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.background = "#f8fafb")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
               >
                 <List.Item.Meta
                   style={{ alignItems: "center" }}
@@ -136,7 +142,7 @@ const NotificationBell = () => {
         arrow
       >
         <Badge
-          count={notificationCount}
+          count={totalUnread}
           size="small"
           overflowCount={99}
           offset={[0, 6]}

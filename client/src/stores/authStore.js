@@ -60,6 +60,6 @@ export const useAuthStore = create((set) => ({
   logout: () => {
     localStorage.clear();
     set({ user: null, token: null });
-    window.location.reload();
+    // window.location.reload();
   },
 }));
