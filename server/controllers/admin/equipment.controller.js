@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const { formatPagination } = require("../../utils/format.util");
 const equipmentService = require("../../services/equipment.service");
+const NotFoundException = require("../../middlewares/exceptions/notfound");
 
 // Get list equipment with pagination and keyword search
 const getList = async (req, res) => {
@@ -8,13 +9,20 @@ const getList = async (req, res) => {
   const keyword = req.query.keyword || "";
   const category = req.query.category || null;
   const farmId = req.user.farmId;
+  const status = req.query.status || null;
   const list = await equipmentService.getListPagination(
     farmId,
     category,
     page,
-    keyword
+    keyword,
+    status
   );
-  const total = await equipmentService.getTotal(farmId, category, keyword);
+  const total = await equipmentService.getTotal(
+    farmId,
+    category,
+    keyword,
+    status
+  );
   res.json(formatPagination(page, total, list));
 };
 

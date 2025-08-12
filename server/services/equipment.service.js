@@ -5,7 +5,7 @@ const EquipmentCategory = require("../models/equipmentCategories.model");
 const { LIMIT_ITEM_PER_PAGE } = require("../constants/app");
 const NotFoundException = require("../middlewares/exceptions/notfound");
 
-const getListPagination = async (farmId, categoryId, page, keyword) => {
+const getListPagination = async (farmId, categoryId, page, keyword, status) => {
   const filter = {
     farmId: farmId,
     name: { $regex: keyword, $options: "i" },
@@ -15,6 +15,10 @@ const getListPagination = async (farmId, categoryId, page, keyword) => {
     filter.categoryId = categoryId;
   }
 
+  if (status === "1" || status === "0") {
+    filter.status = status === "1";
+  }
+
   const list = await Equipment.find(filter)
     .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
     .limit(LIMIT_ITEM_PER_PAGE);
@@ -22,7 +26,7 @@ const getListPagination = async (farmId, categoryId, page, keyword) => {
   return list;
 };
 
-const getTotal = async (farmId, categoryId, keyword) => {
+const getTotal = async (farmId, categoryId, keyword, status) => {
   const filter = {
     farmId: farmId,
     name: { $regex: keyword, $options: "i" },
@@ -30,6 +34,10 @@ const getTotal = async (farmId, categoryId, keyword) => {
 
   if (categoryId) {
     filter.categoryId = categoryId;
+  }
+
+  if (status === "1" || status === "0") {
+    filter.status = status === "1";
   }
 
   const total = await Equipment.countDocuments(filter);

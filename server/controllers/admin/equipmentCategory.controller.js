@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const { formatPagination } = require("../../utils/format.util");
 const equipmentCategoryService = require("../../services/equipmentCategory.service");
+const NotFoundException = require("../../middlewares/exceptions/notfound");
 
 // Get list category with pagination and keyword search
 const getList = async (req, res) => {
