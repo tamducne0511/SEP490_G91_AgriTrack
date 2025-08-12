@@ -11,6 +11,39 @@ const getList = async (req, res) => {
   });
 };
 
+const markRead = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const notificationId = req.params.id;
+    const notification = await questionNotificationService.markRead(
+      notificationId,
+      userId
+    );
+
+    res.json({
+      message: "Notification marked as read successfully",
+      data: notification,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getTotalUnread = async (req, res) => {
+  const userId = req.user.id;
+  const role = req.user.role;
+  const farmId = req.user.farmId;
+  const totalUnread = await questionNotificationService.getTotalUnread(
+    userId,
+    role,
+    farmId
+  );
+  res.json({
+    message: "Total unread notifications retrieved successfully",
+    data: totalUnread,
+  });
+};
+
 const getListByUser = async (req, res) => {
   const userId = req.user.id;
   const list = await questionNotificationService.getListByUser(userId);
@@ -47,4 +80,6 @@ module.exports = {
   getList,
   create,
   getListByUser,
+  markRead,
+  getTotalUnread,
 };

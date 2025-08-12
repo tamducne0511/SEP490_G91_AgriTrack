@@ -14,7 +14,7 @@ router.get(
 
 router.get(
   "/:farmId",
-  isRoles([USER_ROLE.farmer, USER_ROLE.expert]),
+  isRoles([USER_ROLE.farmer, USER_ROLE.expert, USER_ROLE.farmAdmin]),
   questionNotificationController.getList
 );
 
@@ -23,6 +23,18 @@ router.post(
   isRoles([USER_ROLE.farmer, USER_ROLE.expert]),
   notificationValidation.createQuestionNotification,
   questionNotificationController.create
+);
+
+router.get(
+  "/unread/total",
+  isRoles([USER_ROLE.farmer, USER_ROLE.farmAdmin, USER_ROLE.expert]),
+  questionNotificationController.getTotalUnread
+);
+
+router.get(
+  "/:id/mark-read",
+  isRoles([USER_ROLE.farmer, USER_ROLE.farmAdmin, USER_ROLE.expert]),
+  questionNotificationController.markRead
 );
 
 module.exports = router;

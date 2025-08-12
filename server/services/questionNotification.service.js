@@ -71,8 +71,36 @@ const create = async (data) => {
   }
 };
 
+const markRead = async (notificationId, userId) => {
+  await QuestionNotification.findByIdAndUpdate(
+    notificationId,
+    {
+      $addToSet: { readBy: userId },
+    },
+    { new: true }
+  );
+};
+
+const getTotalUnread = async (userId, role, farmId) => {
+  if (role === "expert") {
+    const listFarm = await ExpertFarm.find({ expertId: userId });
+    const listFarmId = listFarm.map((item) => item.farmId);
+    return QuestionNotification.countDocuments({
+      farmId: { $in: listFarmId },
+      readBy: { $ne: userId },
+    });
+  } else {
+    return QuestionNotification.countDocuments({
+      farmId: farmId,
+      readBy: { $ne: userId },
+    });
+  }
+};
+
 module.exports = {
   getList,
   create,
   getListByUser,
+  markRead,
+  getTotalUnread,
 };

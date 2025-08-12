@@ -35,6 +35,8 @@ const questionNotificationSchema = new mongoose.Schema({
     required: true,
   },
 
+  readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
   status: {
     type: Boolean,
     default: true,

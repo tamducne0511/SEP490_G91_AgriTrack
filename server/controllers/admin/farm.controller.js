@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const { formatPagination } = require("../../utils/format.util");
 const farmService = require("../../services/farm.service");
+const NotFoundException = require("../../middlewares/exceptions/notfound");
 
 // Get list farm with pagination and keyword search
 const getList = async (req, res) => {
