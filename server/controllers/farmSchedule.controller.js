@@ -2,6 +2,7 @@ const { validationResult } = require("express-validator");
 const { formatPagination } = require("../utils/format.util");
 const farmScheduleService = require("../services/farmSchedule.service");
 const e = require("cors");
+const NotFoundException = require("../middlewares/exceptions/notfound");
 
 // Get list farm schedule with pagination and keyword search
 const getList = async (req, res) => {

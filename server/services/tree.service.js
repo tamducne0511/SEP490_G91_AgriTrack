@@ -77,8 +77,31 @@ const getList = async (gardenId) => {
       },
     },
     {
+      $lookup: {
+        from: "taskquestions",
+        let: { treeId: "$_id" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$treeId", "$$treeId"] } } },
+          { $sort: { createdAt: -1 } },
+          { $limit: 1 },
+          {
+            $lookup: {
+              from: "users",
+              localField: "userId",
+              foreignField: "_id",
+              as: "user",
+            },
+          },
+          { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+          { $project: { "user.password": 0 } },
+        ],
+        as: "latestQuestion",
+      },
+    },
+    {
       $addFields: {
         questionCount: { $size: "$questions" },
+        latestQuestion: { $arrayElemAt: ["$latestQuestion", 0] },
       },
     },
     {
