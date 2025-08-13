@@ -11,6 +11,7 @@ const {
 const NotFoundException = require("../middlewares/exceptions/notfound");
 const TaskHistory = require("../models/taskHistory.model");
 const TaskDailyNote = require("../models/taskDailyNote.model");
+const BadRequestException = require("../middlewares/exceptions/badrequest");
 const mongoose = require("mongoose");
 
 const getListPagination = async (farmId, gardenId, page, keyword) => {
@@ -186,7 +187,9 @@ const assignFarmer = async (taskId, farmerId) => {
   if (!task) {
     throw new NotFoundException("Not found task with id: " + taskId);
   }
-
+  if (task.farmerId) {
+    throw new BadRequestException("This task has already been assigned to a farmer.");
+  }
   const user = await User.findById(farmerId);
   if (!user || user.role !== USER_ROLE.farmer) {
     throw new NotFoundException("Not found user with id: " + farmerId);
