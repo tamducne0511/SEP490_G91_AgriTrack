@@ -38,6 +38,9 @@ export default function ExpertList() {
       await createUser({ ...values, role: "expert" });
       message.success("Thêm chuyên gia thành công!");
       setModalOpen(false);
+    } catch (error) {
+      // Error đã được handle trong store
+      console.error("Error creating expert:", error);
     } finally {
       setConfirmLoading(false);
     }
