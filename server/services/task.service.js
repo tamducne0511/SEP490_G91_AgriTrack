@@ -190,6 +190,10 @@ const assignFarmer = async (taskId, farmerId) => {
   if (task.farmerId) {
     throw new BadRequestException("This task has already been assigned to a farmer.");
   }
+  // Kiểm tra thêm trạng thái task
+  if (task.status === TASK_ASSIGN_STATUS.completed) {
+    throw new BadRequestException("Cannot assign a completed task.");
+  }
   const user = await User.findById(farmerId);
   if (!user || user.role !== USER_ROLE.farmer) {
     throw new NotFoundException("Not found user with id: " + farmerId);
