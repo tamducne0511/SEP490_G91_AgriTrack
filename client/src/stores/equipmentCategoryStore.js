@@ -22,8 +22,8 @@ export const useEquipmentCategoryStore = create((set, get) => ({
       set({
         categories: data.data || [],
         pagination: {
-          total: data.total || data.pagination?.total || 0,
-          page: params.page || 1,
+          total: data.totalItem || 0,
+          page: data.page || 1,
           pageSize: params.pageSize || 10,
         },
         loading: false,
