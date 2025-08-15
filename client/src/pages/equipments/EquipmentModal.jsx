@@ -14,6 +14,8 @@ export default function EquipmentModal({
 }) {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
+  const availableCategories = categories.filter(c => c.status === true);
+
   useEffect(() => {
     if (open) {
       form.setFieldsValue(initialValues);
@@ -80,7 +82,7 @@ export default function EquipmentModal({
           <Select
             showSearch
             placeholder="Chọn danh mục"
-            options={categories.map((c) => ({
+            options={availableCategories.map((c) => ({
               value: c._id,
               label: c.name,
             }))}
