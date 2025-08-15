@@ -73,14 +73,6 @@ export default function Login() {
               autoComplete="current-password"
             />
           </Form.Item>
-          <div className="login-options">
-            {/* <Form.Item name="remember" valuePropName="checked" noStyle>
-              <Checkbox>Nhớ mật khẩu</Checkbox>
-            </Form.Item> */}
-            <a className="login-forgot" href="#">
-              Quên mật khẩu?
-            </a>
-          </div>
           <Form.Item>
             <Button
               type="primary"
