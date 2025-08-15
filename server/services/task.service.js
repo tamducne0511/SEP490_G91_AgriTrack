@@ -105,6 +105,9 @@ const update = async (id, data) => {
   task.type = data.type;
   task.priority = data.priority;
   task.description = data.description;
+  if (data.status !== undefined) {
+    task.status = data.status;
+  }
   await task.save();
   return task;
 };

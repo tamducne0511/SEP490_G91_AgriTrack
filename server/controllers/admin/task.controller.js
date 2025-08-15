@@ -56,6 +56,7 @@ const update = async (req, res, next) => {
       description: req.body.description,
       type: req.body.type,
       priority: req.body.priority,
+      status: req.body.status,
       gardenId: req.body.gardenId,
       image: req.file?.filename ? `/uploads/tasks/${req.file.filename}` : "",
     });
@@ -70,17 +71,21 @@ const update = async (req, res, next) => {
 };
 
 // Delete task
-const remove = async (req, res) => {
-  const id = req.params.id;
-  const task = await taskService.find(id);
-  if (!task) {
-    next(new NotFoundException("Not found task with id: " + id));
-  }
+const remove = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const task = await taskService.find(id);
+    if (!task) {
+      return next(new NotFoundException("Not found task with id: " + id));
+    }
 
-  await taskService.remove(id);
-  res.json({
-    message: "Task deleted successfully",
-  });
+    await taskService.remove(id);
+    res.json({
+      message: "Task deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Get detail

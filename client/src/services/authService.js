@@ -1,8 +1,16 @@
 import { client } from "@/configs";
 
 export const loginApi = async ({ email, password }) => {
-  const res = await client.post("/auth/login", { email, password });
-  return res.data;
+  console.log("🔍 AuthService: Making login API call to /auth/login");
+  console.log("🔍 AuthService: Request payload:", { email, password: "***" });
+  try {
+    const res = await client.post("/auth/login", { email, password });
+    console.log("🔍 AuthService: Login API success response:", res);
+    return res.data;
+  } catch (error) {
+    console.error("❌ AuthService: Login API error:", error);
+    throw error;
+  }
 };
 
 export const updateProfileApi = async (payload) => {
@@ -16,6 +24,13 @@ export const changePasswordApi = async (payload) => {
 };
 
 export const getMeApi = async () => {
-  const res = await client.get("/auth/me");
-  return res.data;
+  console.log("🔍 AuthService: Making getMe API call to /auth/me");
+  try {
+    const res = await client.get("/auth/me");
+    console.log("🔍 AuthService: GetMe API success response:", res);
+    return res.data;
+  } catch (error) {
+    console.error("❌ AuthService: GetMe API error:", error);
+    throw error;
+  }
 };

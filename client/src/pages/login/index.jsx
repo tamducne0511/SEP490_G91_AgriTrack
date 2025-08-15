@@ -16,23 +16,37 @@ export default function Login() {
   const navigate = useNavigate();
 
   const onFinish = async (values) => {
-    await login(values.username, values.password);
+    console.log("🔍 Login attempt with values:", { email: values.username, password: "***" });
+    console.log("🔍 API Base URL:", process.env.REACT_APP_API_BASE_URL);
+    try {
+      await login(values.username, values.password);
+    } catch (err) {
+      console.error("❌ Login error in component:", err);
+    }
   };
 
   React.useEffect(() => {
+    console.log("🔍 Error state changed:", error);
     if (error) {
       message.error(error);
     }
   }, [error]);
 
   React.useEffect(() => {
-    if (token) {
+    console.log("🔍 Token/User state changed:", { token: !!token, user: user?.role });
+    if (token && user) {
+      console.log("🔍 Navigating based on role:", user.role);
       if (user.role === "admin") navigate(RoutePaths.DASHBOARD);
       if (user.role === "farm-admin") navigate(RoutePaths.GARDEN_LIST);
       if (user.role === "farmer") navigate(RoutePaths.MY_TASK_LIST);
       if (user.role === "expert") navigate(RoutePaths.REQUEST_LIST);
+    } else if (token && !user) {
+      console.log("🔍 Token exists but no user, calling getMe");
+      // If we have token but no user, try to get user info
+      const { getMe } = useAuthStore.getState();
+      getMe();
     }
-  }, [token, navigate]);
+  }, [token, user, navigate]);
 
   return (
     <div className="login-bg">

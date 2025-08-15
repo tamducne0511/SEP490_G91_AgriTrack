@@ -7,13 +7,19 @@ const { USER_ROLE } = require("../constants/app");
 // Login
 const login = async (req, res, next) => {
   try {
+    console.log("🔍 AuthController: Login request received");
     const { email, password } = req.body;
+    console.log("🔍 AuthController: Login credentials:", { email, password: password ? "***" : "undefined" });
+    
     const user = await authService.login(email, password);
+    console.log("🔍 AuthController: Login successful for user:", user.user.email);
+    
     res.json({
       message: "Login successful",
       data: user,
     });
   } catch (error) {
+    console.error("❌ AuthController: Login error:", error.message);
     next(error);
   }
 };
@@ -21,6 +27,7 @@ const login = async (req, res, next) => {
 // Get current user
 const getMe = async (req, res) => {
   try {
+    console.log("🔍 AuthController: GetMe request received for user ID:", req.user.id);
     const response = {};
     const user = await userService.find(req.user.id);
     response.user = user;
@@ -37,11 +44,13 @@ const getMe = async (req, res) => {
     }
 
     user.password = undefined;
+    console.log("🔍 AuthController: GetMe successful for user:", user.email);
     res.json({
       message: "User retrieved successfully",
       data: response,
     });
   } catch (error) {
+    console.error("❌ AuthController: GetMe error:", error.message);
     res.status(500).json({
       message: "Error retrieving user",
       error: error.message,

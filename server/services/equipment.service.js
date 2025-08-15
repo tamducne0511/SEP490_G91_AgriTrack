@@ -72,10 +72,24 @@ const update = async (id, data) => {
     throw new NotFoundException("Not found Equipment with id: " + id);
   }
 
-  equipment.name = data.name;
-  equipment.image = data.image || equipment.image;
-  equipment.description = data.description;
-  equipment.categoryId = data.categoryId;
+  if (data.name !== undefined) {
+    equipment.name = data.name;
+  }
+  if (data.image !== undefined) {
+    equipment.image = data.image;
+  }
+  if (data.description !== undefined) {
+    equipment.description = data.description;
+  }
+  if (data.categoryId !== undefined) {
+    equipment.categoryId = data.categoryId;
+  }
+  if (data.quantity !== undefined) {
+    equipment.quantity = data.quantity;
+  }
+  if (data.status !== undefined) {
+    equipment.status = data.status;
+  }
   await equipment.save();
   return equipment;
 };

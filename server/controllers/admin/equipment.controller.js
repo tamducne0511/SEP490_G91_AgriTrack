@@ -38,6 +38,7 @@ const create = async (req, res) => {
     description: req.body.description,
     farmId: req.user.farmId,
     categoryId: req.body.categoryId,
+    quantity: req.body.quantity || 0,
     image: req.file?.filename ? `/uploads/equipments/${req.file.filename}` : "",
   };
 
@@ -61,6 +62,8 @@ const update = async (req, res, next) => {
       name: req.body.name,
       description: req.body.description,
       categoryId: req.body.categoryId,
+      quantity: req.body.quantity,
+      status: req.body.status,
       image: req.file?.filename
         ? `/uploads/equipments/${req.file.filename}`
         : "",
@@ -76,17 +79,21 @@ const update = async (req, res, next) => {
 };
 
 // Delete equipment
-const remove = async (req, res) => {
-  const id = req.params.id;
-  const equipment = await equipmentService.find(id);
-  if (!equipment) {
-    next(new NotFoundException("Not found equipment with id: " + id));
-  }
+const remove = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const equipment = await equipmentService.find(id);
+    if (!equipment) {
+      return next(new NotFoundException("Not found equipment with id: " + id));
+    }
 
-  await equipmentService.remove(id);
-  res.json({
-    message: "Equipment deleted successfully",
-  });
+    await equipmentService.remove(id);
+    res.json({
+      message: "Equipment deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Get detail
