@@ -35,6 +35,10 @@ export default function AddTaskQuestion() {
   const [selectedGarden, setSelectedGarden] = useState();
   const [selectedTree, setSelectedTree] = useState();
 
+  const availableGardens = gardens.filter(garden =>
+    // Chỉ hiển thị garden còn hoạt động 
+    garden.status === true
+  );
   useEffect(() => {
     fetchGardens();
   }, []);
@@ -194,7 +198,10 @@ export default function AddTaskQuestion() {
               }}
               placeholder="Chọn vườn"
               loading={gardenLoading}
-              options={gardens.map((g) => ({ value: g._id, label: g.name }))}
+              options={availableGardens.map((g) => ({
+                value: g._id,
+                label: g.name,
+              }))}
               allowClear
               size="large"
               style={{

@@ -58,6 +58,11 @@ export default function TaskCreate() {
     setFileList(newFileList);
   };
 
+  const availableGardens = gardens.filter(garden => 
+    // Chỉ hiển thị garden còn hoạt động 
+    garden.status === true
+  );
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -154,7 +159,7 @@ export default function TaskCreate() {
                   showSearch
                   placeholder="Chọn vườn"
                   value={selectedGardenId}
-                  options={gardens.map((g) => ({
+                  options={availableGardens.map((g) => ({
                     value: g._id,
                     label: g.name,
                   }))}
