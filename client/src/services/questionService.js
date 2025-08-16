@@ -1,8 +1,8 @@
 import { client } from "@/configs";
 
-export const fetchFarmTaskQuestionsApi = async (farmId) => {
+export const fetchFarmTaskQuestionsApi = async (farmId, page = 1, keyword = "") => {
   const res = await client.get("/task-questions", {
-    params: { farmId },
+    params: { farmId, page, keyword },
   });
   return res.data;
 };
@@ -14,8 +14,10 @@ export const createTaskQuestionApi = async (formData) => {
   return res.data;
 };
 
-export const fetchQuestionsByTreeApi = async (treeId) => {
-  const res = await client.get(`/task-questions/tree/${treeId}`);
+export const fetchQuestionsByTreeApi = async (treeId, page = 1, keyword = "") => {
+  const res = await client.get(`/task-questions/tree/${treeId}`, {
+    params: { page, keyword },
+  });
   return res.data;
 };
 

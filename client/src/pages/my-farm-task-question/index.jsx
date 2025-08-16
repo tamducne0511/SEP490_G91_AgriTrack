@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTaskQuestionStore, useAuthStore } from "@/stores";
 import { Table, Spin, message, Button, Input, Tooltip } from "antd";
 import { PlusOutlined, SearchOutlined, EyeOutlined } from "@ant-design/icons";
@@ -9,20 +9,29 @@ export default function FarmTaskQuestionList() {
   const { farm } = useAuthStore();
   const farmId = farm?._id;
 
-  const { questions, loading, error, fetchQuestions } = useTaskQuestionStore();
+  const { questions, loading, error, fetchQuestions, pagination } = useTaskQuestionStore();
   const [keyword, setKeyword] = useState("");
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  // Xử lý fetch có keyword
+  // Xử lý fetch có keyword và page
   useEffect(() => {
-    if (farmId) fetchQuestions(farmId, { keyword, page });
+    if (farmId) fetchQuestions(farmId, page, keyword);
   }, [farmId, keyword, page]);
 
   useEffect(() => {
     if (error) message.error(error);
   }, [error]);
+  // Debounce search
+  const handleSearch = useCallback((value) => {
+    setKeyword(value);
+    setPage(1); // Reset về trang 1 khi tìm kiếm
+  }, []);
 
+  // Handle page change
+  const handlePageChange = useCallback((newPage) => {
+    setPage(newPage);
+  }, []);
   const columns = [
     {
       title: "STT",
@@ -110,7 +119,7 @@ export default function FarmTaskQuestionList() {
             border: "1.5px solid #23643A",
             background: "#f8fafb",
           }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
           value={keyword}
         />
       </div>
@@ -126,10 +135,11 @@ export default function FarmTaskQuestionList() {
           dataSource={questions}
           pagination={{
             current: page,
-            total: questions.length,
-            pageSize: 10,
+            total: pagination.total,
+            pageSize: pagination.pageSize,
             showSizeChanger: false,
-            onChange: setPage,
+            onChange: handlePageChange,
+            
           }}
           bordered
           size="middle"
