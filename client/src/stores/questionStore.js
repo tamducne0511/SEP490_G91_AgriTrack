@@ -13,11 +13,13 @@ export const useTaskQuestionStore = create((set) => ({
   questions: [],
   loading: false,
   error: null,
+  pagination: { total: 0, page: 1, pageSize: 20 },
   creating: false,
   createError: null,
   treeQuestions: [],
   loadingTreeQuestions: false,
   errorTreeQuestions: null,
+  treeQuestionsPagination: { total: 0, page: 1, pageSize: 10 },
   aiAnswer: null,
   loadingAI: false,
   errorAI: null,
@@ -100,11 +102,19 @@ export const useTaskQuestionStore = create((set) => ({
       throw err;
     }
   },
-  fetchQuestions: async (farmId) => {
+  fetchQuestions: async (farmId, page = 1, keyword = "") => {
     set({ loading: true, error: null });
     try {
-      const res = await fetchFarmTaskQuestionsApi(farmId);
-      set({ questions: res.data || [], loading: false });
+      const res = await fetchFarmTaskQuestionsApi(farmId, page, keyword);
+      set({ 
+        questions: res.data || [], 
+        loading: false,
+        pagination: {
+          total: res.totalItem || 0,
+          page: res.page || 1,
+          pageSize: res.pageSize || 10,
+        }
+      });
     } catch (err) {
       set({
         error: err?.message || "Lỗi tải danh sách câu hỏi",
@@ -114,11 +124,19 @@ export const useTaskQuestionStore = create((set) => ({
     }
   },
 
-  fetchQuestionsByTree: async (treeId) => {
+  fetchQuestionsByTree: async (treeId, page = 1, keyword = "") => {
     set({ loadingTreeQuestions: true, errorTreeQuestions: null });
     try {
-      const data = await fetchQuestionsByTreeApi(treeId);
-      set({ treeQuestions: data.data || [], loadingTreeQuestions: false });
+      const data = await fetchQuestionsByTreeApi(treeId, page, keyword);
+      set({ 
+        treeQuestions: data.data || [], 
+        loadingTreeQuestions: false,
+        treeQuestionsPagination: {
+          total: data.totalItem || 0,
+          page: data.page || 1,
+          pageSize: data.pageSize || 10,
+        }
+      });
     } catch (err) {
       set({
         errorTreeQuestions: err?.message || "Lỗi tải câu hỏi của cây",
