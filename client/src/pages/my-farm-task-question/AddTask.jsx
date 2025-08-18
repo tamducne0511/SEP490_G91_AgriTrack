@@ -40,7 +40,7 @@ export default function AddTaskQuestion() {
     garden.status === true
   );
   useEffect(() => {
-    fetchGardens();
+    fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
   }, []);
 
   useEffect(() => {

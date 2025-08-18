@@ -1,6 +1,6 @@
 import { useEquipmentStore } from "@/stores";
 import { Button, Input, message, Table, Tooltip, Modal } from "antd";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { SearchOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 
 export default function EquipmentChangeList() {
@@ -19,6 +19,7 @@ export default function EquipmentChangeList() {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [rejectingId, setRejectingId] = useState(null);
+  const isSearching = useRef(false);
 
   // Lấy danh sách thiết bị khi mount
   useEffect(() => {
@@ -28,6 +29,14 @@ export default function EquipmentChangeList() {
   useEffect(() => {
     fetchEquipmentChanges({ page, status: "all", keyword });
   }, [page, keyword, fetchEquipmentChanges]);
+
+  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    if (isSearching.current) {
+      setPage(1);
+      isSearching.current = false;
+    }
+  }, [keyword]);
 
   useEffect(() => {
     if (ecError) message.error(ecError);
@@ -166,7 +175,10 @@ export default function EquipmentChangeList() {
             border: "1.5px solid #23643A",
             background: "#fafafa",
           }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            isSearching.current = true;
+            setKeyword(e.target.value);
+          }}
           value={keyword}
         />
       </div>

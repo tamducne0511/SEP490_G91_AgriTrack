@@ -10,18 +10,86 @@ const BadRequestException = require("../middlewares/exceptions/badrequest");
 const NotFoundException = require("../middlewares/exceptions/notfound");
 const e = require("express");
 
-const getListPagination = async (farmId, status, page) => {
-  const list = await EquipmentChange.find({
+const getListPagination = async (farmId, status, page, keyword = "") => {
+  let query = {
     farmId: farmId,
     status: status === "all" ? { $ne: null } : status,
-  })
+  };
+
+  // Nếu có keyword, tìm theo equipment name thông qua lookup
+  if (keyword) {
+    const list = await EquipmentChange.aggregate([
+      {
+        $match: {
+          farmId: farmId,
+          status: status === "all" ? { $ne: null } : status,
+        }
+      },
+      {
+        $lookup: {
+          from: "equipment",
+          localField: "equipmentId",
+          foreignField: "_id",
+          as: "equipment"
+        }
+      },
+      {
+        $unwind: "$equipment"
+      },
+      {
+        $match: {
+          "equipment.name": { $regex: keyword, $options: "i" }
+        }
+      },
+      {
+        $skip: (page - 1) * LIMIT_ITEM_PER_PAGE
+      },
+      {
+        $limit: LIMIT_ITEM_PER_PAGE
+      }
+    ]);
+    return list;
+  }
+
+  const list = await EquipmentChange.find(query)
     .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
     .limit(LIMIT_ITEM_PER_PAGE);
 
   return list;
 };
 
-const getTotal = async (farmId, status) => {
+const getTotal = async (farmId, status, keyword = "") => {
+  if (keyword) {
+    const total = await EquipmentChange.aggregate([
+      {
+        $match: {
+          farmId: farmId,
+          status: status === "all" ? { $ne: null } : status,
+        }
+      },
+      {
+        $lookup: {
+          from: "equipment",
+          localField: "equipmentId",
+          foreignField: "_id",
+          as: "equipment"
+        }
+      },
+      {
+        $unwind: "$equipment"
+      },
+      {
+        $match: {
+          "equipment.name": { $regex: keyword, $options: "i" }
+        }
+      },
+      {
+        $count: "total"
+      }
+    ]);
+    return total[0]?.total || 0;
+  }
+
   const total = await EquipmentChange.countDocuments({
     farmId: farmId,
     status: status === "all" ? { $ne: null } : status,

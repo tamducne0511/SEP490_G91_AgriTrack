@@ -2,7 +2,7 @@ import { RoutePaths } from "@/routes";
 import { useUserStore } from "@/stores";
 import { EyeOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Input, message, Popconfirm, Table, Tag, Tooltip } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ExpertModal from "./ExpertModal";
 
@@ -22,11 +22,20 @@ export default function ExpertList() {
   const [keyword, setKeyword] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const isSearching = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchUsers({ page, role: "expert", keyword });
   }, [page, keyword, fetchUsers]);
+
+  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    if (isSearching.current) {
+      setPage(1);
+      isSearching.current = false;
+    }
+  }, [keyword]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -207,7 +216,10 @@ export default function ExpertList() {
             border: "1.5px solid #23643A",
             background: "#f8fafb",
           }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            isSearching.current = true;
+            setKeyword(e.target.value);
+          }}
           value={keyword}
         />
       </div>

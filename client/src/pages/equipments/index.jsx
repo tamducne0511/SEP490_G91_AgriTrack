@@ -73,6 +73,11 @@ export default function EquipmentList() {
     }
   }, [keyword]);
 
+  // Reset page khi categoryFilter thay đổi
+  useEffect(() => {
+    setPage(1);
+  }, [categoryFilter]);
+
   useEffect(() => {
     if (error) message.error(error);
   }, [error]);

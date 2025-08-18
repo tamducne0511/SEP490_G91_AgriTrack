@@ -63,7 +63,7 @@ export default function TaskList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchGardens();
+    fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
   }, [fetchGardens]);
 
   useEffect(() => {
