@@ -51,7 +51,7 @@ export default function TaskCreate() {
   const [formValues, setFormValues] = useState({});
 
   useEffect(() => {
-    fetchGardens();
+    fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
   }, [fetchGardens]);
 
   const handleChange = ({ fileList: newFileList }) => {

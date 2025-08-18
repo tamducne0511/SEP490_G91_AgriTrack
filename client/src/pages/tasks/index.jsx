@@ -16,7 +16,7 @@ import {
   Tag,
   Tooltip,
 } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const typeLabel = {
@@ -59,6 +59,7 @@ export default function TaskList() {
   const [keyword, setKeyword] = useState("");
   const [selectedGardenId, setSelectedGardenId] = useState(undefined);
   const [zoneFilter, setZoneFilter] = useState(undefined); // Remove zone filter
+  const isSearching = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -68,6 +69,14 @@ export default function TaskList() {
   useEffect(() => {
     fetchTasks({ page, keyword, gardenId: selectedGardenId }); // Filter by gardenId only
   }, [page, keyword, selectedGardenId, fetchTasks]);
+
+  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    if (isSearching.current) {
+      setPage(1);
+      isSearching.current = false;
+    }
+  }, [keyword]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -216,7 +225,10 @@ export default function TaskList() {
             border: "1.5px solid #23643A",
             background: "#f8fafb",
           }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            isSearching.current = true;
+            setKeyword(e.target.value);
+          }}
           value={keyword}
         />
         <Select

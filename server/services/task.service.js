@@ -14,7 +14,7 @@ const TaskDailyNote = require("../models/taskDailyNote.model");
 const BadRequestException = require("../middlewares/exceptions/badrequest");
 const mongoose = require("mongoose");
 
-const getListPagination = async (farmId, gardenId, page, keyword) => {
+const getListPagination = async (farmId, gardenId, page, keyword, pageSize = LIMIT_ITEM_PER_PAGE) => {
   const filter = {
     farmId: farmId,
     name: { $regex: keyword, $options: "i" },
@@ -25,8 +25,8 @@ const getListPagination = async (farmId, gardenId, page, keyword) => {
   }
 
   const list = await Task.find(filter)
-    .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
-    .limit(LIMIT_ITEM_PER_PAGE);
+    .skip((page - 1) * pageSize)
+    .limit(pageSize);
 
   return list;
 };

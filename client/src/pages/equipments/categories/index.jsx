@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Table, Button, Input, Popconfirm, message, Tag } from "antd";
 import {
   PlusOutlined,
@@ -35,10 +35,19 @@ export default function EquipmentCategoryList() {
   const [modal, setModal] = useState({ open: false, edit: false, initial: {} });
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const isSearching = useRef(false);
   // Fetch all categories on mount & khi search
   useEffect(() => {
     fetchCategories({ page, keyword });
   }, [page, keyword, fetchCategories]);
+
+  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    if (isSearching.current) {
+      setPage(1);
+      isSearching.current = false;
+    }
+  }, [keyword]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -171,7 +180,10 @@ export default function EquipmentCategoryList() {
           prefix={<SearchOutlined />}
           placeholder="Tìm theo tên/mô tả"
           style={{ width: 280 }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            isSearching.current = true;
+            setKeyword(e.target.value);
+          }}
           value={keyword}
         />
       </div>

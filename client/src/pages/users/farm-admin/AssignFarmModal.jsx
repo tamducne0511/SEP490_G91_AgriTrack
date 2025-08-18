@@ -8,7 +8,7 @@ const AssignFarmModal = ({ open, onOk, onCancel, userId }) => {
   const [farmId, setFarmId] = useState();
 
   useEffect(() => {
-    if (open) fetchFarms({ page: 1, name: search, pageSize: 100 });
+    if (open) fetchFarms({ keyword: search, pageSize: 1000 }); // lấy tất cả farms
     if (!open) {
       setFarmId(undefined);
       setSearch("");
