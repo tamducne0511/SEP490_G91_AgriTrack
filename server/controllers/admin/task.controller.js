@@ -6,16 +6,29 @@ const NotFoundException = require("../../middlewares/exceptions/notfound");
 // Get list task with pagination and keyword search
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
   const keyword = req.query.keyword || "";
   const gardenId = req.query.gardenId || null;
+  
   const list = await taskService.getListPagination(
     req.user.farmId,
     gardenId,
     page,
-    keyword
+    keyword,
+    pageSize
   );
-  const total = await taskService.getTotal(req.user.farmId, gardenId, keyword);
-  res.json(formatPagination(page, total, list));
+  
+  if (pageSize >= 1000) {
+    res.json({
+      data: list,
+      totalItem: list.length,
+      page: 1,
+      pageSize: list.length,
+    });
+  } else {
+    const total = await taskService.getTotal(req.user.farmId, gardenId, keyword);
+    res.json(formatPagination(page, total, list));
+  }
 };
 
 // Create new task
