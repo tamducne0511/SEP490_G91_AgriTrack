@@ -106,6 +106,9 @@ export default function FarmAdminDetail() {
           <Descriptions.Item label="Ngày tạo">
             {new Date(farmAdmin.createdAt).toLocaleString("vi-VN")}
           </Descriptions.Item>
+          <Descriptions.Item label="Số điện thoại">
+            {farmAdmin.phone}
+          </Descriptions.Item>
         </Descriptions>
 
         <FarmAdminModal

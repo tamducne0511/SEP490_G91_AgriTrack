@@ -7,11 +7,19 @@ import {
   PlusOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { Button, Input, message, Popconfirm, Table, Tooltip } from "antd";
+import { Button, Input, message, Popconfirm, Table,Tag, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FarmModal from "./FarmModal";
+const statusLabel = {
+  false: "Đã xoá",
+  true: "Hoạt động",
+};
 
+const statusColor = {
+  false: "red",
+  true: "green",
+};
 export default function FarmList() {
   const {
     farms,
@@ -90,6 +98,17 @@ export default function FarmList() {
       ellipsis: true,
     },
     {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      align: "center",
+      render: (status) => (
+        <Tag color={statusColor[status] || "default"}>
+          {statusLabel[status] || status?.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
       title: "Địa chỉ",
       dataIndex: "address",
       key: "address",
@@ -142,16 +161,18 @@ export default function FarmList() {
             onConfirm={() => handleDelete(record)}
           >
             <Tooltip title="Xóa">
-              <Button
-                type="link"
-                icon={<DeleteOutlined />}
-                danger
-                style={{
-                  color: "#b8000b",
-                  fontWeight: 700,
-                  borderRadius: 6,
-                }}
-              />
+            <Button
+                  type="text"
+                  danger
+                  icon={
+                    <span
+                      className="anticon"
+                      style={{ color: "red", fontSize: 18 }}
+                    >
+                      🗑️
+                    </span>
+                  }
+                />
             </Tooltip>
           </Popconfirm>
         </div>
