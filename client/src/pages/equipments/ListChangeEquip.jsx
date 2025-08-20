@@ -154,6 +154,8 @@ export default function EquipmentChangeList() {
     },
   ];
 
+  console.log(equipmentMap);
+
   // Modal nhập lý do từ chối
   const [rejectReason, setRejectReason] = useState("");
   const handleRejectOk = () => {

@@ -53,4 +53,12 @@ router.delete(
   userController.removeAssignExpertToFarm
 );
 
+// Admin change password for expert/farm-admin
+router.post(
+  "/:id/change-password",
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.admin]),
+  userValidation.adminChangePassword,
+  userController.adminChangePassword
+);
+
 module.exports = router;

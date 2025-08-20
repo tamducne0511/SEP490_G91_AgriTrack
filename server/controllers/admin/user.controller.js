@@ -5,6 +5,7 @@ const farmService = require("../../services/farm.service");
 const { hashPassword } = require("../../utils/auth.util");
 const { USER_ROLE } = require("../../constants/app");
 const NotFoundException = require("../../middlewares/exceptions/notfound");
+const BadRequestException = require("../../middlewares/exceptions/badrequest");
 
 // Get list user with pagination and keyword search
 const getList = async (req, res) => {
@@ -196,6 +197,37 @@ const deactive = async (req, res) => {
   });
 };
 
+// Admin change password for expert/farm-admin
+const adminChangePassword = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    const targetUser = await userService.find(id);
+    if (!targetUser) {
+      return next(new NotFoundException("Not found user with id: " + id));
+    }
+
+    if (![USER_ROLE.farmAdmin, USER_ROLE.expert, USER_ROLE.farmer].includes(targetUser.role)) {
+      return next(
+        new BadRequestException(
+          "Only 'farm-admin' and 'expert' passwords can be reset by admin"
+        )
+      );
+    }
+
+    await userService.updatePassword(id, newPassword);
+    return res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getList,
   create,
@@ -211,4 +243,5 @@ module.exports = {
   getListFarmAssignToExpert,
   active,
   deactive,
+  adminChangePassword,
 };
