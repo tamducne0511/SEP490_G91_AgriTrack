@@ -37,9 +37,9 @@ export default function FarmerList() {
     }
   }, [keyword]);
 
-  useEffect(() => {
-    if (error) message.error(error);
-  }, [error]);
+  // useEffect(() => {
+  //   if (error) message.error(error);
+  // }, [error]);
 
   const handleAdd = async (values) => {
     setConfirmLoading(true);
@@ -47,6 +47,9 @@ export default function FarmerList() {
       await createFarmer(values);
       message.success("Thêm nông dân thành công!");
       setModalOpen(false);
+    } catch (er) {
+      // Error đã được handle trong store
+      message.error(er?.message || "Thêm nông dân thành công!");
     } finally {
       setConfirmLoading(false);
     }
