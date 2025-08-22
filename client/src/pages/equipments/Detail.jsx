@@ -60,7 +60,6 @@ const EquipmentDetail = () => {
     setEditedQuantity(equipmentDetail.quantity);
     setEditedPrice(equipmentDetail.price);
   };
-
   const handleSave = async () => {
     try {
       await updateEquipment(id, {
@@ -68,8 +67,10 @@ const EquipmentDetail = () => {
         description: editedDescription,
         quantity: editedQuantity,
         price: editedPrice,
+        categoryId: category ? category._id : null, // Use selected category ID
       });
       setIsEditing(false);
+      fetchEquipmentDetail(id); // Fetch equipment details using the store
       message.success("Cập nhật thiết bị thành công!");
     } catch (err) {
       message.error(
@@ -175,15 +176,7 @@ const EquipmentDetail = () => {
               {category ? category.name : "Chưa có danh mục"}
             </Descriptions.Item>
             <Descriptions.Item label="Số lượng">
-              {isEditing ? (
-                <InputNumber
-                  value={editedQuantity}
-                  onChange={(value) => setEditedQuantity(value)}
-                  min={0}
-                />
-              ) : (
-                equipmentDetail.quantity
-              )}
+              {equipmentDetail.quantity}
             </Descriptions.Item>
 
             <Descriptions.Item label="Ngày tạo">

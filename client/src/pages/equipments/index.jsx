@@ -91,7 +91,6 @@ export default function EquipmentList() {
       setModal({ open: false, edit: false, initial: {} });
       fetchEquipments({ page, keyword, categoryId: categoryFilter });
     } catch (err) {
-      message.error("Đã xảy ra lỗi");
     } finally {
       setConfirmLoading(false);
     }

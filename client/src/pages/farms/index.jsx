@@ -7,7 +7,7 @@ import {
   PlusOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { Button, Input, message, Popconfirm, Table,Tag, Tooltip } from "antd";
+import { Button, Input, message, Popconfirm, Table, Tag, Tooltip } from "antd";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import FarmModal from "./FarmModal";
@@ -170,18 +170,18 @@ export default function FarmList() {
             onConfirm={() => handleDelete(record)}
           >
             <Tooltip title="Xóa">
-            <Button
-                  type="text"
-                  danger
-                  icon={
-                    <span
-                      className="anticon"
-                      style={{ color: "red", fontSize: 18 }}
-                    >
-                      🗑️
-                    </span>
-                  }
-                />
+              <Button
+                type="text"
+                danger
+                icon={
+                  <span
+                    className="anticon"
+                    style={{ color: "red", fontSize: 18 }}
+                  >
+                    🗑️
+                  </span>
+                }
+              />
             </Tooltip>
           </Popconfirm>
         </div>
