@@ -6,8 +6,12 @@ const { USER_ROLE } = require("../constants/app");
 const { isRoles, isLogin, isExpert } = require("../middlewares");
 const farmQuestionValidation = require("../middlewares/validators/taskQuestion.validation");
 const taskQuestionController = require("../controllers/taskQuestion.controller");
-const { configUploadFile } = require("../utils/upload.util");
-const upload = multer({ storage: configUploadFile("uploads/questions") });
+const { configUploadFile, fileFilter } = require("../utils/upload.util");
+const upload = multer({
+  storage: configUploadFile("uploads/questions"),
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 router.get("/", isLogin, taskQuestionController.getList);
 router.get("/:id", isLogin, taskQuestionController.getDetail);
