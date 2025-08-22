@@ -4,10 +4,14 @@ const multer = require("multer");
 
 const gardenValidation = require("../../middlewares/validators/garden.validation");
 const gardenController = require("../../controllers/admin/garden.controller");
-const { configUploadFile } = require("../../utils/upload.util");
+const { configUploadFile, fileFilter } = require("../../utils/upload.util");
 const { isFarmAdmin, isRoles } = require("../../middlewares");
 const { USER_ROLE } = require("../../constants/app");
-const upload = multer({ storage: configUploadFile("uploads/gardens") });
+const upload = multer({
+  storage: configUploadFile("uploads/gardens"),
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 router.get(
   "/",
