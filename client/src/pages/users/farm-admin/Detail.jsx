@@ -15,8 +15,6 @@ import AssignFarmModal from "./AssignFarmModal";
 import { useUserStore } from "@/stores";
 import { ImageBaseUrl } from "@/variables/common";
 import { RoutePaths } from "@/routes";
-import ChangePasswordModal from "@/components/ChangePasswordModal";
-import { adminChangePasswordApi } from "@/services/userService";
 
 export default function FarmAdminDetail() {
   const { id } = useParams();
@@ -25,8 +23,6 @@ export default function FarmAdminDetail() {
     useUserStore();
   const [editModal, setEditModal] = useState(false);
   const [assignModal, setAssignModal] = useState(false);
-  const [pwdModal, setPwdModal] = useState(false);
-  const [pwdLoading, setPwdLoading] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
   const farmAdmin = userDetail?.user || {};
@@ -91,7 +87,6 @@ export default function FarmAdminDetail() {
           <Button onClick={() => setAssignModal(true)} type="dashed">
             Gán trang trại
           </Button>
-          <Button danger onClick={() => setPwdModal(true)}>Đổi mật khẩu</Button>
         </Space>
         <Descriptions
           bordered
@@ -111,9 +106,6 @@ export default function FarmAdminDetail() {
           <Descriptions.Item label="Ngày tạo">
             {new Date(farmAdmin.createdAt).toLocaleString("vi-VN")}
           </Descriptions.Item>
-          <Descriptions.Item label="Số điện thoại">
-            {farmAdmin.phone}
-          </Descriptions.Item>
         </Descriptions>
 
         <FarmAdminModal
@@ -129,23 +121,6 @@ export default function FarmAdminDetail() {
           userId={id}
           onOk={handleAssignFarm}
           onCancel={() => setAssignModal(false)}
-        />
-        <ChangePasswordModal
-          open={pwdModal}
-          loading={pwdLoading}
-          onCancel={() => setPwdModal(false)}
-          onOk={async ({ newPassword }) => {
-            try {
-              setPwdLoading(true);
-              await adminChangePasswordApi(id, { newPassword });
-              message.success("Đổi mật khẩu thành công");
-              setPwdModal(false);
-            } catch (e) {
-              message.error(e?.message || "Đổi mật khẩu thất bại");
-            } finally {
-              setPwdLoading(false);
-            }
-          }}
         />
       </div>
 

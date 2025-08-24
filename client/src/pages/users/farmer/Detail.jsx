@@ -6,8 +6,7 @@ import FarmerModal from "./FarmerModal";
 import AssignTaskModal from "./AssignTaskModal";
 import { RoutePaths } from "@/routes";
 import { ImageBaseUrl } from "@/variables/common";
-import { adminChangePasswordApi } from "@/services/userService";
-import ChangePasswordModal from "@/components/ChangePasswordModal";
+
 export default function FarmerDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -19,8 +18,7 @@ export default function FarmerDetail() {
   const [editModal, setEditModal] = useState(false);
   const [assignModal, setAssignModal] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [pwdModal, setPwdModal] = useState(false);
-  const [pwdLoading, setPwdLoading] = useState(false);
+
   const farmer = userDetail?.user || {};
   const farm = userDetail?.farm || {};
   const tasks = userDetail?.tasks || [];
@@ -87,7 +85,6 @@ export default function FarmerDetail() {
           <Button onClick={() => setAssignModal(true)} type="dashed">
             Gán công việc
           </Button>
-          <Button danger onClick={() => setPwdModal(true)}>Đổi mật khẩu</Button>
         </Space>
 
         <Descriptions
@@ -108,9 +105,6 @@ export default function FarmerDetail() {
           <Descriptions.Item label="Ngày tạo">
             {new Date(farmer.createdAt).toLocaleString("vi-VN")}
           </Descriptions.Item>
-          <Descriptions.Item label="Số điện thoại">
-            {farmer.phone}
-          </Descriptions.Item>
           <Descriptions.Item label="Vườn">
             {farm?.name || "Không xác định"}
           </Descriptions.Item>
@@ -130,23 +124,6 @@ export default function FarmerDetail() {
           farmerId={id}
           onOk={handleAssignTask}
           onCancel={() => setAssignModal(false)}
-        />
-        <ChangePasswordModal
-          open={pwdModal}
-          loading={pwdLoading}
-          onCancel={() => setPwdModal(false)}
-          onOk={async ({ newPassword }) => {
-            try {
-              setPwdLoading(true);
-              await adminChangePasswordApi(id, { newPassword });
-              message.success("Đổi mật khẩu thành công");
-              setPwdModal(false);
-            } catch (e) {
-              message.error(e?.message || "Đổi mật khẩu thất bại");
-            } finally {
-              setPwdLoading(false);
-            }
-          }}
         />
       </div>
 

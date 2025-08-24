@@ -214,9 +214,6 @@ export default function FarmerTaskDetail() {
             <Descriptions.Item label="Mô tả">
               {task.description}
             </Descriptions.Item>
-            <Descriptions.Item label="Vườn">
-              {myTask.garden.name}
-            </Descriptions.Item>
             <Descriptions.Item label="Loại">
               <Tag color={typeColor[task.type]}>{typeLabel[task.type]}</Tag>
             </Descriptions.Item>

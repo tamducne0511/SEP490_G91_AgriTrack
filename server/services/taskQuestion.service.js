@@ -60,7 +60,7 @@ const getListPaginationByTreeId = async (treeId, page, keyword) => {
     title: { $regex: keyword, $options: "i" },
   })
     .populate("userId", "fullName email role")
-    .select("userId fullName email title image content createdAt updatedAt")
+    .select("userId fullName email title image content createdAt updatedAt parentId")
     .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
     .limit(LIMIT_ITEM_PER_PAGE);
 
