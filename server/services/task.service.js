@@ -175,7 +175,8 @@ const getDetail = async (id) => {
   ]);
 
   const garden = await Garden.findById(task.gardenId);
-  return { task, histories: listTaskHistory, notes: listDailyNote, garden };
+  const farm = await Farm.findById(task.farmId);
+  return { task, histories: listTaskHistory, notes: listDailyNote, garden, farm };
 };
 
 const remove = async (id) => {
