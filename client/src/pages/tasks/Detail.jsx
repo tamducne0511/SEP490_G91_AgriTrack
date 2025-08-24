@@ -11,6 +11,7 @@ import {
   Form,
   Input,
   message,
+  Image,
   Modal,
   Spin,
   Typography,
@@ -53,18 +54,36 @@ export default function TaskDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const { fetchTaskDetail, taskDetail, updateTask, loading } = useTaskStore();
+  const { fetchTaskDetail, taskDetail, updateTask, loading, fetchDailyNoteDetail, myTask } = useTaskStore();
   const { gardens, fetchGardens } = useGardenStore();
   const [fileList, setFileList] = useState([]);
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedGardenId, setSelectedGardenId] = useState(undefined);
-
+  const [notesDetail, setNotesDetail] = useState([]);
   useEffect(() => {
     fetchTaskDetail(id);
     fetchGardens();
   }, [id, fetchTaskDetail, fetchGardens]);
-
+  useEffect(() => {
+    const fetchAllNotes = async () => {
+      if (!myTask?.notes) return;
+      try {
+        const arr = await Promise.all(
+          myTask?.notes.map(async (note) => {
+            try {
+              const detail = await fetchDailyNoteDetail(note._id);
+              return detail; // hoặc detail.data tùy API trả về
+            } catch {
+              return null;
+            }
+          })
+        );
+        setNotesDetail(arr.filter(Boolean));
+      } catch { }
+    };
+    fetchAllNotes();
+  }, [myTask?.notes]);
   useEffect(() => {
     if (taskDetail) {
       form.setFieldsValue(taskDetail);
@@ -410,6 +429,99 @@ export default function TaskDetail() {
                 {taskDetail?.farmerId?.fullName} - {taskDetail?.farmerId?.email}
               </Descriptions.Item>
             </Descriptions>
+          </Card>
+          <Card
+            title="Ghi chú hàng ngày"
+            bordered={false}
+            style={{ borderRadius: 12 }}
+          >
+            {notesDetail.length > 0 ? (
+              notesDetail.map((noteDetail) => {
+                const note = noteDetail.taskDailyNote;
+                const equipments = noteDetail.equipments || [];
+                return (
+                  <List.Item
+                    style={{
+                      border: "1px solid grey",
+                      marginBottom: 12,
+                      padding: 8,
+                      borderRadius: 8,
+                    }}
+                    key={note._id}
+                  >
+                    <List.Item.Meta
+                      title={<Text strong>{note.title}</Text>}
+                      description={
+                        <>
+                          <span style={{ fontSize: 13, color: "#888" }}>
+                            {new Date(note.createdAt).toLocaleString("vi-VN")}
+                          </span>
+                          {/* Nếu type consumption thì show thiết bị */}
+                          {note.type === "consumption" &&
+                            equipments.length > 0 && (
+                              <div style={{ marginTop: 8 }}>
+                                <Text strong>Thiết bị sử dụng:</Text>
+                                <List
+                                  size="small"
+                                  dataSource={equipments}
+                                  renderItem={(eq) => (
+                                    <List.Item
+                                      style={{
+                                        padding: "4px 0",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "start",
+                                        gap: 8,
+                                      }}
+                                    >
+                                      <Image
+                                        width={40}
+                                        src={
+                                          eq.equipment.image.startsWith("http")
+                                            ? eq.equipment.image
+                                            : ImageBaseUrl + eq.equipment.image
+                                        }
+                                        alt={eq.equipment.name}
+                                        style={{
+                                          borderRadius: 6,
+                                        }}
+                                      />
+                                      <Text>
+                                        {eq.equipment.name} — <b>{eq.quantity}</b>
+                                      </Text>
+                                    </List.Item>
+                                  )}
+                                />
+                              </div>
+                            )}
+                          {/* Nếu type harvest thì show sản lượng */}
+                          {note.type === "harvest" && (
+                            <div style={{ marginTop: 8 }}>
+                              <Text strong>Sản lượng thu hoạch:</Text>{" "}
+                              <Tag color="green">{note.quantity} kg</Tag>
+                            </div>
+                          )}
+                        </>
+                      }
+                    />
+                    <div style={{ marginBottom: 8 }}>{note.comment}</div>
+                    {note.image && (
+                      <Image
+                        width={160}
+                        src={
+                          note.image.startsWith("http")
+                            ? note.image
+                            : ImageBaseUrl + note.image
+                        }
+                        alt="Ảnh ghi chú"
+                      />
+                    )}
+                  </List.Item>
+                );
+              })
+            ) : (
+              <Text type="secondary">Chưa có ghi chú nào</Text>
+            )}
           </Card>
         </div>
       </div>
