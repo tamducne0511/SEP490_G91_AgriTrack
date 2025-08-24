@@ -77,3 +77,8 @@ export const fetchDailyNoteDetailApi = async (id) => {
   const res = await client.get(`/web/tasks/daily-note/${id}`);
   return res.data;
 };
+
+export const fetchDailyNotesByTaskIdApi = async (taskId) => {
+  const res = await client.get(`/web/tasks/${taskId}/daily-note`);
+  return res.data;
+};

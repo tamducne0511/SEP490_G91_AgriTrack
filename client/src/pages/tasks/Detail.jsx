@@ -54,7 +54,7 @@ export default function TaskDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const { fetchTaskDetail, taskDetail, updateTask, loading, fetchDailyNoteDetail, myTask } = useTaskStore();
+  const { fetchTaskDetail, taskDetail, updateTask, loading, fetchDailyNoteDetail, fetchDailyNotesByTaskId } = useTaskStore();
   const { gardens, fetchGardens } = useGardenStore();
   const [fileList, setFileList] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -67,23 +67,30 @@ export default function TaskDetail() {
   }, [id, fetchTaskDetail, fetchGardens]);
   useEffect(() => {
     const fetchAllNotes = async () => {
-      if (!myTask?.notes) return;
+      if (!id) return;
       try {
-        const arr = await Promise.all(
-          myTask?.notes.map(async (note) => {
-            try {
-              const detail = await fetchDailyNoteDetail(note._id);
-              return detail; // hoặc detail.data tùy API trả về
-            } catch {
-              return null;
-            }
-          })
-        );
-        setNotesDetail(arr.filter(Boolean));
-      } catch { }
+        const notes = await fetchDailyNotesByTaskId(id);
+        if (notes && notes.length > 0) {
+          const arr = await Promise.all(
+            notes.map(async (note) => {
+              try {
+                const detail = await fetchDailyNoteDetail(note._id);
+                return detail; // hoặc detail.data tùy API trả về
+              } catch {
+                return null;
+              }
+            })
+          );
+          setNotesDetail(arr.filter(Boolean));
+        } else {
+          setNotesDetail([]);
+        }
+      } catch { 
+        setNotesDetail([]);
+      }
     };
     fetchAllNotes();
-  }, [myTask?.notes]);
+  }, [id, fetchDailyNotesByTaskId, fetchDailyNoteDetail]);
   useEffect(() => {
     if (taskDetail) {
       form.setFieldsValue(taskDetail);
