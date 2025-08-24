@@ -24,17 +24,9 @@ const getListPagination = async (role, page, keyword) => {
   return list;
 };
 
-const getListFarmerInFarm = async (farmIds, page, keyword) => {
-  // farmIds có thể là 1 string hoặc mảng
-  let queryFarmIds;
-  if (Array.isArray(farmIds)) {
-    queryFarmIds = farmIds.map(id => new mongoose.Types.ObjectId(id));
-  } else {
-    queryFarmIds = [new mongoose.Types.ObjectId(farmIds)];
-  }
-
+const getListFarmerInFarm = async (farmId, page, keyword) => {
   const list = await User.find({
-    farmId: { $in: queryFarmIds },
+    farmId: new mongoose.Types.ObjectId(farmId),
     role: USER_ROLE.farmer,
     fullName: { $regex: keyword, $options: "i" },
   })
@@ -45,26 +37,19 @@ const getListFarmerInFarm = async (farmIds, page, keyword) => {
   return list;
 };
 
-const getTotalFarmerInFarm = async (farmIds, keyword) => {
-  let queryFarmIds;
-  if (Array.isArray(farmIds)) {
-    queryFarmIds = farmIds.map(id => new mongoose.Types.ObjectId(id));
-  } else {
-    queryFarmIds = [new mongoose.Types.ObjectId(farmIds)];
-  }
-
+const getTotal = async (role, keyword) => {
   const total = await User.countDocuments({
-    farmId: { $in: queryFarmIds },
-    role: USER_ROLE.farmer,
+    role: role,
     fullName: { $regex: keyword, $options: "i" },
   });
 
   return total;
 };
 
-const getTotal = async (role, keyword) => {
+const getTotalFarmerInFarm = async (farmId, keyword) => {
   const total = await User.countDocuments({
-    role: role,
+    farmId: new mongoose.Types.ObjectId(farmId),
+    role: USER_ROLE.farmer,
     fullName: { $regex: keyword, $options: "i" },
   });
 
@@ -217,6 +202,23 @@ const changeStatus = async (id, status) => {
   return user;
 };
 
+const { hashPassword } = require("../utils/auth.util");
+
+const updatePassword = async (id, newPassword) => {
+  if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6) {
+    throw new BadRequestException("Password must be at least 6 characters long");
+  }
+
+  const user = await User.findById(id);
+  if (!user) {
+    throw new BadRequestException("User not found");
+  }
+
+  user.password = await hashPassword(newPassword);
+  await user.save();
+  return user;
+};
+
 module.exports = {
   getListPagination,
   getTotal,
@@ -232,4 +234,5 @@ module.exports = {
   removeAssignExpertToFarm,
   getListFarmAssignToExpert,
   changeStatus,
+  updatePassword,
 };

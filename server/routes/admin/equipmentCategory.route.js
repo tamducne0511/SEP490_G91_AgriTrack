@@ -2,8 +2,12 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 
-const { configUploadFile } = require("../../utils/upload.util");
-const upload = multer({ storage: configUploadFile("uploads/categories") });
+const { configUploadFile, fileFilter } = require("../../utils/upload.util");
+const upload = multer({
+  storage: configUploadFile("uploads/categories"),
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 const equipmentCategoryValidation = require("../../middlewares/validators/equipmentCategory.validation");
 const equipmentCategoryController = require("../../controllers/admin/equipmentCategory.controller");
 const { isFarmAdmin } = require("../../middlewares");

@@ -8,7 +8,6 @@ const {
 } = require("../constants/app");
 const BadRequestException = require("../middlewares/exceptions/badrequest");
 const NotFoundException = require("../middlewares/exceptions/notfound");
-const e = require("express");
 
 const getListPagination = async (farmId, status, page) => {
   const list = await EquipmentChange.find({
@@ -16,9 +15,21 @@ const getListPagination = async (farmId, status, page) => {
     status: status === "all" ? { $ne: null } : status,
   })
     .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
-    .limit(LIMIT_ITEM_PER_PAGE);
+    .limit(LIMIT_ITEM_PER_PAGE)
+    .populate("farmId")
+    .populate("equipmentId")
+    .lean();
 
-  return list;
+  const mappedList = list.map((item) => {
+    const { farmId, equipmentId, ...rest } = item;
+    return {
+      ...rest,
+      farm: farmId,
+      equipment: equipmentId,
+    };
+  });
+
+  return mappedList;
 };
 
 const getTotal = async (farmId, status) => {
