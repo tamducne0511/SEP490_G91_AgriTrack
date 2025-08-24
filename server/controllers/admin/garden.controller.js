@@ -6,35 +6,14 @@ const NotFoundException = require("../../middlewares/exceptions/notfound");
 // Get list garden with pagination and keyword search
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 10;
   const keyword = req.query.keyword || "";
-  
-  // Nếu pageSize >= 1000, lấy tất cả gardens
-  if (pageSize >= 1000) {
-    const list = await gardenService.getListPagination(
-      req.user.farmId,
-      1,
-      keyword,
-      pageSize
-    );
-    const total = await gardenService.getTotal(req.user.farmId, keyword);
-    res.json({
-      message: "Gardens fetched successfully",
-      data: list,
-      totalItem: total,
-      page: 1,
-      pageSize: total,
-    });
-  } else {
-    const list = await gardenService.getListPagination(
-      req.user.farmId,
-      page,
-      keyword,
-      pageSize
-    );
-    const total = await gardenService.getTotal(req.user.farmId, keyword);
-    res.json(formatPagination(page, total, list));
-  }
+  const list = await gardenService.getListPagination(
+    req.user.farmId,
+    page,
+    keyword
+  );
+  const total = await gardenService.getTotal(req.user.farmId, keyword);
+  res.json(formatPagination(page, total, list));
 };
 
 // Get list garden of farm with pagination and keyword search

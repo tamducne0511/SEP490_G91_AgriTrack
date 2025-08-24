@@ -1,4 +1,5 @@
 const User = require("../models/user.model");
+const ExpertFarm = require("../models/expertFarm.model"); // <-- bảng liên kết expert-farm
 const BadRequestException = require("../middlewares/exceptions/badrequest");
 const {
   comparePassword,
@@ -20,15 +21,25 @@ const login = async (email, password) => {
     throw new BadRequestException("Invalid email or password");
   }
 
+  let farmIds = [];
+
+  // Nếu là expert thì lấy danh sách farm từ bảng expertFarms
+  if (user.role === "expert") {
+    const expertFarms = await ExpertFarm.find({ expertId: user._id }).select("farmId");
+    farmIds = expertFarms.map((ef) => ef.farmId);
+  }
+
   const userInfo = {
     id: user._id,
     fullName: user.fullName,
     email: user.email,
     role: user.role,
-    farmId: user.farmId,
+    farmId: user.role === "expert" ? farmIds : user.farmId, // expert có nhiều farm
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
+
+  console.log(userInfo);
 
   return {
     user: userInfo,

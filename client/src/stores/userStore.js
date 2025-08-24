@@ -83,7 +83,8 @@ export const useUserStore = create((set, get) => ({
   deleteUser: async (id, role) => {
     set({ loading: true });
     try {
-      await deleteUserApi(id);
+      console.log("🗑️ Deleting user:", { id, role }); // 👈 check ở đây
+      await deleteUserApi(id, role);
       set({ loading: false });
       const { pagination, fetchUsers } = get();
       fetchUsers({ page: pagination.page, role });

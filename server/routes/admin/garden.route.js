@@ -4,18 +4,14 @@ const multer = require("multer");
 
 const gardenValidation = require("../../middlewares/validators/garden.validation");
 const gardenController = require("../../controllers/admin/garden.controller");
-const { configUploadFile, fileFilter } = require("../../utils/upload.util");
+const { configUploadFile } = require("../../utils/upload.util");
 const { isFarmAdmin, isRoles } = require("../../middlewares");
 const { USER_ROLE } = require("../../constants/app");
-const upload = multer({
-  storage: configUploadFile("uploads/gardens"),
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
+const upload = multer({ storage: configUploadFile("uploads/gardens") });
 
 router.get(
   "/",
-  isRoles([USER_ROLE.farmAdmin, USER_ROLE.farmer]),
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.farmer, USER_ROLE.expert]),
   gardenController.getList
 );
 router.get(
@@ -25,19 +21,19 @@ router.get(
 );
 router.post(
   "/",
-  isFarmAdmin,
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]),
   upload.single("image"),
   gardenValidation.create,
   gardenController.create
 );
 router.put(
   "/:id",
-  isFarmAdmin,
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]),
   upload.single("image"),
   gardenValidation.update,
   gardenController.update
 );
-router.delete("/:id", isFarmAdmin, gardenController.remove);
-router.get("/:id", isFarmAdmin, gardenController.find);
+router.delete("/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), gardenController.remove);
+router.get("/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), gardenController.find);
 
 module.exports = router;
