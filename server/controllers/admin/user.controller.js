@@ -216,7 +216,7 @@ const adminChangePassword = async (req, res, next) => {
     if (![USER_ROLE.farmAdmin, USER_ROLE.expert, USER_ROLE.farmer].includes(targetUser.role)) {
       return next(
         new BadRequestException(
-          "Only 'farm-admin' and 'expert' passwords can be reset by admin"
+          "Only 'farm-admin' and 'expert' passwords can be reset by admin or farm-admin for farmer"
         )
       );
     }
