@@ -9,9 +9,9 @@ const getList = async (req, res) => {
   const pageSize = parseInt(req.query.pageSize) || 10;
   const keyword = req.query.keyword || "";
   const gardenId = req.query.gardenId || null;
-  
+  const farmId = req.user.role === "expert" ? (req.query.farmId || null) : req.user.farmId;
   const list = await taskService.getListPagination(
-    req.user.farmId,
+    farmId,
     gardenId,
     page,
     keyword,
@@ -26,7 +26,7 @@ const getList = async (req, res) => {
       pageSize: list.length,
     });
   } else {
-    const total = await taskService.getTotal(req.user.farmId, gardenId, keyword);
+    const total = await taskService.getTotal(farmId, gardenId, keyword);
     res.json(formatPagination(page, total, list));
   }
 };
