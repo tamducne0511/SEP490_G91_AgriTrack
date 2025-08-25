@@ -24,9 +24,17 @@ const getListPagination = async (role, page, keyword) => {
   return list;
 };
 
-const getListFarmerInFarm = async (farmId, page, keyword) => {
+const getListFarmerInFarm = async (farmIds, page, keyword) => {
+  // farmIds có thể là 1 string hoặc mảng
+  let queryFarmIds;
+  if (Array.isArray(farmIds)) {
+    queryFarmIds = farmIds.map(id => new mongoose.Types.ObjectId(id));
+  } else {
+    queryFarmIds = [new mongoose.Types.ObjectId(farmIds)];
+  }
+
   const list = await User.find({
-    farmId: new mongoose.Types.ObjectId(farmId),
+    farmId: { $in: queryFarmIds },
     role: USER_ROLE.farmer,
     fullName: { $regex: keyword, $options: "i" },
   })
@@ -37,19 +45,26 @@ const getListFarmerInFarm = async (farmId, page, keyword) => {
   return list;
 };
 
-const getTotal = async (role, keyword) => {
+const getTotalFarmerInFarm = async (farmIds, keyword) => {
+  let queryFarmIds;
+  if (Array.isArray(farmIds)) {
+    queryFarmIds = farmIds.map(id => new mongoose.Types.ObjectId(id));
+  } else {
+    queryFarmIds = [new mongoose.Types.ObjectId(farmIds)];
+  }
+
   const total = await User.countDocuments({
-    role: role,
+    farmId: { $in: queryFarmIds },
+    role: USER_ROLE.farmer,
     fullName: { $regex: keyword, $options: "i" },
   });
 
   return total;
 };
 
-const getTotalFarmerInFarm = async (farmId, keyword) => {
+const getTotal = async (role, keyword) => {
   const total = await User.countDocuments({
-    farmId: new mongoose.Types.ObjectId(farmId),
-    role: USER_ROLE.farmer,
+    role: role,
     fullName: { $regex: keyword, $options: "i" },
   });
 

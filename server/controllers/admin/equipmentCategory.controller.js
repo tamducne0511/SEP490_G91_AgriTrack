@@ -6,36 +6,15 @@ const NotFoundException = require("../../middlewares/exceptions/notfound");
 // Get list category with pagination and keyword search
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 10;
   const keyword = req.query.keyword || "";
   const farmId = req.user.farmId;
-  
-  // Nếu pageSize >= 1000, lấy tất cả categories
-  if (pageSize >= 1000) {
-    const list = await equipmentCategoryService.getListPagination(
-      farmId,
-      1,
-      keyword,
-      pageSize
-    );
-    const total = await equipmentCategoryService.getTotal(farmId, keyword);
-    res.json({
-      message: "Categories fetched successfully",
-      data: list,
-      totalItem: total,
-      page: 1,
-      pageSize: total,
-    });
-  } else {
-    const list = await equipmentCategoryService.getListPagination(
-      farmId,
-      page,
-      keyword,
-      pageSize
-    );
-    const total = await equipmentCategoryService.getTotal(farmId, keyword);
-    res.json(formatPagination(page, total, list));
-  }
+  const list = await equipmentCategoryService.getListPagination(
+    farmId,
+    page,
+    keyword
+  );
+  const total = await equipmentCategoryService.getTotal(farmId, keyword);
+  res.json(formatPagination(page, total, list));
 };
 
 // Create new category

@@ -110,9 +110,6 @@ export default function ExpertDetail() {
           <Descriptions.Item label="Ngày tạo">
             {new Date(expert.createdAt).toLocaleString("vi-VN")}
           </Descriptions.Item>
-          <Descriptions.Item label="Số điện thoại">
-            {expert.phone}
-          </Descriptions.Item>
         </Descriptions>
 
         <AssignFarmModal

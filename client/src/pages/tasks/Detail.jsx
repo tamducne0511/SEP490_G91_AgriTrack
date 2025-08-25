@@ -390,6 +390,11 @@ export default function TaskDetail() {
             }}
           >
             <Descriptions column={1} labelStyle={{ fontWeight: 600 }}>
+              <Descriptions.Item label="Người tạo">
+                <Tag color={"geekblue"} style={{ fontWeight: 600 }}>
+                  {taskDetail.createdBy?.fullName || "Không xác định"}
+                </Tag>
+              </Descriptions.Item>
               <Descriptions.Item label="Loại công việc">
                 <Tag color={typeColor[taskDetail.type]}>
                   {typeLabel[taskDetail.type]}
@@ -405,6 +410,9 @@ export default function TaskDetail() {
               </Descriptions.Item>
               <Descriptions.Item label="Ngày tạo">
                 {new Date(taskDetail.createdAt).toLocaleString("vi-VN")}
+              </Descriptions.Item>
+              <Descriptions.Item label="Ngày kết thúc">
+                {taskDetail?.endDate || <Text type="secondary">Không xác định</Text>}
               </Descriptions.Item>
               <Descriptions.Item label="Được giao cho">
                 {taskDetail?.farmerId?.fullName} - {taskDetail?.farmerId?.email}

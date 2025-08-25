@@ -105,9 +105,6 @@ export default function FarmerDetail() {
           <Descriptions.Item label="Ngày tạo">
             {new Date(farmer.createdAt).toLocaleString("vi-VN")}
           </Descriptions.Item>
-          <Descriptions.Item label="Số điện thoại">
-            {farmer.phone}
-          </Descriptions.Item>
           <Descriptions.Item label="Vườn">
             {farm?.name || "Không xác định"}
           </Descriptions.Item>

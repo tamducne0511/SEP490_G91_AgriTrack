@@ -6,25 +6,10 @@ const NotFoundException = require("../../middlewares/exceptions/notfound");
 // Get list farm with pagination and keyword search
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 10;
   const keyword = req.query.keyword || "";
-  
-  // Nếu pageSize >= 1000, lấy tất cả farms
-  if (pageSize >= 1000) {
-    const list = await farmService.getListPagination(1, keyword, pageSize);
-    const total = await farmService.getTotal(keyword);
-    res.json({
-      message: "Farms fetched successfully",
-      data: list,
-      totalItem: total,
-      page: 1,
-      pageSize: total,
-    });
-  } else {
-    const list = await farmService.getListPagination(page, keyword, pageSize);
-    const total = await farmService.getTotal(keyword);
-    res.json(formatPagination(page, total, list));
-  }
+  const listFarm = await farmService.getListPagination(page, keyword);
+  const totalFarm = await farmService.getTotal(keyword);
+  res.json(formatPagination(page, totalFarm, listFarm));
 };
 
 // Create new farm

@@ -11,7 +11,7 @@ const upload = multer({ storage: configUploadFile("uploads/gardens") });
 
 router.get(
   "/",
-  isRoles([USER_ROLE.farmAdmin, USER_ROLE.farmer]),
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.farmer, USER_ROLE.expert]),
   gardenController.getList
 );
 router.get(
@@ -21,19 +21,19 @@ router.get(
 );
 router.post(
   "/",
-  isFarmAdmin,
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]),
   upload.single("image"),
   gardenValidation.create,
   gardenController.create
 );
 router.put(
   "/:id",
-  isFarmAdmin,
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]),
   upload.single("image"),
   gardenValidation.update,
   gardenController.update
 );
-router.delete("/:id", isFarmAdmin, gardenController.remove);
-router.get("/:id", isFarmAdmin, gardenController.find);
+router.delete("/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), gardenController.remove);
+router.get("/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), gardenController.find);
 
 module.exports = router;

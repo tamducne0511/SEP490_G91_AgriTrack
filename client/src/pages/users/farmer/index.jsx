@@ -1,11 +1,12 @@
 import { RoutePaths } from "@/routes";
-import { useFarmerStore } from "@/stores";
+import { useAuthStore, useFarmerStore } from "@/stores";
 import { EyeOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Input, message, Popconfirm, Table, Tag, Tooltip } from "antd";
+import { Button, Input, message, Modal, Popconfirm, Select, Table, Tag, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FarmerModal from "./FarmerModal";
 import { activeFarmerApi } from "@/services";
+import emailjs from "@emailjs/browser";
 
 export default function FarmerList() {
   const {
@@ -24,9 +25,16 @@ export default function FarmerList() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const navigate = useNavigate();
 
+  const { user, farmIds } = useAuthStore();
+  const [selectedFarmId, setSelectedFarmId] = useState(undefined);
+
   useEffect(() => {
-    fetchFarmers({ page, keyword });
-  }, [page, keyword, fetchFarmers]);
+    fetchFarmers({
+      page,
+      keyword,
+      farmId: selectedFarmId,
+    });
+  }, [page, keyword, selectedFarmId, fetchFarmers]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -40,6 +48,46 @@ export default function FarmerList() {
       setModalOpen(false);
     } finally {
       setConfirmLoading(false);
+    }
+  };
+
+  const [deactivateModal, setDeactivateModal] = useState({
+    open: false,
+    farmer: null,
+  });
+  const [deactivateMessage, setDeactivateMessage] = useState("");
+
+  const handleDeactivateConfirm = async () => {
+    try {
+      // Data chuẩn bị gửi cho emailjs
+      const emailData = {
+        name: deactivateModal.farmer?.fullName,
+        email: deactivateModal.farmer?.email,
+        message: deactivateMessage,
+        time: new Date().toLocaleString("vi-VN"),
+      };
+
+      // In ra console cho dễ debug
+      console.log("📨 EmailJS data to send:", emailData);
+
+      // Gọi API deactivate farmer
+      await deleteFarmer(deactivateModal.farmer._id, deactivateMessage);
+
+      // Gửi mail
+      await emailjs.send(
+        "service_qwirn1u",
+        "template_s48zz6f",
+        emailData,
+        "-DtfIEOTZV0sDYXEr"
+      );
+
+      message.success("Vô hiệu hoá thành công và email đã được gửi!");
+    } catch (error) {
+      console.error("❌ Error in handleDeactivateConfirm:", error);
+      message.error("Có lỗi xảy ra!");
+    } finally {
+      setDeactivateModal({ open: false, farmer: null });
+      setDeactivateMessage("");
     }
   };
 
@@ -120,25 +168,14 @@ export default function FarmerList() {
           {record.status ? (
             // Trường hợp Farmer đang active -> Hiển thị nút Deactivate
             <Tooltip title="Vô hiệu hoá">
-              <Popconfirm
-                title="Bạn chắc chắn muốn vô hiệu hoá nông dân này?"
-                okText="Vô hiệu hoá"
-                cancelText="Huỷ"
-                onConfirm={() => handleDelete(record)}
-              >
-                <Button
-                  type="text"
-                  danger
-                  icon={
-                    <span
-                      className="anticon"
-                      style={{ color: "red", fontSize: 18 }}
-                    >
-                      🗑️
-                    </span>
-                  }
-                />
-              </Popconfirm>
+              <Button
+                type="text"
+                danger
+                icon={<span style={{ color: "red", fontSize: 18 }}>🗑️</span>}
+                onClick={() =>
+                  setDeactivateModal({ open: true, farmer: record })
+                }
+              />
             </Tooltip>
           ) : (
             <Tooltip title="Kích hoạt lại">
@@ -197,6 +234,19 @@ export default function FarmerList() {
         >
           Thêm nông dân
         </Button>
+        {user?.role === "expert" && (
+          <Select
+            allowClear
+            style={{ width: 240 }}
+            placeholder="Chọn trang trại"
+            value={selectedFarmId}
+            options={farmIds?.map((f) => ({
+              value: f.farm._id,
+              label: f.farm.name,
+            }))}
+            onChange={setSelectedFarmId}
+          />
+        )}
         <Input
           allowClear
           prefix={<SearchOutlined />}
@@ -237,6 +287,19 @@ export default function FarmerList() {
           },
         }}
       />
+      <Modal
+        title="Nhập nội dung vô hiệu hoá"
+        open={deactivateModal.open}
+        onOk={handleDeactivateConfirm}
+        onCancel={() => setDeactivateModal({ open: false, farmer: null })}
+      >
+        <Input.TextArea
+          rows={4}
+          placeholder="Nhập lý do/nội dung gửi cho farmer..."
+          value={deactivateMessage}
+          onChange={(e) => setDeactivateMessage(e.target.value)}
+        />
+      </Modal>
       <FarmerModal
         open={modalOpen}
         isEdit={false}

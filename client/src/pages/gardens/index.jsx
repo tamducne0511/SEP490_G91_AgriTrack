@@ -7,7 +7,7 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import { Button, Input, message, Popconfirm, Table, Tag, Tooltip } from "antd";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GardenModal from "./GardenModal";
 import { RoutePaths } from "@/routes";
@@ -36,19 +36,10 @@ export default function GardenList() {
   const [keyword, setKeyword] = useState("");
   const [modal, setModal] = useState({ open: false, edit: false, initial: {} });
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const isSearching = useRef(false);
 
   useEffect(() => {
     fetchGardens({ page, keyword });
   }, [page, keyword, fetchGardens]);
-
-  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
-  useEffect(() => {
-    if (isSearching.current) {
-      setPage(1);
-      isSearching.current = false;
-    }
-  }, [keyword]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -224,10 +215,7 @@ export default function GardenList() {
             border: "1.5px solid #23643A",
             background: "#fafafa",
           }}
-          onChange={(e) => {
-            isSearching.current = true;
-            setKeyword(e.target.value);
-          }}
+          onChange={(e) => setKeyword(e.target.value)}
           value={keyword}
         />
       </div>

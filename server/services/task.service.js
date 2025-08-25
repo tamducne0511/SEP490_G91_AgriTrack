@@ -14,19 +14,23 @@ const TaskDailyNote = require("../models/taskDailyNote.model");
 const BadRequestException = require("../middlewares/exceptions/badrequest");
 const mongoose = require("mongoose");
 
-const getListPagination = async (farmId, gardenId, page, keyword, pageSize = LIMIT_ITEM_PER_PAGE) => {
+const getListPagination = async (farmId, gardenId, page, keyword) => {
   const filter = {
-    farmId: farmId,
     name: { $regex: keyword, $options: "i" },
   };
+
+  if (farmId) {
+    filter.farmId = farmId;
+  }
 
   if (gardenId) {
     filter.gardenId = gardenId;
   }
 
   const list = await Task.find(filter)
-    .skip((page - 1) * pageSize)
-    .limit(pageSize);
+    .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
+    .limit(LIMIT_ITEM_PER_PAGE)
+    .populate("createdBy", "fullName");
 
   return list;
 };
@@ -45,9 +49,12 @@ const getListAssignedPagination = async (farmId, farmerId, page, keyword) => {
 
 const getTotal = async (farmId, gardenId, keyword) => {
   const filter = {
-    farmId: farmId,
     name: { $regex: keyword, $options: "i" },
   };
+
+  if (farmId) {
+    filter.farmId = farmId;
+  }
 
   if (gardenId) {
     filter.gardenId = gardenId;
@@ -105,13 +112,14 @@ const update = async (id, data) => {
   task.type = data.type;
   task.priority = data.priority;
   task.description = data.description;
+  task.endDate = data.endDate;
   await task.save();
   return task;
 };
 
 const find = async (id) => {
   try {
-    const task = await Task.findById(id).populate("farmerId", "-password");
+    const task = await Task.findById(id).populate("farmerId", "-password").populate("createdBy", "fullName");
     return task;
   } catch (error) {
     return null;

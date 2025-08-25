@@ -6,29 +6,17 @@ const NotFoundException = require("../../middlewares/exceptions/notfound");
 // Get list task with pagination and keyword search
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 10;
   const keyword = req.query.keyword || "";
   const gardenId = req.query.gardenId || null;
-  
+  const farmId = req.user.role === "expert" ? (req.query.farmId || null) : req.user.farmId;
   const list = await taskService.getListPagination(
-    req.user.farmId,
+    farmId,
     gardenId,
     page,
-    keyword,
-    pageSize
+    keyword
   );
-  
-  if (pageSize >= 1000) {
-    res.json({
-      data: list,
-      totalItem: list.length,
-      page: 1,
-      pageSize: list.length,
-    });
-  } else {
-    const total = await taskService.getTotal(req.user.farmId, gardenId, keyword);
-    res.json(formatPagination(page, total, list));
-  }
+  const total = await taskService.getTotal(farmId, gardenId, keyword);
+  res.json(formatPagination(page, total, list));
 };
 
 // Create new task
@@ -43,11 +31,15 @@ const create = async (req, res) => {
     description: req.body.description,
     type: req.body.type,
     priority: req.body.priority,
-    farmId: req.user.farmId,
+    farmId: req.user.role === "expert" ? req.body.farmId : req.user.farmId,
     gardenId: req.body.gardenId,
     image: req.file?.filename ? `/uploads/tasks/${req.file.filename}` : "",
+    endDate: req.body.endDate !== "null" ? new Date(req.body.endDate) : null,
+    createdBy: req.user.id,
   };
 
+  console.log(req.body.endDate);
+  console.log(payload);
   const task = await taskService.create(payload);
   res.status(201).json({
     message: "Task created successfully",
