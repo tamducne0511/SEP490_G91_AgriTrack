@@ -1,5 +1,5 @@
 import { RoutePaths } from "@/routes";
-import { useGardenStore, useTaskStore } from "@/stores";
+import { useAuthStore,useFarmStore, useGardenStore, useTaskStore } from "@/stores";
 import {
   DeleteOutlined,
   EyeOutlined,
@@ -51,16 +51,42 @@ const statusColor = {
 const getRowLabel = (index) => String.fromCharCode(65 + index); // A, B, C, ...
 
 export default function TaskList() {
-  const { tasks, pagination, loading, error, fetchTasks, deleteTask } =
-    useTaskStore();
-
-  const { gardens, fetchGardens } = useGardenStore();
+  const {
+    tasks,
+    pagination,
+    loading,
+    error,
+    fetchTasks,
+    deleteTask,
+  } = useTaskStore();
+  const { user, farmIds } = useAuthStore();
+  const { fetchFarms } = useFarmStore();
+  const { gardens, fetchGardens, fetchGardensByFarmId, gardensByFarm } =
+    useGardenStore();
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
+  const [selectedFarmId, setSelectedFarmId] = useState(undefined);
   const [selectedGardenId, setSelectedGardenId] = useState(undefined);
   const [zoneFilter, setZoneFilter] = useState(undefined); // Remove zone filter
   const isSearching = useRef(false);
   const navigate = useNavigate();
+  useEffect(() => {
+    fetchFarms(); // load danh sách farm cho expert
+  }, [fetchFarms]);
+
+  useEffect(() => {
+    if (selectedFarmId) {
+      fetchGardensByFarmId(selectedFarmId);
+      setSelectedGardenId(undefined); // reset garden khi đổi farm
+      fetchTasks({
+        page,
+        keyword,
+        farmId: selectedFarmId,
+        gardenId: undefined, // <-- đảm bảo không dùng giá trị cũ
+      });
+    }
+  }, [selectedFarmId, fetchGardensByFarmId, fetchTasks, page, keyword]);
+
 
   useEffect(() => {
     fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
@@ -116,6 +142,29 @@ export default function TaskList() {
           {typeLabel[type] || type}
         </Tag>
       ),
+    },
+    {
+      title: "Ngày tạo",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      align: "center",
+      render: (createdAt) =>
+        createdAt ? new Date(createdAt).toLocaleDateString("vi-VN") : "—",
+    },
+    {
+      title: "Ngày kết thúc",
+      dataIndex: "endDate",
+      key: "endDate",
+      align: "center",
+      render: (endDate) =>
+        endDate ? new Date(endDate).toLocaleDateString("vi-VN") : "—",
+    },
+    {
+      title: "Người tạo",
+      dataIndex: ["createdBy", "fullName"],
+      key: "createdBy",
+      align: "center",
+      render: (createdBy) => createdBy || "—",
     },
     {
       title: "Ưu tiên",
@@ -231,13 +280,31 @@ export default function TaskList() {
           }}
           value={keyword}
         />
+        {user?.role === "expert" && (
+          <Select
+            allowClear
+            style={{ width: 240 }}
+            placeholder="Chọn trang trại"
+            value={selectedFarmId}
+            options={farmIds?.map((f) => ({
+              value: f.farm._id,
+              label: f.farm.name,
+            }))}
+            onChange={setSelectedFarmId}
+          />
+        )}
         <Select
           allowClear
           style={{ width: 240 }}
           placeholder="Chọn vườn"
           value={selectedGardenId}
-          options={gardens.map((g) => ({ value: g._id, label: g.name }))}
+          options={
+            user?.role === "expert"
+              ? gardensByFarm.map((g) => ({ value: g._id, label: g.name }))
+              : gardens.map((g) => ({ value: g._id, label: g.name }))
+          }
           onChange={setSelectedGardenId}
+          disabled={!selectedFarmId && user?.role === "expert"}
         />
       </div>
 
