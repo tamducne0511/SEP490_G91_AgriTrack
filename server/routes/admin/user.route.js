@@ -9,21 +9,21 @@ const { USER_ROLE } = require("../../constants/app");
 router.get("/", isAdmin, userController.getList);
 router.post("/:id/active", isAdmin, userController.active);
 router.post("/:id/deactive", isAdmin, userController.deactive);
-router.get("/list/farmers", isFarmAdmin, userController.getListFarmer);
+router.get("/list/farmers", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), userController.getListFarmer);
 router.get(
   "/:id",
-  isRoles(USER_ROLE.farmAdmin, USER_ROLE.admin),
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.admin, USER_ROLE.expert]),
   userController.getDetail
 );
 router.post("/", userValidation.create, userController.create);
 router.post(
   "/farmers",
-  isFarmAdmin,
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.admin, USER_ROLE.expert]),
   userValidation.createFarmer,
   userController.createFarmer
 );
-router.delete("/farmers/:id", isFarmAdmin, userController.removeFarmer);
-router.post("/farmer/:id/active", isFarmAdmin, userController.active);
+router.delete("/farmers/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), userController.removeFarmer);
+router.post("/farmer/:id/active", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), userController.active);
 router.get(
   "/list/farm-unassigned",
   isAdmin,
