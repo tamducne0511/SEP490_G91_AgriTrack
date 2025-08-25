@@ -6,12 +6,8 @@ const { USER_ROLE } = require("../constants/app");
 const { isRoles } = require("../middlewares");
 const notificationValidation = require("../middlewares/validators/notification.validation");
 const notificationController = require("../controllers/notification.controller");
-const { configUploadFile, fileFilter } = require("../utils/upload.util");
-const upload = multer({
-  storage: configUploadFile("uploads/notifications"),
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
+const { configUploadFile } = require("../utils/upload.util");
+const upload = multer({ storage: configUploadFile("uploads/notifications") });
 
 router.get(
   "/",

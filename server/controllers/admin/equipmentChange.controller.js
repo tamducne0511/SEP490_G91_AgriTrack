@@ -8,15 +8,13 @@ const NotFoundException = require("../../middlewares/exceptions/notfound");
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const status = req.query.status || "all";
-  const keyword = req.query.keyword || "";
   const farmId = req.user.farmId;
   const list = await equipmentChangeService.getListPagination(
     farmId,
     status,
-    page,
-    keyword
+    page
   );
-  const total = await equipmentChangeService.getTotal(farmId, status, keyword);
+  const total = await equipmentChangeService.getTotal(farmId, status);
   res.json(formatPagination(page, total, list));
 };
 
