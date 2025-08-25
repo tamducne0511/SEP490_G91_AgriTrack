@@ -1,11 +1,10 @@
 import { RoutePaths } from "@/routes";
 import { useUserStore } from "@/stores";
 import { EyeOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Input, message, Modal, Popconfirm, Table, Tag, Tooltip } from "antd";
-import { useEffect, useState } from "react";
+import { Button, Input, message, Popconfirm, Table, Tag, Tooltip } from "antd";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ExpertModal from "./ExpertModal";
-import emailjs from "@emailjs/browser";
 
 export default function ExpertList() {
   const {
@@ -23,47 +22,20 @@ export default function ExpertList() {
   const [keyword, setKeyword] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const isSearching = useRef(false);
   const navigate = useNavigate();
-  const [deactivateModal, setDeactivateModal] = useState({
-    open: false,
-    expert: null,
-  });
-  const [deactivateMessage, setDeactivateMessage] = useState("");
-
-  const handleDeactivateConfirm = async () => {
-    if (!deactivateModal.expert) return;
-
-    const emailData = {
-      name: deactivateModal.expert.fullName,
-      email: deactivateModal.expert.email,
-      message: deactivateMessage,
-      time: new Date().toLocaleString("vi-VN"),
-    };
-
-    console.log("📨 EmailJS data to send:", emailData);
-    console.log("❓ deactivateModal:", deactivateModal);
-
-    try {
-      await deleteUser(deactivateModal.expert._id, "expert");
-      await emailjs.send(
-        "service_qwirn1u",
-        "template_s48zz6f",
-        emailData,
-        "-DtfIEOTZV0sDYXEr"
-      );
-      message.success("Vô hiệu hoá chuyên gia thành công!");
-    } catch (error) {
-      console.error("❌ Error deactivating expert:", error);
-      message.error("Có lỗi xảy ra khi vô hiệu hoá chuyên gia.");
-    } finally {
-      setDeactivateModal({ open: false, expert: null });
-      setDeactivateMessage("");
-    }
-  };
 
   useEffect(() => {
     fetchUsers({ page, role: "expert", keyword });
   }, [page, keyword, fetchUsers]);
+
+  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    if (isSearching.current) {
+      setPage(1);
+      isSearching.current = false;
+    }
+  }, [keyword]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -156,21 +128,25 @@ export default function ExpertList() {
           </Tooltip>
           {record.status ? (
             <Tooltip title="Vô hiệu hoá">
-              <Button
-                type="text"
-                danger
-                icon={
-                  <span
-                    className="anticon"
-                    style={{ color: "red", fontSize: 18 }}
-                  >
-                    🗑️
-                  </span>
-                }
-                onClick={() =>
-                  setDeactivateModal({ open: true, expert: record })
-                }
-              />
+              <Popconfirm
+                title="Bạn chắc chắn muốn vô hiệu hoá chuyên gia này?"
+                okText="Vô hiệu hoá"
+                cancelText="Huỷ"
+                onConfirm={() => handleDelete(record)}
+              >
+                <Button
+                  type="text"
+                  danger
+                  icon={
+                    <span
+                      className="anticon"
+                      style={{ color: "red", fontSize: 18 }}
+                    >
+                      🗑️
+                    </span>
+                  }
+                />
+              </Popconfirm>
             </Tooltip>
           ) : (
             <Tooltip title="Kích hoạt lại">
@@ -240,7 +216,10 @@ export default function ExpertList() {
             border: "1.5px solid #23643A",
             background: "#f8fafb",
           }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            isSearching.current = true;
+            setKeyword(e.target.value);
+          }}
           value={keyword}
         />
       </div>
@@ -270,46 +249,6 @@ export default function ExpertList() {
           },
         }}
       />
-      <Modal
-        title="Vô hiệu hoá chuyên gia"
-        open={deactivateModal.open}
-        okText="Xác nhận"
-        cancelText="Huỷ"
-        onOk={handleDeactivateConfirm}
-        onCancel={() => setDeactivateModal({ open: false, expert: null })}
-      >
-        {deactivateModal.expert && (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: 12,
-              border: "1px solid #e0e0e0",
-              borderRadius: 8,
-              background: "#f9fafb",
-            }}
-          >
-            <p>
-              <strong>Tên chuyên gia:</strong> {deactivateModal.expert.fullName}
-            </p>
-            <p>
-              <strong>Email:</strong> {deactivateModal.expert.email}
-            </p>
-            <p>
-              <strong>Ngày tạo:</strong>{" "}
-              {new Date(deactivateModal.expert.createdAt).toLocaleDateString(
-                "vi-VN"
-              )}
-            </p>
-          </div>
-        )}
-        <Input.TextArea
-          rows={5}
-          placeholder="Nhập lý do / nội dung sẽ gửi cho chuyên gia qua email..."
-          value={deactivateMessage}
-          onChange={(e) => setDeactivateMessage(e.target.value)}
-          style={{ borderRadius: 8 }}
-        />
-      </Modal>
       <ExpertModal
         open={modalOpen}
         isEdit={false}

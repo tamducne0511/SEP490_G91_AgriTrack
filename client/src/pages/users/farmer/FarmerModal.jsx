@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Select } from "antd";
-import { useAuthStore } from "@/stores";
+import React, { useEffect } from "react";
+import { Modal, Form, Input } from "antd";
 
 const FarmerModal = ({
   open,
@@ -17,11 +16,6 @@ const FarmerModal = ({
     if (!open) form.resetFields();
   }, [open, initialValues, form]);
 
-  const { user, farmIds } = useAuthStore();
-  const isExpert = user?.role === "expert";
-
-  const [selectedFarmId, setSelectedFarmId] = useState(undefined);
-
   return (
     <Modal
       title={isEdit ? "Sửa nông dân" : "Thêm nông dân"}
@@ -35,24 +29,6 @@ const FarmerModal = ({
       destroyOnClose
     >
       <Form form={form} layout="vertical">
-        {isExpert && (
-          <Form.Item
-            name="farmId"
-            label="Trang trại"
-            rules={[{ required: true, message: "Chọn trang trại" }]}
-          >
-            <Select
-              placeholder="Chọn trang trại"
-              value={selectedFarmId}
-              options={farmIds?.map((f) => ({
-                value: f.farm._id,
-                label: f.farm.name,
-              }))}
-              onChange={setSelectedFarmId}
-              size="large"
-            />
-          </Form.Item>
-        )}
         <Form.Item
           name="fullName"
           label="Tên nông dân"

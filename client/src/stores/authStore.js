@@ -11,7 +11,7 @@ export const useAuthStore = create((set) => ({
   user: null,
   token: null,
   loading: false,
-  farmIds: null,
+  farm: null,
   error: null,
 
   login: async (email, password) => {
@@ -32,8 +32,8 @@ export const useAuthStore = create((set) => ({
       const res = await getMeApi();
       const data = res.data;
       localStorage.setItem(EUser.CURRENT_USER, JSON.stringify(data.user));
-      localStorage.setItem(EFarm.CURRENT_FARM, JSON.stringify(data.farmId));
-      set({ user: data.user, farmIds: data.farmId });
+      localStorage.setItem(EFarm.CURRENT_FARM, JSON.stringify(data.farm));
+      set({ user: data.user, farm: data.farm });
     } catch (err) {
       set({ error: err?.message || "Lỗi lấy thông tin người dùng" });
     }
