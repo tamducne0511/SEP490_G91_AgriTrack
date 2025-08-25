@@ -1,15 +1,9 @@
 import { RoutePaths } from "@/routes";
-import {
-  useAuthStore,
-  useFarmStore,
-  useGardenStore,
-  useTaskStore,
-} from "@/stores";
+import { useGardenStore, useTaskStore } from "@/stores";
 import { ArrowLeftOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
-  DatePicker,
   Descriptions,
   Form,
   Input,
@@ -17,7 +11,7 @@ import {
   Select,
   Tag,
   Typography,
-  Upload,
+  Upload
 } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -47,30 +41,27 @@ const priorityLabel = {
 };
 
 export default function TaskCreate() {
-  const { fetchGardens, gardens,gardensByFarm } = useGardenStore();
+  const { fetchGardens, gardens } =
+    useGardenStore();
   const { createTask } = useTaskStore();
-
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
-  const [selectedFarmId, setSelectedFarmId] = useState(undefined);
   const [selectedGardenId, setSelectedGardenId] = useState(undefined);
   const [formValues, setFormValues] = useState({});
-  const { getMe, user, farmIds } = useAuthStore();
 
   useEffect(() => {
-    getMe();
-  }, [getMe]);
-
-  const isExpert = user?.role === "expert";
-
-  useEffect(() => {
-    fetchGardens();
+    fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
   }, [fetchGardens]);
 
   const handleChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
   };
+
+  const availableGardens = gardens.filter(garden => 
+    // Chỉ hiển thị garden còn hoạt động 
+    garden.status === true
+  );
 
   const handleSubmit = async () => {
     try {
@@ -79,17 +70,12 @@ export default function TaskCreate() {
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("description", values.description);
-      if (user?.role === "expert") {
-        formData.append("farmId", selectedFarmId);
-      }
       formData.append("gardenId", selectedGardenId);
       formData.append("type", values.type);
       formData.append("priority", values.priority);
-      formData.append("endDate", values.endDate ? values.endDate : null);
       if (fileList[0]?.originFileObj) {
         formData.append("image", fileList[0].originFileObj);
       }
-      console.log("Farm Id:", selectedFarmId);
       await createTask(formData);
       message.success("Tạo công việc thành công!");
       navigate(RoutePaths.TASK_LIST);
@@ -98,6 +84,7 @@ export default function TaskCreate() {
       console.error("Submission error:", err);
     }
   };
+
 
   return (
     <div
@@ -156,7 +143,6 @@ export default function TaskCreate() {
               >
                 <Input placeholder="Tên công việc" size="large" />
               </Form.Item>
-
               <Form.Item
                 name="description"
                 label="Mô tả"
@@ -164,27 +150,6 @@ export default function TaskCreate() {
               >
                 <Input placeholder="Mô tả" size="large" />
               </Form.Item>
-
-              {/* Nếu expert thì chọn farm trước */}
-              {isExpert && (
-                <Form.Item
-                  name="farmId"
-                  label="Trang trại"
-                  rules={[{ required: true, message: "Chọn trang trại" }]}
-                >
-                  <Select
-                    placeholder="Chọn trang trại"
-                    value={selectedFarmId}
-                    options={farmIds?.map((f) => ({
-                      value: f.farm._id,
-                      label: f.farm.name,
-                    }))}
-                    onChange={setSelectedFarmId}
-                    size="large"
-                  />
-                </Form.Item>
-              )}
-
               <Form.Item
                 name="gardenId"
                 label="Vườn"
@@ -194,24 +159,29 @@ export default function TaskCreate() {
                   showSearch
                   placeholder="Chọn vườn"
                   value={selectedGardenId}
-                  options={
-                    user?.role === "expert"
-                      ? gardensByFarm.map((g) => ({
-                          value: g._id,
-                          label: g.name,
-                        }))
-                      : gardens.map((g) => ({ value: g._id, label: g.name }))
-                  }
+                  options={availableGardens.map((g) => ({
+                    value: g._id,
+                    label: g.name,
+                  }))}
                   onChange={setSelectedGardenId}
                   size="large"
-                  disabled={isExpert && !selectedFarmId}
                 />
               </Form.Item>
-
+        
               <Form.Item
                 name="type"
                 label="Loại công việc"
-                rules={[{ required: true, message: "Chọn loại công việc" }]}
+                rules={[
+                  { required: true, message: "Chọn loại công việc" },
+                  {
+                    validator: (_, value) =>
+                      value === "collect" || value === "task-care"
+                        ? Promise.resolve()
+                        : Promise.reject(
+                            new Error("Type must be collect or task-care")
+                          ),
+                  },
+                ]}
               >
                 <Select
                   placeholder="Chọn loại"
@@ -222,7 +192,6 @@ export default function TaskCreate() {
                   size="large"
                 />
               </Form.Item>
-
               <Form.Item
                 name="priority"
                 label="Độ ưu tiên"
@@ -238,15 +207,6 @@ export default function TaskCreate() {
                   size="large"
                 />
               </Form.Item>
-
-              <Form.Item name="endDate" label="Ngày kết thúc">
-                <DatePicker
-                  style={{ width: "100%" }}
-                  size="large"
-                  format="DD/MM/YYYY"
-                />
-              </Form.Item>
-
               <Form.Item label="Ảnh minh hoạ">
                 <Upload
                   listType="picture-card"
@@ -281,7 +241,6 @@ export default function TaskCreate() {
                   )}
                 </Upload>
               </Form.Item>
-
               <div style={{ display: "flex", gap: 16, marginTop: 14 }}>
                 <Button
                   type="primary"
@@ -292,6 +251,7 @@ export default function TaskCreate() {
                     minWidth: 120,
                   }}
                   onClick={handleSubmit}
+                  loading={false}
                 >
                   Lưu công việc
                 </Button>
@@ -324,34 +284,11 @@ export default function TaskCreate() {
               <Descriptions.Item label="Tên công việc">
                 {formValues.name || <Text type="secondary">Chưa nhập</Text>}
               </Descriptions.Item>
-
               <Descriptions.Item label="Mô tả">
                 {formValues.description || (
                   <Text type="secondary">Chưa nhập</Text>
                 )}
               </Descriptions.Item>
-
-              {isExpert && (
-                <Descriptions.Item label="Trang trại">
-                  {selectedFarmId ? (
-                    (() => {
-                      const selectedFarm = farmIds.find((f) =>
-                        f.farm
-                          ? f.farm._id === selectedFarmId
-                          : f._id === selectedFarmId
-                      );
-                      return selectedFarm
-                        ? selectedFarm.farm
-                          ? selectedFarm.farm.name
-                          : selectedFarm.name
-                        : "Không xác định";
-                    })()
-                  ) : (
-                    <Text type="secondary">Chưa chọn</Text>
-                  )}
-                </Descriptions.Item>
-              )}
-
               <Descriptions.Item label="Vườn">
                 {selectedGardenId ? (
                   gardens.find((g) => g._id === selectedGardenId)?.name ||
@@ -360,7 +297,7 @@ export default function TaskCreate() {
                   <Text type="secondary">Chưa chọn</Text>
                 )}
               </Descriptions.Item>
-
+           
               <Descriptions.Item label="Loại công việc">
                 {formValues.type ? (
                   <Tag color={typeColor[formValues.type]}>
@@ -370,7 +307,6 @@ export default function TaskCreate() {
                   <Text type="secondary">Chưa chọn</Text>
                 )}
               </Descriptions.Item>
-
               <Descriptions.Item label="Độ ưu tiên">
                 {formValues.priority ? (
                   <Tag color={priorityColor[formValues.priority]}>
@@ -380,7 +316,6 @@ export default function TaskCreate() {
                   <Text type="secondary">Chưa chọn</Text>
                 )}
               </Descriptions.Item>
-
               {fileList.length > 0 && (
                 <Descriptions.Item label="Ảnh">
                   <img

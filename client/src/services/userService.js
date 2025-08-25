@@ -60,3 +60,8 @@ export const unassignExpertFromFarmApi = async (assignedFarmId) => {
   );
   return res.data;
 };
+
+export const adminChangePasswordApi = async (id, payload) => {
+  const res = await client.post(`/admin/users/${id}/change-password`, payload);
+  return res.data;
+};

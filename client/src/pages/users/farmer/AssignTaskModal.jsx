@@ -13,7 +13,7 @@ export default function AssignTaskModal({
   const [selectedTask, setSelectedTask] = useState(initialTaskId || null);
 
   useEffect(() => {
-    if (open) fetchTasks();
+    if (open) fetchTasks({ pageSize: 1000 }); // Lấy tất cả tasks
     setSelectedTask(initialTaskId || null);
     // eslint-disable-next-line
   }, [open]);

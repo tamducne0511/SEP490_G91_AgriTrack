@@ -1,7 +1,19 @@
 import { useEquipmentStore } from "@/stores";
-import { Button, Input, message, Table, Tooltip, Modal } from "antd";
-import { useEffect, useState, useMemo } from "react";
-import { SearchOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import {
+  CheckOutlined,
+  CloseOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import {
+  Button,
+  Input,
+  message,
+  Modal,
+  Table,
+  Tooltip,
+  Typography,
+} from "antd";
+import { useEffect, useRef, useState } from "react";
 
 export default function EquipmentChangeList() {
   const {
@@ -19,6 +31,7 @@ export default function EquipmentChangeList() {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [rejectingId, setRejectingId] = useState(null);
+  const isSearching = useRef(false);
 
   // Lấy danh sách thiết bị khi mount
   useEffect(() => {
@@ -29,18 +42,17 @@ export default function EquipmentChangeList() {
     fetchEquipmentChanges({ page, status: "all", keyword });
   }, [page, keyword, fetchEquipmentChanges]);
 
+  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    if (isSearching.current) {
+      setPage(1);
+      isSearching.current = false;
+    }
+  }, [keyword]);
+
   useEffect(() => {
     if (ecError) message.error(ecError);
   }, [ecError]);
-
-  // Tạo map equipmentId => name
-  const equipmentMap = useMemo(() => {
-    const map = {};
-    (equipments || []).forEach(eq => {
-      map[eq._id] = eq.name;
-    });
-    return map;
-  }, [equipments]);
 
   const handleApprove = async (id) => {
     try {
@@ -64,17 +76,22 @@ export default function EquipmentChangeList() {
   const columns = [
     {
       title: "STT",
-      render: (_, __, idx) => (page - 1) * (ecPagination.pageSize || 10) + idx + 1,
+      render: (_, __, idx) =>
+        (page - 1) * (ecPagination.pageSize || 10) + idx + 1,
       align: "center",
       width: 70,
     },
     {
       title: "Thiết bị",
-      dataIndex: "equipmentId",
-      key: "equipmentId",
+      dataIndex: "equipment",
+      key: "equipment",
       align: "center",
       width: 180,
-      render: (equipmentId) => equipmentMap[equipmentId] || equipmentId,
+      render: (_, record) => (
+        <Typography.Text style={{ fontWeight: "bold" }}>
+          {record?.equipment?.name}
+        </Typography.Text>
+      ),
     },
     {
       title: "Loại thay đổi",
@@ -106,11 +123,14 @@ export default function EquipmentChangeList() {
       align: "center",
       width: 120,
       render: (status) => {
-        if (status === "pending") return <span style={{ color: "#f39c12" }}>Chờ duyệt</span>;
-        if (status === "approved") return <span style={{ color: "#27ae60" }}>Đã duyệt</span>;
-        if (status === "rejected") return <span style={{ color: "#e74c3c" }}>Từ chối</span>;
+        if (status === "pending")
+          return <span style={{ color: "#f39c12" }}>Chờ duyệt</span>;
+        if (status === "approved")
+          return <span style={{ color: "#27ae60" }}>Đã duyệt</span>;
+        if (status === "rejected")
+          return <span style={{ color: "#e74c3c" }}>Từ chối</span>;
         return status;
-      }
+      },
     },
     {
       title: "Chức năng",
@@ -154,8 +174,22 @@ export default function EquipmentChangeList() {
   };
 
   return (
-    <div style={{ background: "#fff", borderRadius: 13, padding: 24, boxShadow: "0 2px 12px #00000013" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 13,
+        padding: 24,
+        boxShadow: "0 2px 12px #00000013",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+          marginBottom: 18,
+        }}
+      >
         <Input
           allowClear
           placeholder="Tìm kiếm theo thiết bị"
@@ -166,7 +200,10 @@ export default function EquipmentChangeList() {
             border: "1.5px solid #23643A",
             background: "#fafafa",
           }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            isSearching.current = true;
+            setKeyword(e.target.value);
+          }}
           value={keyword}
         />
       </div>
@@ -189,14 +226,17 @@ export default function EquipmentChangeList() {
         open={!!rejectingId}
         title="Nhập lý do từ chối"
         onOk={handleRejectOk}
-        onCancel={() => { setRejectingId(null); setRejectReason(""); }}
+        onCancel={() => {
+          setRejectingId(null);
+          setRejectReason("");
+        }}
         okText="Từ chối"
         cancelText="Huỷ"
       >
         <Input.TextArea
           rows={3}
           value={rejectReason}
-          onChange={e => setRejectReason(e.target.value)}
+          onChange={(e) => setRejectReason(e.target.value)}
           placeholder="Nhập lý do từ chối"
         />
       </Modal>
