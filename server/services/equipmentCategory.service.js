@@ -4,13 +4,13 @@ const EquipmentCategory = require("../models/equipmentCategories.model");
 const { LIMIT_ITEM_PER_PAGE } = require("../constants/app");
 const NotFoundException = require("../middlewares/exceptions/notfound");
 
-const getListPagination = async (farmId, page, keyword, pageSize = LIMIT_ITEM_PER_PAGE) => {
+const getListPagination = async (farmId, page, keyword) => {
   const list = await EquipmentCategory.find({
     farmId: farmId,
     name: { $regex: keyword, $options: "i" },
   })
-    .skip((page - 1) * pageSize)
-    .limit(pageSize);
+    .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
+    .limit(LIMIT_ITEM_PER_PAGE);
 
   return list;
 };

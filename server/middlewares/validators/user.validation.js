@@ -43,18 +43,9 @@ const assignExpertToFarm = [
   body("farmId").notEmpty().withMessage("Farm ID is required"),
 ];
 
-const adminChangePassword = [
-  body("newPassword")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long")
-    .notEmpty()
-    .withMessage("New password is required"),
-];
-
 module.exports = {
   create,
   assignFarmToUser,
   createFarmer,
   assignExpertToFarm,
-  adminChangePassword,
 };

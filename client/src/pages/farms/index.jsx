@@ -7,19 +7,11 @@ import {
   PlusOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { Button, Input, message, Popconfirm, Table, Tag, Tooltip } from "antd";
-import { useEffect, useState, useRef } from "react";
+import { Button, Input, message, Popconfirm, Table, Tooltip } from "antd";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FarmModal from "./FarmModal";
-const statusLabel = {
-  false: "Đã xoá",
-  true: "Hoạt động",
-};
 
-const statusColor = {
-  false: "red",
-  true: "green",
-};
 export default function FarmList() {
   const {
     farms,
@@ -36,19 +28,10 @@ export default function FarmList() {
   const [keyword, setKeyword] = useState("");
   const [modal, setModal] = useState({ open: false, edit: false, initial: {} });
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const isSearching = useRef(false);
 
   useEffect(() => {
     fetchFarms({ page, keyword });
   }, [page, keyword, fetchFarms]);
-
-  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
-  useEffect(() => {
-    if (isSearching.current) {
-      setPage(1);
-      isSearching.current = false;
-    }
-  }, [keyword]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -107,17 +90,6 @@ export default function FarmList() {
       ellipsis: true,
     },
     {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      align: "center",
-      render: (status) => (
-        <Tag color={statusColor[status] || "default"}>
-          {statusLabel[status] || status?.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
       title: "Địa chỉ",
       dataIndex: "address",
       key: "address",
@@ -171,16 +143,14 @@ export default function FarmList() {
           >
             <Tooltip title="Xóa">
               <Button
-                type="text"
+                type="link"
+                icon={<DeleteOutlined />}
                 danger
-                icon={
-                  <span
-                    className="anticon"
-                    style={{ color: "red", fontSize: 18 }}
-                  >
-                    🗑️
-                  </span>
-                }
+                style={{
+                  color: "#b8000b",
+                  fontWeight: 700,
+                  borderRadius: 6,
+                }}
               />
             </Tooltip>
           </Popconfirm>
@@ -231,10 +201,7 @@ export default function FarmList() {
             border: "1.5px solid #23643A",
             background: "#fafafa",
           }}
-          onChange={(e) => {
-            isSearching.current = true;
-            setKeyword(e.target.value);
-          }}
+          onChange={(e) => setKeyword(e.target.value)}
           value={keyword}
         />
       </div>
