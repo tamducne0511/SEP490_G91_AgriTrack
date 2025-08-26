@@ -43,7 +43,7 @@ export default function TreeQuestionDetail() {
   const { user } = useAuthStore();
   const isExpert = user?.role === "expert";
   const isFarmer = user?.role === "farmer";
-
+  const isReply = user?.role === "farmer" || user?.role === "expert";
 
   const {
     treeQuestions,
@@ -200,14 +200,19 @@ export default function TreeQuestionDetail() {
     if (!replyContent) return;
     try {
       const formData = new FormData();
-      formData.append("title", "Trả lời");
+      formData.append(
+        "title",
+        checkedMap[questionId] ? "Khuyến nghị" : "Trả lời"
+      );
       formData.append("content", replyContent);
       formData.append("treeId", treeId);
       formData.append("parentId", questionId);
       const res = await createQuestion(formData);
       await createNotificationQuesApi({
         questionId: res._id,
-        title: `${user?.fullName} đã trả lời một câu hỏi`,
+        title: checkedMap[questionId]
+          ? `${user?.fullName} đã trả lời một câu hỏi, nhưng chuyên gia khuyến nghị xử lý toàn vườn`
+          : `${user?.fullName} đã trả lời một câu hỏi`,
         content: res?.content || "N/A",
       });
       setReplyForm((prev) => ({ ...prev, [questionId]: "" }));
@@ -217,6 +222,7 @@ export default function TreeQuestionDetail() {
       message.error(err?.message || "Không thể gửi trả lời");
     }
   };
+  const [checkedMap, setCheckedMap] = useState({});
   const forecastTomorrow = weather?.forecast?.forecastday?.[1];
   return (
     <div
@@ -479,94 +485,126 @@ export default function TreeQuestionDetail() {
                           [q._id]: e.target.value,
                         }))
                       }
-                      placeholder="Nhập câu trả lời hoặc dùng AI gợi ý"
+                      placeholder={
+                        isExpert
+                          ? "Nhập câu trả lời hoặc dùng AI gợi ý"
+                          : "Nhập câu trả lời của bạn"
+                      }
                       autoSize={{ minRows: 1, maxRows: 20 }}
                       style={{ marginBottom: 8 }}
                     />
-                    <div style={{ display: "flex", gap: 10 }}>
-                      <Button
-                        icon={<RobotOutlined />}
-                        onClick={async () => {
-                          setAnswerModal({
-                            open: true,
-                            question: q,
-                            textPrompt: "Giải đáp cho tôi vấn đề này?",
-                          });
-                        }}
-                        loading={loadingAI}
-                        style={{ fontWeight: 500 }}
-                      >
-                        Gợi ý AI
-                      </Button>
+                    {isExpert && (
+                        <div style={{ marginBottom: 8 }}>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={checkedMap[q._id] || false}
+                              onChange={() =>
+                                setCheckedMap((prev) => ({
+                                  ...prev,
+                                  [q._id]: !prev[q._id], // toggle riêng cho question này
+                                }))
+                              }
+                            />
+                            Khuyến nghị xử lý toàn vườn
+                          </label>
+                        </div>
+                      )}
+                      <div style={{ display: "flex", gap: 10 }}>
+                        {isExpert && (
+                          <div>
+                            <Button
+                              icon={<RobotOutlined />}
+                              onClick={async () => {
+                                setAnswerModal({
+                                  open: true,
+                                  question: q,
+                                  textPrompt: "Giải đáp cho tôi vấn đề này?",
+                                });
+                              }}
+                              loading={loadingAI}
+                              style={{ fontWeight: 500 }}
+                            >
+                              Gợi ý AI
+                            </Button>
+
+                            <Button
+                              icon={<SunOutlined />}
+                              onClick={async () => {
+                                if (!forecastTomorrow) {
+                                  message.warning(
+                                    "Chưa có dữ liệu dự báo ngày mai."
+                                  );
+                                  return;
+                                }
+                                const textPrompt =
+                                  `Dự báo thời tiết ngày mai tại ${weather?.location?.name}, ${weather?.location?.country}: ` +
+                                  `${forecastTomorrow?.day?.condition?.text}, nhiệt độ trung bình ${forecastTomorrow?.day?.avgtemp_c}°C (cao nhất ${forecastTomorrow?.day?.maxtemp_c}°C, thấp nhất ${forecastTomorrow?.day?.mintemp_c}°C), ` +
+                                  `độ ẩm trung bình ${forecastTomorrow?.day?.avghumidity}%, lượng mưa dự kiến ${forecastTomorrow?.day?.totalprecip_mm}mm, gió tối đa ${forecastTomorrow?.day?.maxwind_kph} km/h. ` +
+                                  `Với điều kiện này, nên chăm sóc cây như thế nào?`;
+
+                                try {
+                                  setAnswerModal({
+                                    open: true,
+                                    question: q,
+                                    textPrompt,
+                                  });
+                                } catch (err) {
+                                  message.error(
+                                    err?.message || "Không thể hỏi AI"
+                                  );
+                                }
+                              }}
+                              loading={loadingAI}
+                              style={{ fontWeight: 500 }}
+                            >
+                              Gợi ý chăm sóc theo thời tiết
+                            </Button>
+                            </div>
+                        )}
 
 
-                      <Button
-                        icon={<SunOutlined />}
-                        onClick={async () => {
-                          if (!forecastTomorrow) {
-                            message.warning("Chưa có dữ liệu dự báo ngày mai.");
-                            return;
-                          }
-                          const textPrompt =
-                            `Dự báo thời tiết ngày mai tại ${weather?.location?.name}, ${weather?.location?.country}: ` +
-                            `${forecastTomorrow?.day?.condition?.text}, nhiệt độ trung bình ${forecastTomorrow?.day?.avgtemp_c}°C (cao nhất ${forecastTomorrow?.day?.maxtemp_c}°C, thấp nhất ${forecastTomorrow?.day?.mintemp_c}°C), ` +
-                            `độ ẩm trung bình ${forecastTomorrow?.day?.avghumidity}%, lượng mưa dự kiến ${forecastTomorrow?.day?.totalprecip_mm}mm, gió tối đa ${forecastTomorrow?.day?.maxwind_kph} km/h. ` +
-                            `Với điều kiện này, nên chăm sóc cây như thế nào?`;
-
-
-                          try {
-                            setAnswerModal({
-                              open: true,
-                              question: q,
-                              textPrompt,
-                            });
-                          } catch (err) {
-                            message.error(err?.message || "Không thể hỏi AI");
-                          }
-                        }}
-                        loading={loadingAI}
-                        style={{ fontWeight: 500 }}
-                      >
-                        Gợi ý chăm sóc theo thời tiết
-                      </Button>
-
-
-                      <Button
-                        type="primary"
-                        onClick={() => handleReply(q._id)}
-                        loading={creating}
-                        disabled={!replyForm[q._id]?.trim()}
-                        style={{ fontWeight: 600 }}
-                      >
-                        Gửi trả lời
-                      </Button>
+<Button
+                          type="primary"
+                          onClick={() => handleReply(q._id)}
+                          loading={creating}
+                          disabled={!replyForm[q._id]?.trim()}
+                          style={{ fontWeight: 600 }}
+                        >
+                          Gửi trả lời
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-
-                {/* Hiển thị replies */}
-                {getRepliesForQuestion(q._id).length > 0 && (
-                  <div style={{
-                    marginTop: 12,
-                    marginLeft: 20,
-                    borderLeft: "2px solid #e8f5e8",
-                    paddingLeft: 16
-                  }}>
-                    {getRepliesForQuestion(q._id).map((reply) => (
-                      <div key={reply._id} style={{
-                        marginBottom: 12,
-                        padding: "12px 16px",
-                        background: "#f8fafb",
-                        borderRadius: 8,
-                        border: "1px solid #e8f5e8"
-                      }}>
-                        <div style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          marginBottom: 6
-                        }}>
+                  {/* Hiển thị replies */}
+                  {getRepliesForQuestion(q._id).length > 0 && (
+                    <div
+                      style={{
+                        marginTop: 12,
+                        marginLeft: 20,
+                        borderLeft: "2px solid #e8f5e8",
+                        paddingLeft: 16,
+                      }}
+                    >
+                      {getRepliesForQuestion(q._id).map((reply) => (
+                        <div
+                          key={reply._id}
+                          style={{
+                            marginBottom: 12,
+                            padding: "12px 16px",
+                            background: "#f8fafb",
+                            borderRadius: 8,
+                            border: "1px solid #e8f5e8",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              marginBottom: 6,
+                            }}>
                           <Tag
                             color={roleColor[reply.createdBy?.role] || "gray"}
                             style={{ fontWeight: 600, fontSize: 11 }}
@@ -574,24 +612,34 @@ export default function TreeQuestionDetail() {
                             {reply.createdBy?.role === "expert" ? "Chuyên gia" : "Nông dân"}
                           </Tag>
                           {reply.createdBy?.role === "expert" && (
-                            <Tag color="green" style={{ fontSize: 11 }}>
-                              Đã trả lời
-                            </Tag>
-                          )}
-                        </div>
-                        <div style={{ color: "#4e4e4e", marginBottom: 8 }}>
-                          {reply.content}
-                        </div>
-                        {reply.image && (
-                          <img
-                            src={
-                              reply.image.startsWith("http")
-                                ? reply.image
-                                : ImageBaseUrl + reply.image
-                            }
-                            alt="reply"
-                            style={{ maxWidth: 180, borderRadius: 6, marginBottom: 8 }}
-                          />
+                              <Tag color="green" style={{ fontSize: 11 }}>
+                                Đã trả lời
+                              </Tag>
+                            )}
+                            {reply.createdBy?.role === "expert" &&
+                              reply.title === "Khuyến nghị" && (
+                                <Tag color="orange" style={{ fontSize: 11 }}>
+                                  Khuyến nghị toàn vườn
+                                </Tag>
+                              )}
+                          </div>
+                          <div style={{ color: "#4e4e4e", marginBottom: 8 }}>
+                            {reply.content}
+                          </div>
+                          {reply.image && (
+                            <img
+                              src={
+                                reply.image.startsWith("http")
+                                  ? reply.image
+                                  : ImageBaseUrl + reply.image
+                              }
+                              alt="reply"
+                              style={{
+                                maxWidth: 180,
+                                borderRadius: 6,
+                                marginBottom: 8,
+                              }}
+                            />
                         )}
                         <div style={{ color: "#999", fontSize: 12 }}>
                           Trả lời bởi:{" "}

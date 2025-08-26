@@ -22,7 +22,7 @@ const getListFarmer = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const keyword = req.query.keyword || "";
   const selectedFarmId = req.query.farmId; // nhận farmId từ frontend
-
+  
   let farmIdsToQuery;
 
   if (req.user.role === "expert") {
@@ -37,6 +37,7 @@ const getListFarmer = async (req, res) => {
 
   const list = await userService.getListFarmerInFarm(farmIdsToQuery, page, keyword);
   const total = await userService.getTotalFarmerInFarm(farmIdsToQuery, keyword);
+
   res.json(formatPagination(page, total, list));
 };
 

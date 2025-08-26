@@ -16,9 +16,18 @@ const mongoose = require("mongoose");
 
 const getListPagination = async (farmId, gardenId, page, keyword, pageSize = LIMIT_ITEM_PER_PAGE) => {
   const filter = {
-    farmId: farmId,
     name: { $regex: keyword, $options: "i" },
   };
+
+  // Xử lý farmId có thể là string hoặc mảng
+  if (Array.isArray(farmId)) {
+    if (farmId.length === 0) {
+      return []; // Trả về mảng rỗng nếu không có farm nào
+    }
+    filter.farmId = { $in: farmId };
+  } else {
+    filter.farmId = farmId;
+  }
 
   if (gardenId) {
     filter.gardenId = gardenId;
@@ -26,8 +35,8 @@ const getListPagination = async (farmId, gardenId, page, keyword, pageSize = LIM
 
   const list = await Task.find(filter)
     .skip((page - 1) * pageSize)
-    .limit(pageSize);
-
+    .limit(pageSize)
+    .populate("createdBy", "fullName");
   return list;
 };
 
@@ -45,9 +54,21 @@ const getListAssignedPagination = async (farmId, farmerId, page, keyword) => {
 
 const getTotal = async (farmId, gardenId, keyword) => {
   const filter = {
-    farmId: farmId,
     name: { $regex: keyword, $options: "i" },
   };
+
+  if (farmId) {
+    filter.farmId = farmId;
+  }
+  // Xử lý farmId có thể là string hoặc mảng
+  if (Array.isArray(farmId)) {
+    if (farmId.length === 0) {
+      return 0; // Trả về 0 nếu không có farm nào
+    }
+    filter.farmId = { $in: farmId };
+  } else {
+    filter.farmId = farmId;
+  }
 
   if (gardenId) {
     filter.gardenId = gardenId;
@@ -105,13 +126,14 @@ const update = async (id, data) => {
   task.type = data.type;
   task.priority = data.priority;
   task.description = data.description;
+  task.endDate = data.endDate;
   await task.save();
   return task;
 };
 
 const find = async (id) => {
   try {
-    const task = await Task.findById(id).populate("farmerId", "-password");
+    const task = await Task.findById(id).populate("farmerId", "-password").populate("createdBy", "fullName");
     return task;
   } catch (error) {
     return null;

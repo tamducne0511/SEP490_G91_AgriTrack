@@ -76,6 +76,12 @@ export default function TaskCreate() {
     try {
       const values = await form.validateFields();
 
+      // Kiểm tra farmId cho expert
+      if (user?.role === "expert" && !selectedFarmId) {
+        message.error("Vui lòng chọn trang trại!");
+        return;
+      }
+
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("description", values.description);
@@ -85,7 +91,7 @@ export default function TaskCreate() {
       formData.append("gardenId", selectedGardenId);
       formData.append("type", values.type);
       formData.append("priority", values.priority);
-      formData.append("endDate", values.endDate ? values.endDate : null);
+      formData.append("endDate", values.endDate ? values.endDate.toISOString() : null);
       if (fileList[0]?.originFileObj) {
         formData.append("image", fileList[0].originFileObj);
       }

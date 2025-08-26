@@ -10,6 +10,7 @@ const getList = async (req, res) => {
   const keyword = req.query.keyword || "";
   const gardenId = req.query.gardenId || null;
   const farmId = req.user.role === "expert" ? (req.query.farmId || null) : req.user.farmId;
+
   const list = await taskService.getListPagination(
     farmId,
     gardenId,
@@ -38,14 +39,24 @@ const create = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
+  // Xử lý farmId cho expert
+  let farmId;
+  if (req.user.role === "expert") {
+    farmId = req.body.farmId; // Expert sẽ gửi farmId cụ thể
+  } else {
+    farmId = req.user.farmId; // Farm-admin chỉ có 1 farm
+  }
+
   const payload = {
     name: req.body.name,
     description: req.body.description,
     type: req.body.type,
     priority: req.body.priority,
-    farmId: req.user.farmId,
+    farmId: req.user.role === "expert" ? req.body.farmId : req.user.farmId,
     gardenId: req.body.gardenId,
     image: req.file?.filename ? `/uploads/tasks/${req.file.filename}` : "",
+    endDate: req.body.endDate !== "null" ? new Date(req.body.endDate) : null,
+    createdBy: req.user.id,
   };
 
   const task = await taskService.create(payload);

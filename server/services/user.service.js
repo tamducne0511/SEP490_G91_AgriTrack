@@ -53,9 +53,20 @@ const getTotal = async (role, keyword) => {
   return total;
 };
 
-const getTotalFarmerInFarm = async (farmId, keyword) => {
+const getTotalFarmerInFarm = async (farmIds, keyword) => {
+  // farmIds có thể là 1 string hoặc mảng
+  let queryFarmIds;
+  if (Array.isArray(farmIds)) {
+    if (farmIds.length === 0) {
+      return 0; // Trả về 0 nếu không có farm nào
+    }
+    queryFarmIds = farmIds.map(id => new mongoose.Types.ObjectId(id));
+  } else {
+    queryFarmIds = [new mongoose.Types.ObjectId(farmIds)];
+  }
+  
   const total = await User.countDocuments({
-    farmId: new mongoose.Types.ObjectId(farmId),
+    farmId: { $in: queryFarmIds },
     role: USER_ROLE.farmer,
     fullName: { $regex: keyword, $options: "i" },
   });

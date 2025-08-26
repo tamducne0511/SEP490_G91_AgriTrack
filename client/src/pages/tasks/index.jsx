@@ -75,34 +75,43 @@ export default function TaskList() {
   }, [fetchFarms]);
 
   useEffect(() => {
-    if (selectedFarmId) {
-      fetchGardensByFarmId(selectedFarmId);
-      setSelectedGardenId(undefined); // reset garden khi đổi farm
-      fetchTasks({
-        page,
-        keyword,
-        farmId: selectedFarmId,
-        gardenId: undefined, // <-- đảm bảo không dùng giá trị cũ
-      });
-    }
-  }, [selectedFarmId, fetchGardensByFarmId, fetchTasks, page, keyword]);
-
-
-  useEffect(() => {
     fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
   }, [fetchGardens]);
 
   useEffect(() => {
-    fetchTasks({ page, keyword, gardenId: selectedGardenId }); // Filter by gardenId only
-  }, [page, keyword, selectedGardenId, fetchTasks]);
+    if (selectedFarmId) {
+      fetchGardensByFarmId(selectedFarmId);
+      setSelectedGardenId(undefined); // reset garden khi đổi farm
+      setPage(1); // reset page khi đổi farm
+    }
+  }, [selectedFarmId, fetchGardensByFarmId]);
 
-  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    const params = {
+      page,
+      keyword,
+    };
+    
+    // Thêm farmId nếu expert đã chọn farm
+    if (user?.role === "expert" && selectedFarmId) {
+      params.farmId = selectedFarmId;
+    }
+    
+    // Thêm gardenId nếu đã chọn garden
+    if (selectedGardenId) {
+      params.gardenId = selectedGardenId;
+    }
+    
+    fetchTasks(params);
+  }, [page, keyword, selectedFarmId, selectedGardenId, fetchTasks, user?.role]);
+
+  // Reset page khi keyword hoặc filter thay đổi
   useEffect(() => {
     if (isSearching.current) {
       setPage(1);
       isSearching.current = false;
     }
-  }, [keyword]);
+  }, [keyword, selectedFarmId, selectedGardenId]);
 
   useEffect(() => {
     if (error) message.error(error);

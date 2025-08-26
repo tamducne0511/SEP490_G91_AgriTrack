@@ -29,11 +29,17 @@ export default function FarmerList() {
   const [selectedFarmId, setSelectedFarmId] = useState(undefined);
 
   useEffect(() => {
-    fetchFarmers({
+    const params = {
       page,
       keyword,
-      farmId: selectedFarmId,
-    });
+    };
+    
+    // Only add farmId to params if it's not undefined
+    if (selectedFarmId !== undefined) {
+      params.farmId = selectedFarmId;
+    }
+    
+    fetchFarmers(params);
   }, [page, keyword, selectedFarmId, fetchFarmers]);
 
   // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
@@ -44,9 +50,9 @@ export default function FarmerList() {
     }
   }, [keyword]);
 
-  // useEffect(() => {
-  //   if (error) message.error(error);
-  // }, [error]);
+  useEffect(() => {
+    if (error) message.error(error);
+  }, [error]);
 
   const handleAdd = async (values) => {
     setConfirmLoading(true);
