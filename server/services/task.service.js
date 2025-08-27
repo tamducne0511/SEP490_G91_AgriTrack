@@ -126,6 +126,7 @@ const update = async (id, data) => {
   task.type = data.type;
   task.priority = data.priority;
   task.description = data.description;
+  task.startDate = data.startDate;
   task.endDate = data.endDate;
   await task.save();
   return task;

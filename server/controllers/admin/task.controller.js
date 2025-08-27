@@ -55,6 +55,7 @@ const create = async (req, res) => {
     farmId: req.user.role === "expert" ? req.body.farmId : req.user.farmId,
     gardenId: req.body.gardenId,
     image: req.file?.filename ? `/uploads/tasks/${req.file.filename}` : "",
+    startDate: req.body.startDate !== "null" ? new Date(req.body.startDate) : null,
     endDate: req.body.endDate !== "null" ? new Date(req.body.endDate) : null,
     createdBy: req.user.id,
   };

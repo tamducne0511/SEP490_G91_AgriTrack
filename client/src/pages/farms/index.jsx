@@ -170,17 +170,15 @@ export default function FarmList() {
             onConfirm={() => handleDelete(record)}
           >
             <Tooltip title="Xóa">
-              <Button
-                type="text"
+            <Button
+                type="link"
+                icon={<DeleteOutlined />}
                 danger
-                icon={
-                  <span
-                    className="anticon"
-                    style={{ color: "red", fontSize: 18 }}
-                  >
-                    🗑️
-                  </span>
-                }
+                style={{
+                  color: "#b8000b",
+                  fontWeight: 700,
+                  borderRadius: 6,
+                }}
               />
             </Tooltip>
           </Popconfirm>

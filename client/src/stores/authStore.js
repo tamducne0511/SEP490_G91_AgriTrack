@@ -12,6 +12,7 @@ export const useAuthStore = create((set) => ({
   token: null,
   loading: false,
   farmIds: null,
+  farm: null,
   error: null,
 
   login: async (email, password) => {
@@ -33,7 +34,7 @@ export const useAuthStore = create((set) => ({
       const data = res.data;
       localStorage.setItem(EUser.CURRENT_USER, JSON.stringify(data.user));
       localStorage.setItem(EFarm.CURRENT_FARM, JSON.stringify(data.farmId));
-      set({ user: data.user, farmIds: data.farmId });
+      set({ user: data.user, farmIds: data.farmId, farm: data.farm });
     } catch (err) {
       set({ error: err?.message || "Lỗi lấy thông tin người dùng" });
     }

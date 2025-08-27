@@ -27,15 +27,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { socket } from "@/services/socket";
 
-
 const { Title, Text } = Typography;
-
 
 const roleColor = {
   farmer: "green",
   expert: "geekblue",
 };
-
 
 export default function TreeQuestionDetail() {
   const { id: treeId } = useParams();
@@ -65,17 +62,14 @@ export default function TreeQuestionDetail() {
     fetchTreeDetail,
   } = useTaskQuestionStore();
 
-
   // State cho Modal đặt câu hỏi (chỉ Farmer)
   const [addModal, setAddModal] = useState(false);
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
 
-
   // State cho phân trang
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
-
 
   // State cho trả lời từng câu hỏi
   const [replyForm, setReplyForm] = useState({}); // { [questionId]: text }
@@ -86,11 +80,9 @@ export default function TreeQuestionDetail() {
     textPrompt: "",
   });
 
-
   useEffect(() => {
     fetchWeather();
   }, []);
-
 
   useEffect(() => {
     if (treeId) {
@@ -98,18 +90,15 @@ export default function TreeQuestionDetail() {
     }
   }, [treeId, page, keyword]);
 
-
   // Handlers cho phân trang và tìm kiếm
   const handlePageChange = useCallback((newPage) => {
     setPage(newPage);
   }, []);
 
-
   const handleSearch = useCallback((value) => {
     setKeyword(value);
     setPage(1); // Reset về trang 1 khi tìm kiếm
   }, []);
-
 
   // Lắng nghe realtime với socket
   useEffect(() => {
@@ -128,19 +117,16 @@ export default function TreeQuestionDetail() {
     };
   }, [treeId, page, keyword]);
 
-
   useEffect(() => {
     if (treeId) fetchTreeDetail(treeId);
   }, [treeId]);
   // Lọc câu hỏi chính (không có parentId)
   const mainQuestions = treeQuestions?.filter((q) => !q.parentId);
 
-
   // Lấy replies cho từng câu hỏi
   const getRepliesForQuestion = (questionId) => {
     return treeQuestions?.filter((q) => q.parentId === questionId) || [];
   };
-
 
   // Đặt câu hỏi (chỉ Farmer)
   const handleAddQuestion = async () => {
@@ -169,13 +155,11 @@ export default function TreeQuestionDetail() {
     }
   };
 
-
   // Gọi AI suggestion (expert)
   const handleAskAI = async (question) => {
     try {
       const textPrompt = answerModal.textPrompt?.trim() || "Đây là bệnh gì?";
       let payload = { textPrompt };
-
 
       // Nếu có ảnh thì thêm imageUrl, không thì thôi
       if (question.image) {
@@ -184,7 +168,6 @@ export default function TreeQuestionDetail() {
           : ImageBaseUrl + question.image;
       }
 
-
       const res = await askAI(payload);
       setAiSuggest((prev) => ({ ...prev, [question._id]: res.reply || res }));
       setReplyForm((prev) => ({ ...prev, [question._id]: res.reply || res }));
@@ -192,7 +175,6 @@ export default function TreeQuestionDetail() {
       message.error(err?.message || "Không thể hỏi AI");
     }
   };
-
 
   // Expert gửi trả lời
   const handleReply = async (questionId) => {
@@ -222,7 +204,9 @@ export default function TreeQuestionDetail() {
       message.error(err?.message || "Không thể gửi trả lời");
     }
   };
+
   const [checkedMap, setCheckedMap] = useState({});
+
   const forecastTomorrow = weather?.forecast?.forecastday?.[1];
   return (
     <div
@@ -325,7 +309,6 @@ export default function TreeQuestionDetail() {
           </Card>
         ) : null}
 
-
         {forecastTomorrow && (
           <Card
             title={`Dự báo thời tiết ngày mai (${forecastTomorrow?.date})`}
@@ -389,22 +372,23 @@ export default function TreeQuestionDetail() {
         )}
       </div>
 
-
       <Card
         bordered={false}
         style={{ borderRadius: 14, minHeight: 300 }}
         bodyStyle={{ padding: 0 }}
       >
         {/* Header với tìm kiếm và thông tin */}
-        <div style={{
-          padding: "16px 24px",
-          borderBottom: "1px solid #f0f0f0",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 12
-        }}>
+        <div
+          style={{
+            padding: "16px 24px",
+            borderBottom: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <h3 style={{ margin: 0, color: "#23643A", fontWeight: 600 }}>
               Danh sách câu hỏi ({treeQuestionsPagination?.total || 0} câu hỏi)
@@ -425,75 +409,84 @@ export default function TreeQuestionDetail() {
           <List
             dataSource={mainQuestions}
             rowKey="_id"
-            renderItem={(q) => (
-              <List.Item
-                style={{
-                  borderBottom: "1px solid #f4f4f4",
-                  padding: "20px 32px 8px",
-                  flexDirection: "column",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <Text strong style={{ fontSize: 16 }}>
-                    {q.title}
-                  </Text>
-                  <Tag
-                    color={roleColor[q.createdBy?.role] || "gray"}
-                    style={{ fontWeight: 600 }}
-                  >
-                    {q.createdBy?.role === "expert" ? "Chuyên gia" : "Nông dân"}
-                  </Tag>
-                </div>
-                <div style={{ margin: "4px 0", color: "#4e4e4e" }}>
-                  {q.content}
-                </div>
-                {q.image && (
-                  <img
-                    src={
-                      q.image.startsWith("http")
-                        ? q.image
-                        : ImageBaseUrl + q.image
-                    }
-                    alt="question"
-                    style={{ maxWidth: 220, borderRadius: 7, margin: "10px 0" }}
-                  />
-                )}
-                <div style={{ color: "#999", fontSize: 13 }}>
-                  Đặt bởi:{" "}
-                  <b>
-                    {q.createdBy?.fullName || q.createdBy?.email || "Ẩn danh"}
-                  </b>
-                  {" • "}
-                  {new Date(q.createdAt).toLocaleString("vi-VN")}
-                </div>
-                {/* FORM trả lời (EXPERT) */}
-                {isExpert && q?.createdBy?.role === "farmer" && (
+            renderItem={(q) =>
+              console.log(q) || (
+                <List.Item
+                  style={{
+                    borderBottom: "1px solid #f4f4f4",
+                    padding: "20px 32px 8px",
+                    flexDirection: "column",
+                  }}
+                >
                   <div
-                    style={{
-                      marginTop: 10,
-                      background: "#f7fafd",
-                      borderRadius: 7,
-                      padding: 12,
-                      width: "100%",
-                    }}
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
                   >
-                    <Input.TextArea
-                      value={replyForm[q._id] ?? ""}
-                      onChange={(e) =>
-                        setReplyForm((prev) => ({
-                          ...prev,
-                          [q._id]: e.target.value,
-                        }))
+                    <Text strong style={{ fontSize: 16 }}>
+                      {q.title}
+                    </Text>
+                    <Tag
+                      color={roleColor[q.createdBy?.role] || "gray"}
+                      style={{ fontWeight: 600 }}
+                    >
+                      {q.createdBy?.role === "expert"
+                        ? "Chuyên gia"
+                        : "Nông dân"}
+                    </Tag>
+                  </div>
+                  <div style={{ margin: "4px 0", color: "#4e4e4e" }}>
+                    {q.content}
+                  </div>
+                  {q.image && (
+                    <img
+                      src={
+                        q.image.startsWith("http")
+                          ? q.image
+                          : ImageBaseUrl + q.image
                       }
-                      placeholder={
-                        isExpert
-                          ? "Nhập câu trả lời hoặc dùng AI gợi ý"
-                          : "Nhập câu trả lời của bạn"
-                      }
-                      autoSize={{ minRows: 1, maxRows: 20 }}
-                      style={{ marginBottom: 8 }}
+                      alt="question"
+                      style={{
+                        maxWidth: 220,
+                        borderRadius: 7,
+                        margin: "10px 0",
+                      }}
                     />
-                    {isExpert && (
+                  )}
+                  <div style={{ color: "#999", fontSize: 13 }}>
+                    Đặt bởi:{" "}
+                    <b>
+                      {q.createdBy?.fullName || q.createdBy?.email || "Ẩn danh"}
+                    </b>
+                    {" • "}
+                    {new Date(q.createdAt).toLocaleString("vi-VN")}
+                  </div>
+                  {/* FORM trả lời (EXPERT) */}
+                  {isReply && q?.createdBy?.role === "farmer" && (
+                    <div
+                      style={{
+                        marginTop: 10,
+                        background: "#f7fafd",
+                        borderRadius: 7,
+                        padding: 12,
+                        width: "100%",
+                      }}
+                    >
+                      <Input.TextArea
+                        value={replyForm[q._id] ?? ""}
+                        onChange={(e) =>
+                          setReplyForm((prev) => ({
+                            ...prev,
+                            [q._id]: e.target.value,
+                          }))
+                        }
+                        placeholder={
+                          isExpert
+                            ? "Nhập câu trả lời hoặc dùng AI gợi ý"
+                            : "Nhập câu trả lời của bạn"
+                        }
+                        autoSize={{ minRows: 1, maxRows: 20 }}
+                        style={{ marginBottom: 8 }}
+                      />
+                      {isExpert && (
                         <div style={{ marginBottom: 8 }}>
                           <label>
                             <input
@@ -560,11 +553,10 @@ export default function TreeQuestionDetail() {
                             >
                               Gợi ý chăm sóc theo thời tiết
                             </Button>
-                            </div>
+                          </div>
                         )}
 
-
-<Button
+                        <Button
                           type="primary"
                           onClick={() => handleReply(q._id)}
                           loading={creating}
@@ -604,14 +596,17 @@ export default function TreeQuestionDetail() {
                               alignItems: "center",
                               gap: 8,
                               marginBottom: 6,
-                            }}>
-                          <Tag
-                            color={roleColor[reply.createdBy?.role] || "gray"}
-                            style={{ fontWeight: 600, fontSize: 11 }}
+                            }}
                           >
-                            {reply.createdBy?.role === "expert" ? "Chuyên gia" : "Nông dân"}
-                          </Tag>
-                          {reply.createdBy?.role === "expert" && (
+                            <Tag
+                              color={roleColor[reply.createdBy?.role] || "gray"}
+                              style={{ fontWeight: 600, fontSize: 11 }}
+                            >
+                              {reply.createdBy?.role === "expert"
+                                ? "Chuyên gia"
+                                : "Nông dân"}
+                            </Tag>
+                            {reply.createdBy?.role === "expert" && (
                               <Tag color="green" style={{ fontSize: 11 }}>
                                 Đã trả lời
                               </Tag>
@@ -640,21 +635,24 @@ export default function TreeQuestionDetail() {
                                 marginBottom: 8,
                               }}
                             />
-                        )}
-                        <div style={{ color: "#999", fontSize: 12 }}>
-                          Trả lời bởi:{" "}
-                          <b>
-                            {reply.createdBy?.fullName || reply.createdBy?.email || "Ẩn danh"}
-                          </b>
-                          {" • "}
-                          {new Date(reply.createdAt).toLocaleString("vi-VN")}
+                          )}
+                          <div style={{ color: "#999", fontSize: 12 }}>
+                            Trả lời bởi:{" "}
+                            <b>
+                              {reply.createdBy?.fullName ||
+                                reply.createdBy?.email ||
+                                "Ẩn danh"}
+                            </b>
+                            {" • "}
+                            {new Date(reply.createdAt).toLocaleString("vi-VN")}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </List.Item>
-            )}
+                      ))}
+                    </div>
+                  )}
+                </List.Item>
+              )
+            }
           />
         ) : (
           <div style={{ padding: 42, textAlign: "center", color: "#aaa" }}>
@@ -662,15 +660,16 @@ export default function TreeQuestionDetail() {
           </div>
         )}
 
-
         {/* Phân trang */}
         {treeQuestionsPagination?.total > 0 && (
-          <div style={{
-            padding: "16px 24px",
-            borderTop: "1px solid #f0f0f0",
-            display: "flex",
-            justifyContent: "center"
-          }}>
+          <div
+            style={{
+              padding: "16px 24px",
+              borderTop: "1px solid #f0f0f0",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             <Pagination
               current={page}
               total={treeQuestionsPagination.total}
@@ -684,7 +683,6 @@ export default function TreeQuestionDetail() {
           </div>
         )}
       </Card>
-
 
       {/* Modal đặt câu hỏi */}
       <Modal
@@ -726,7 +724,6 @@ export default function TreeQuestionDetail() {
           </Form.Item>
         </Form>
       </Modal>
-
 
       <Modal
         title="Gợi ý từ AI"
@@ -834,7 +831,6 @@ export default function TreeQuestionDetail() {
           )}
         </div>
       </Modal>
-
 
       <style>{`
         @media (max-width: 700px) {

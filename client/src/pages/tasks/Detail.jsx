@@ -437,8 +437,11 @@ export default function TaskDetail() {
               <Descriptions.Item label="Ngày tạo">
                 {new Date(taskDetail.createdAt).toLocaleString("vi-VN")}
               </Descriptions.Item>
+              <Descriptions.Item label="Ngày bắt đầu">
+                {taskDetail.startDate ? new Date(taskDetail.startDate).toLocaleDateString("vi-VN") : <Text type="secondary">Không xác định</Text>}
+              </Descriptions.Item>
               <Descriptions.Item label="Ngày kết thúc">
-                {taskDetail?.endDate || <Text type="secondary">Không xác định</Text>}
+              {taskDetail.endDate ? new Date(taskDetail.endDate).toLocaleDateString("vi-VN") : <Text type="secondary">Không xác định</Text>}
               </Descriptions.Item>
               <Descriptions.Item label="Được giao cho">
                 {taskDetail?.farmerId?.fullName} - {taskDetail?.farmerId?.email}

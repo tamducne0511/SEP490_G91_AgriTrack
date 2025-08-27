@@ -60,6 +60,11 @@ const taskSchema = new mongoose.Schema({
     default: Date.now,
   },
 
+  startDate: {
+    type: Date,
+    required: false,
+  },
+  
   endDate: {
     type: Date,
     required: false,

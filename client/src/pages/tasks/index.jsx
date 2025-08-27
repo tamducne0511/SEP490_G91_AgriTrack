@@ -61,8 +61,7 @@ export default function TaskList() {
   } = useTaskStore();
   const { user, farmIds } = useAuthStore();
   const { fetchFarms } = useFarmStore();
-  const { gardens, fetchGardens, fetchGardensByFarmId, gardensByFarm } =
-    useGardenStore();
+  const { gardens, fetchGardens, fetchGardensByFarmId, gardensByFarm } = useGardenStore();
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [selectedFarmId, setSelectedFarmId] = useState(undefined);
@@ -82,9 +81,15 @@ export default function TaskList() {
     if (selectedFarmId) {
       fetchGardensByFarmId(selectedFarmId);
       setSelectedGardenId(undefined); // reset garden khi đổi farm
-      setPage(1); // reset page khi đổi farm
+      // setPage(1); // reset page khi đổi farm
+      fetchTasks({
+        page,
+        keyword,
+        farmId: selectedFarmId,
+        gardenId: undefined, // <-- đảm bảo không dùng giá trị cũ
+      });
     }
-  }, [selectedFarmId, fetchGardensByFarmId]);
+  }, [selectedFarmId, fetchGardensByFarmId, fetchTasks, page, keyword]);
 
   useEffect(() => {
     const params = {
@@ -153,12 +158,12 @@ export default function TaskList() {
       ),
     },
     {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
-      key: "createdAt",
+      title: "Ngày bắt đầu",
+      dataIndex: "startDate",
+      key: "startDate",
       align: "center",
-      render: (createdAt) =>
-        createdAt ? new Date(createdAt).toLocaleDateString("vi-VN") : "—",
+      render: (startDate) =>
+        startDate ? new Date(startDate).toLocaleDateString("vi-VN") : "—",
     },
     {
       title: "Ngày kết thúc",

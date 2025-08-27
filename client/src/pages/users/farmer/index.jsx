@@ -29,17 +29,11 @@ export default function FarmerList() {
   const [selectedFarmId, setSelectedFarmId] = useState(undefined);
 
   useEffect(() => {
-    const params = {
+    fetchFarmers({
       page,
       keyword,
-    };
-    
-    // Only add farmId to params if it's not undefined
-    if (selectedFarmId !== undefined) {
-      params.farmId = selectedFarmId;
-    }
-    
-    fetchFarmers(params);
+      farmId: selectedFarmId,
+    });
   }, [page, keyword, selectedFarmId, fetchFarmers]);
 
   // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
@@ -106,12 +100,14 @@ export default function FarmerList() {
       setDeactivateMessage("");
     }
   };
+
   const handleDelete = async (record) => {
     try {
       await deleteFarmer(record._id);
       message.success("Vô hiệu hoá nông dân thành công!");
     } catch {}
   };
+  
   const handleActive = async (record) => {
     try {
       await activeFarmerApi(record._id);

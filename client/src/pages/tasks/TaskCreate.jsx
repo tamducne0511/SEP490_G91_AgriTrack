@@ -12,7 +12,7 @@ import {
   Select,
   Tag,
   Typography,
-  Upload
+  Upload,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -42,8 +42,7 @@ const priorityLabel = {
 };
 
 export default function TaskCreate() {
-  const { fetchGardens, gardens, gardensByFarm } =
-    useGardenStore();
+  const { fetchGardens, gardens, gardensByFarm, fetchGardensByFarmId } = useGardenStore();
   const { createTask } = useTaskStore();
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -62,6 +61,10 @@ export default function TaskCreate() {
   useEffect(() => {
     fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
   }, [fetchGardens]);
+
+  useEffect(() => {
+    if (selectedFarmId) fetchGardensByFarmId(selectedFarmId);
+  }, [selectedFarmId, fetchGardensByFarmId]);
 
   const handleChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
@@ -91,6 +94,7 @@ export default function TaskCreate() {
       formData.append("gardenId", selectedGardenId);
       formData.append("type", values.type);
       formData.append("priority", values.priority);
+      formData.append("startDate", values.startDate ? values.startDate : null);
       formData.append("endDate", values.endDate ? values.endDate.toISOString() : null);
       if (fileList[0]?.originFileObj) {
         formData.append("image", fileList[0].originFileObj);
@@ -169,6 +173,8 @@ export default function TaskCreate() {
               >
                 <Input placeholder="Mô tả" size="large" />
               </Form.Item>
+
+              {/* Nếu expert thì chọn farm trước */}
               {isExpert && (
                 <Form.Item
                   name="farmId"
@@ -187,6 +193,7 @@ export default function TaskCreate() {
                   />
                 </Form.Item>
               )}
+              
               <Form.Item
                 name="gardenId"
                 label="Vườn"
@@ -247,6 +254,13 @@ export default function TaskCreate() {
                     { value: "low", label: "Thấp" },
                   ]}
                   size="large"
+                />
+              </Form.Item>
+              <Form.Item name="startDate" label="Ngày bắt đầu">
+                <DatePicker
+                  style={{ width: "100%" }}
+                  size="large"
+                  format="DD/MM/YYYY"
                 />
               </Form.Item>
               <Form.Item name="endDate" label="Ngày kết thúc">
@@ -338,6 +352,7 @@ export default function TaskCreate() {
                   <Text type="secondary">Chưa nhập</Text>
                 )}
               </Descriptions.Item>
+
               {isExpert && (
                 <Descriptions.Item label="Trang trại">
                   {selectedFarmId ? (
