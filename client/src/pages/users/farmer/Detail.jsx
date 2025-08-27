@@ -128,6 +128,7 @@ export default function FarmerDetail() {
         <AssignTaskModal
           open={assignModal}
           farmerId={id}
+          farmId={farm._id} // Truyền farmId để chỉ lấy tasks của farm này
           onOk={handleAssignTask}
           onCancel={() => setAssignModal(false)}
         />
