@@ -55,16 +55,55 @@ const getDetail = async (id) => {
 };
 
 const getListPaginationByTreeId = async (treeId, page, keyword) => {
-  const list = await TaskQuestion.find({
+  // Chỉ lấy câu hỏi chính (không có parentId) để phân trang
+  const mainFilter = {
     treeId: treeId,
-    title: { $regex: keyword, $options: "i" },
-  })
+    $or: [
+      { parentId: null },
+      { parentId: { $exists: false } }
+    ]
+  };
+  
+  // Tìm kiếm theo cả title và content
+  if (keyword) {
+    mainFilter.$and = [
+      {
+        $or: [
+          { title: { $regex: keyword, $options: "i" } },
+          { content: { $regex: keyword, $options: "i" } }
+        ]
+      }
+    ];
+  }
+  
+
+  
+  // Lấy câu hỏi chính theo trang
+  const mainQuestions = await TaskQuestion.find(mainFilter)
     .populate("userId", "fullName email role")
     .select("userId fullName email title image content createdAt updatedAt parentId")
     .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
     .limit(LIMIT_ITEM_PER_PAGE);
 
-  return [...list].map((item) => {
+
+  
+  // Lấy tất cả replies cho các câu hỏi chính này
+  const mainQuestionIds = mainQuestions.map(q => q._id);
+  const replies = await TaskQuestion.find({
+    treeId: treeId,
+    parentId: { $in: mainQuestionIds }
+  })
+    .populate("userId", "fullName email role")
+    .select("userId fullName email title image content createdAt updatedAt parentId");
+
+
+  
+  // Kết hợp câu hỏi chính và replies
+  const allQuestions = [...mainQuestions, ...replies];
+  
+
+
+  return allQuestions.map((item) => {
     return {
       ...item._doc,
       createdBy: item.userId,
@@ -74,10 +113,28 @@ const getListPaginationByTreeId = async (treeId, page, keyword) => {
 };
 
 const getTotalByTreeId = async (treeId, keyword) => {
-  const total = await TaskQuestion.countDocuments({
+  // Chỉ đếm câu hỏi chính (không có parentId)
+  const filter = {
     treeId: treeId,
-    title: { $regex: keyword, $options: "i" },
-  });
+    $or: [
+      { parentId: null },
+      { parentId: { $exists: false } }
+    ]
+  };
+  
+  // Tìm kiếm theo cả title và content
+  if (keyword) {
+    filter.$and = [
+      {
+        $or: [
+          { title: { $regex: keyword, $options: "i" } },
+          { content: { $regex: keyword, $options: "i" } }
+        ]
+      }
+    ];
+  }
+  
+  const total = await TaskQuestion.countDocuments(filter);
 
   return total;
 };
