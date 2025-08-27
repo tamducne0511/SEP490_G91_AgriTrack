@@ -63,7 +63,7 @@ export default function TaskDetail() {
   const [notesDetail, setNotesDetail] = useState([]);
   useEffect(() => {
     fetchTaskDetail(id);
-    fetchGardens();
+    fetchGardens({ pageSize: 1000 });
   }, [id, fetchTaskDetail, fetchGardens]);
   useEffect(() => {
     const fetchAllNotes = async () => {

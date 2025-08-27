@@ -24,10 +24,10 @@ export const useGardenStore = create((set, get) => ({
   loadingGardensByFarm: false,
   errorGardensByFarm: null,
 
-  fetchGardensByFarmId: async (farmId) => {
+  fetchGardensByFarmId: async (farmId, params = {}) => {
     set({ loadingGardensByFarm: true, errorGardensByFarm: null });
     try {
-      const data = await fetchGardensByFarmIdApi(farmId);
+      const data = await fetchGardensByFarmIdApi(farmId, params);
       // data.data là array garden như API trả về
       set({
         gardensByFarm: data.data || [],

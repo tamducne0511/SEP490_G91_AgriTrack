@@ -61,9 +61,9 @@ export const fetchTreesByGardenIdApi = async (gardenId) => {
   return res.data;
 };
 
-export const fetchGardensByFarmIdApi = async (farmId) => {
+export const fetchGardensByFarmIdApi = async (farmId, params = {}) => {
   // Đúng endpoint API bạn đã gửi ảnh: /admin/gardens/farm/:farmId
-  const res = await client.get(`/admin/gardens/farm/${farmId}`);
+  const res = await client.get(`/admin/gardens/farm/${farmId}`, { params });
   return res.data;
 };
 

@@ -41,7 +41,7 @@ export default function ExpertTaskQuestionPage() {
   const handleFarmCollapse = async ([farmId]) => {
     setActiveFarmId(farmId);
     setActiveGardenIds({}); // Reset khi đổi farm
-    if (farmId) await fetchGardensByFarmId(farmId);
+    if (farmId) await fetchGardensByFarmId(farmId, { pageSize: 1000 });
   };
 
   // Khi click vào garden, lấy list tree

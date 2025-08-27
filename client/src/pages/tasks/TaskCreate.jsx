@@ -63,7 +63,7 @@ export default function TaskCreate() {
   }, [fetchGardens]);
 
   useEffect(() => {
-    if (selectedFarmId) fetchGardensByFarmId(selectedFarmId);
+    if (selectedFarmId) fetchGardensByFarmId(selectedFarmId, { pageSize: 1000 });
   }, [selectedFarmId, fetchGardensByFarmId]);
 
   const handleChange = ({ fileList: newFileList }) => {

@@ -79,17 +79,11 @@ export default function TaskList() {
 
   useEffect(() => {
     if (selectedFarmId) {
-      fetchGardensByFarmId(selectedFarmId);
+      fetchGardensByFarmId(selectedFarmId, { pageSize: 1000 });
       setSelectedGardenId(undefined); // reset garden khi đổi farm
-      // setPage(1); // reset page khi đổi farm
-      fetchTasks({
-        page,
-        keyword,
-        farmId: selectedFarmId,
-        gardenId: undefined, // <-- đảm bảo không dùng giá trị cũ
-      });
+      setPage(1); // reset page khi đổi farm vì filter thay đổi
     }
-  }, [selectedFarmId, fetchGardensByFarmId, fetchTasks, page, keyword]);
+  }, [selectedFarmId, fetchGardensByFarmId]);
 
   useEffect(() => {
     const params = {
@@ -110,13 +104,13 @@ export default function TaskList() {
     fetchTasks(params);
   }, [page, keyword, selectedFarmId, selectedGardenId, fetchTasks, user?.role]);
 
-  // Reset page khi keyword hoặc filter thay đổi
+  // Reset page chỉ khi keyword thay đổi (không reset khi filter thay đổi)
   useEffect(() => {
     if (isSearching.current) {
       setPage(1);
       isSearching.current = false;
     }
-  }, [keyword, selectedFarmId, selectedGardenId]);
+  }, [keyword]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -126,7 +120,14 @@ export default function TaskList() {
     try {
       await deleteTask(record._id);
       message.success("Xoá công việc thành công!");
-      fetchTasks({ page, keyword, gardenId: selectedGardenId });
+      const params = { page, keyword };
+      if (user?.role === "expert" && selectedFarmId) {
+        params.farmId = selectedFarmId;
+      }
+      if (selectedGardenId) {
+        params.gardenId = selectedGardenId;
+      }
+      fetchTasks(params);
     } catch {}
   };
 
@@ -304,7 +305,12 @@ export default function TaskList() {
               value: f.farm._id,
               label: f.farm.name,
             }))}
-            onChange={setSelectedFarmId}
+            onChange={(value) => {
+              setSelectedFarmId(value);
+              if (!value) {
+                setPage(1); // Reset page khi clear farm filter
+              }
+            }}
           />
         )}
         <Select
@@ -317,7 +323,12 @@ export default function TaskList() {
               ? gardensByFarm.map((g) => ({ value: g._id, label: g.name }))
               : gardens.map((g) => ({ value: g._id, label: g.name }))
           }
-          onChange={setSelectedGardenId}
+          onChange={(value) => {
+            setSelectedGardenId(value);
+            if (!value) {
+              setPage(1); // Reset page khi clear garden filter
+            }
+          }}
           disabled={!selectedFarmId && user?.role === "expert"}
         />
       </div>
