@@ -75,6 +75,23 @@ const taskSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+
+  // Thêm các trường cho việc xóa task
+  deleteReason: {
+    type: String,
+    default: null,
+  },
+
+  deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+
+  deletedAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 const Task = mongoose.model("Task", taskSchema);

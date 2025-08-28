@@ -15,9 +15,14 @@ import {
   Table,
   Tag,
   Tooltip,
+  DatePicker,
 } from "antd";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import DeleteTaskModal from "@/components/DeleteTaskModal";
+
+const { RangePicker } = DatePicker;
 
 const typeLabel = {
   collect: "Thu hoạch",
@@ -58,6 +63,7 @@ export default function TaskList() {
     error,
     fetchTasks,
     deleteTask,
+    deleteTaskWithReason,
   } = useTaskStore();
   const { user, farmIds } = useAuthStore();
   const { fetchFarms } = useFarmStore();
@@ -67,8 +73,29 @@ export default function TaskList() {
   const [selectedFarmId, setSelectedFarmId] = useState(undefined);
   const [selectedGardenId, setSelectedGardenId] = useState(undefined);
   const [zoneFilter, setZoneFilter] = useState(undefined); // Remove zone filter
+  const [startDateFilter, setStartDateFilter] = useState(null);
+  const [endDateFilter, setEndDateFilter] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const isSearching = useRef(false);
   const navigate = useNavigate();
+
+  // Hàm kiểm tra có filter nào đang được áp dụng không
+  const hasActiveFilters = () => {
+    return startDateFilter || endDateFilter || keyword || selectedFarmId || selectedGardenId;
+  };
+
+  // Hàm đếm số filter đang được áp dụng
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (startDateFilter) count++;
+    if (endDateFilter) count++;
+    if (keyword) count++;
+    if (selectedFarmId) count++;
+    if (selectedGardenId) count++;
+    return count;
+  };
   useEffect(() => {
     fetchFarms(); // load danh sách farm cho expert
   }, [fetchFarms]);
@@ -85,10 +112,19 @@ export default function TaskList() {
     }
   }, [selectedFarmId, fetchGardensByFarmId]);
 
+  // Reset page khi thay đổi garden filter
+  useEffect(() => {
+    setPage(1);
+  }, [selectedGardenId]);
+
+  // State để lưu tất cả dữ liệu
+  const [allTasks, setAllTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
+
+  // Tải tất cả dữ liệu một lần
   useEffect(() => {
     const params = {
-      page,
-      keyword,
+      pageSize: 1000, // Lấy tất cả
     };
     
     // Thêm farmId nếu expert đã chọn farm
@@ -96,15 +132,55 @@ export default function TaskList() {
       params.farmId = selectedFarmId;
     }
     
-    // Thêm gardenId nếu đã chọn garden
-    if (selectedGardenId) {
-      params.gardenId = selectedGardenId;
-    }
-    
     fetchTasks(params);
-  }, [page, keyword, selectedFarmId, selectedGardenId, fetchTasks, user?.role]);
+  }, [selectedFarmId, fetchTasks, user?.role]);
 
-  // Reset page chỉ khi keyword thay đổi (không reset khi filter thay đổi)
+  // Filter dữ liệu ở frontend
+  useEffect(() => {
+    let filtered = [...allTasks];
+
+    // Filter theo keyword
+    if (keyword) {
+      filtered = filtered.filter(task => 
+        task.name.toLowerCase().includes(keyword.toLowerCase())
+      );
+    }
+
+    // Filter theo garden
+    if (selectedGardenId) {
+      filtered = filtered.filter(task => task.gardenId === selectedGardenId);
+    }
+
+    // Filter theo ngày bắt đầu
+    if (startDateFilter) {
+      const startDate = startDateFilter.toDate();
+      filtered = filtered.filter(task => {
+        if (!task.startDate) return false;
+        return new Date(task.startDate) >= startDate;
+      });
+    }
+
+    // Filter theo ngày kết thúc
+    if (endDateFilter) {
+      const endDate = endDateFilter.toDate();
+      endDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(task => {
+        if (!task.endDate) return false;
+        return new Date(task.endDate) <= endDate;
+      });
+    }
+
+    setFilteredTasks(filtered);
+  }, [allTasks, keyword, selectedGardenId, startDateFilter, endDateFilter]);
+
+  // Cập nhật allTasks khi có dữ liệu mới
+  useEffect(() => {
+    if (tasks && tasks.length > 0) {
+      setAllTasks(tasks);
+    }
+  }, [tasks]);
+
+  // Reset page khi thay đổi keyword
   useEffect(() => {
     if (isSearching.current) {
       setPage(1);
@@ -112,23 +188,39 @@ export default function TaskList() {
     }
   }, [keyword]);
 
+  // Reset page khi thay đổi date filter
+  useEffect(() => {
+    setPage(1);
+  }, [startDateFilter, endDateFilter]);
+
   useEffect(() => {
     if (error) message.error(error);
   }, [error]);
 
   const handleDelete = async (record) => {
+    setSelectedTask(record);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async (deleteReason) => {
+    setDeleteLoading(true);
     try {
-      await deleteTask(record._id);
-      message.success("Xoá công việc thành công!");
-      const params = { page, keyword };
+      await deleteTask(selectedTask._id, deleteReason);
+      message.success("Xóa công việc thành công!");
+      setDeleteModalOpen(false);
+      setSelectedTask(null);
+      
+      // Reload lại tất cả dữ liệu
+      const params = { pageSize: 1000 };
       if (user?.role === "expert" && selectedFarmId) {
         params.farmId = selectedFarmId;
       }
-      if (selectedGardenId) {
-        params.gardenId = selectedGardenId;
-      }
       fetchTasks(params);
-    } catch {}
+    } catch (error) {
+      message.error(error.message || "Có lỗi xảy ra khi xóa công việc!");
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const columns = [
@@ -138,8 +230,8 @@ export default function TaskList() {
       key: "stt",
       align: "center",
       width: 60,
-      render: (_, __, idx) =>
-        (page - 1) * (pagination.pageSize || 10) + idx + 1,
+              render: (_, __, idx) =>
+          (page - 1) * 10 + idx + 1,
     },
     {
       title: "Tên",
@@ -227,27 +319,21 @@ export default function TaskList() {
               onClick={() => navigate(RoutePaths.TASK_DETAIL(record._id))}
             />
           </Tooltip>
-          <Popconfirm
-            title="Bạn chắc chắn muốn xoá công việc này?"
-            okText="Xoá"
-            cancelText="Huỷ"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Tooltip title="Xoá">
-              <Button
-                type="text"
-                danger
-                icon={
-                  <span
-                    className="anticon"
-                    style={{ color: "red", fontSize: 18 }}
-                  >
-                    🗑️
-                  </span>
-                }
-              />
-            </Tooltip>
-          </Popconfirm>
+                     <Tooltip title="Xoá">
+             <Button
+               type="text"
+               danger
+               icon={
+                 <span
+                   className="anticon"
+                   style={{ color: "red", fontSize: 18 }}
+                 >
+                   🗑️
+                 </span>
+               }
+               onClick={() => handleDelete(record)}
+             />
+           </Tooltip>
         </div>
       ),
     },
@@ -333,15 +419,102 @@ export default function TaskList() {
         />
       </div>
 
+      {/* Filter thời gian */}
+      <div style={{ 
+        display: "flex", 
+        gap: 12, 
+        marginBottom: 18, 
+        flexWrap: "wrap",
+        padding: "16px",
+        background: "#f8fafb",
+        borderRadius: "8px",
+        border: "1px solid #e8eaed"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontWeight: 500, color: "#23643A" }}>Bộ lọc thời gian:</span>
+        </div>
+        <Tooltip title="Lọc theo ngày bắt đầu công việc">
+          <DatePicker
+            placeholder="Ngày bắt đầu công việc"
+            value={startDateFilter}
+            onChange={(date) => {
+              setStartDateFilter(date);
+              setPage(1);
+            }}
+            style={{ width: 200 }}
+            format="DD/MM/YYYY"
+          />
+        </Tooltip>
+        <Tooltip title="Lọc theo ngày kết thúc công việc">
+          <DatePicker
+            placeholder="Ngày kết thúc công việc"
+            value={endDateFilter}
+            onChange={(date) => {
+              setEndDateFilter(date);
+              setPage(1);
+            }}
+            style={{ width: 200 }}
+            format="DD/MM/YYYY"
+          />
+        </Tooltip>
+        <Button
+          onClick={() => {
+            setStartDateFilter(null);
+            setEndDateFilter(null);
+            setPage(1);
+          }}
+          style={{ 
+            borderRadius: 8,
+            background: "#ff4d4f",
+            borderColor: "#ff4d4f",
+            color: "white"
+          }}
+          disabled={!hasActiveFilters()}
+        >
+          Xóa bộ lọc ({getActiveFilterCount()})
+        </Button>
+      </div>
+
+      {/* Hiển thị thông tin filter đang áp dụng */}
+      {hasActiveFilters() && (
+        <div style={{ 
+          marginBottom: 16, 
+          padding: "8px 12px", 
+          background: "#e6f7ff", 
+          border: "1px solid #91d5ff", 
+          borderRadius: "6px",
+          fontSize: "14px"
+        }}>
+          <span style={{ fontWeight: 500, color: "#1890ff" }}>
+            Đang áp dụng {getActiveFilterCount()} bộ lọc
+          </span>
+                     {keyword && (
+             <span style={{ marginLeft: 16, color: "#666" }}>
+               Từ khóa: <strong>"{keyword}"</strong>
+             </span>
+           )}
+           {startDateFilter && (
+             <span style={{ marginLeft: 16, color: "#666" }}>
+               Ngày bắt đầu: <strong>{startDateFilter.format('DD/MM/YYYY')}</strong>
+             </span>
+           )}
+           {endDateFilter && (
+             <span style={{ marginLeft: 16, color: "#666" }}>
+               Ngày kết thúc: <strong>{endDateFilter.format('DD/MM/YYYY')}</strong>
+             </span>
+           )}
+        </div>
+      )}
+
       <Table
         rowKey="_id"
         columns={columns}
-        dataSource={tasks}
+        dataSource={filteredTasks}
         loading={loading}
         pagination={{
           current: page,
-          total: pagination.total,
-          pageSize: pagination.pageSize,
+          total: filteredTasks.length,
+          pageSize: 10,
           onChange: setPage,
           showSizeChanger: false,
         }}
@@ -357,8 +530,19 @@ export default function TaskList() {
               </th>
             ),
           },
-        }}
-      />
-    </div>
-  );
-}
+                 }}
+       />
+       
+       <DeleteTaskModal
+         open={deleteModalOpen}
+         task={selectedTask}
+         loading={deleteLoading}
+         onOk={handleDeleteConfirm}
+         onCancel={() => {
+           setDeleteModalOpen(false);
+           setSelectedTask(null);
+         }}
+       />
+     </div>
+   );
+ }

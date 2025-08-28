@@ -202,8 +202,34 @@ const getDetail = async (id) => {
   return { task, histories: listTaskHistory, notes: listDailyNote, garden, farm };
 };
 
-const remove = async (id) => {
-  return await Task.updateOne({ _id: id }, { status: false });
+const remove = async (id, deletedBy, deleteReason) => {
+  const task = await Task.findById(id);
+  if (!task) {
+    throw new NotFoundException("Not found task with id: " + id);
+  }
+
+  // Kiểm tra trạng thái task
+  if (task.status === "completed") {
+    throw new BadRequestException("Cannot delete a completed task.");
+  }
+
+  // Cập nhật task
+  task.status = false; // Đánh dấu là đã xóa
+  task.deleteReason = deleteReason;
+  task.deletedBy = deletedBy;
+  task.deletedAt = new Date();
+  await task.save();
+
+  // Tạo task history
+  const taskHistory = new TaskHistory({
+    taskId: id,
+    farmerId: task.farmerId,
+    comment: `Task deleted. Reason: ${deleteReason}`,
+    status: "deleted",
+  });
+
+  await taskHistory.save();
+  return task;
 };
 
 const assignFarmer = async (taskId, farmerId) => {

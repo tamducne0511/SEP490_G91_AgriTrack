@@ -28,7 +28,7 @@ router.put(
   taskValidation.update,
   taskController.update
 );
-router.delete("/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), taskController.remove);
+router.delete("/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), taskValidation.deleteTask, taskController.remove);
 router.get("/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), taskController.find);
 router.post("/:id/assign-farmer", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), taskController.assignFarmer);
 

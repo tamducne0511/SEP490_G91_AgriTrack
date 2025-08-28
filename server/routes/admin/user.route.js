@@ -18,12 +18,12 @@ router.get(
 router.post("/", userValidation.create, userController.create);
 router.post(
   "/farmers",
-  isRoles([USER_ROLE.farmAdmin, USER_ROLE.admin, USER_ROLE.expert]),
+  isRoles([USER_ROLE.farmAdmin]),
   userValidation.createFarmer,
   userController.createFarmer
 );
-router.delete("/farmers/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), userController.removeFarmer);
-router.post("/farmer/:id/active", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), userController.active);
+router.delete("/farmers/:id", isRoles([USER_ROLE.farmAdmin]), userController.removeFarmer);
+router.post("/farmer/:id/active", isRoles([USER_ROLE.farmAdmin]), userController.active);
 router.get(
   "/list/farm-unassigned",
   isAdmin,

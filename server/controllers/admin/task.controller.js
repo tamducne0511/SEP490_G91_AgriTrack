@@ -1,6 +1,8 @@
 const { validationResult } = require("express-validator");
 const { formatPagination } = require("../../utils/format.util");
 const taskService = require("../../services/task.service");
+const notificationService = require("../../services/notification.service");
+const userService = require("../../services/user.service");
 const NotFoundException = require("../../middlewares/exceptions/notfound");
 
 // Get list task with pagination and keyword search
@@ -95,17 +97,39 @@ const update = async (req, res, next) => {
 };
 
 // Delete task
-const remove = async (req, res) => {
-  const id = req.params.id;
-  const task = await taskService.find(id);
-  if (!task) {
-    next(new NotFoundException("Not found task with id: " + id));
+const remove = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
 
-  await taskService.remove(id);
-  res.json({
-    message: "Task deleted successfully",
-  });
+  try {
+    const id = req.params.id;
+    const { deleteReason } = req.body;
+
+    // Kiểm tra quyền - chỉ expert và farm-admin mới được xóa task
+    if (req.user.role !== "expert" && req.user.role !== "farm-admin") {
+      return res.status(403).json({
+        message: "Chỉ chuyên gia và chủ trang trại mới có quyền xóa công việc"
+      });
+    }
+
+    // Xóa task
+    const task = await taskService.remove(id, req.user.id, deleteReason);
+
+    // Lấy thông tin user xóa task
+    const deletedByUser = await userService.find(req.user.id);
+
+    // Tạo notification
+    await notificationService.createTaskDeleteNotification(task, deleteReason, deletedByUser);
+
+    res.json({
+      message: "Task deleted successfully",
+      data: task,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 // Get detail

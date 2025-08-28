@@ -110,15 +110,16 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  deleteTask: async (id) => {
+  deleteTask: async (taskId, deleteReason) => {
     set({ loading: true, error: null });
     try {
-      await deleteTaskApi(id);
+      await deleteTaskApi(taskId, deleteReason);
       set({ loading: false });
+      // Reload task list sau khi xóa
       const { pagination, fetchTasks } = get();
       fetchTasks({ page: pagination.page });
     } catch (err) {
-      set({ error: err?.message || "Lỗi xoá task", loading: false });
+      set({ error: err?.message || "Lỗi xóa task", loading: false });
       throw err;
     }
   },

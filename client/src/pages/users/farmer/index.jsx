@@ -36,6 +36,11 @@ export default function FarmerList() {
     });
   }, [page, keyword, selectedFarmId, fetchFarmers]);
 
+  // Reset page khi thay đổi farm filter
+  useEffect(() => {
+    setPage(1);
+  }, [selectedFarmId]);
+
   // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
   useEffect(() => {
     if (isSearching.current) {
@@ -177,38 +182,43 @@ export default function FarmerList() {
             />
           </Tooltip>
           {record.status ? (
-            // Trường hợp Farmer đang active -> Hiển thị nút Deactivate
-            <Tooltip title="Vô hiệu hoá">
-              <Button
-                type="text"
-                danger
-                icon={<span style={{ color: "red", fontSize: 18 }}>🗑️</span>}
-                onClick={() =>
-                  setDeactivateModal({ open: true, farmer: record })
-                }
-              />
-            </Tooltip>
-          ) : (
-            <Tooltip title="Kích hoạt lại">
-              <Popconfirm
-                title="Bạn chắc chắn muốn kích hoạt lại nông dân này?"
-                okText="Kích hoạt"
-                cancelText="Huỷ"
-                onConfirm={() => handleActive(record)}
-              >
+            // Trường hợp Farmer đang active -> Hiển thị nút Deactivate (chỉ cho farm-admin)
+            user?.role === "farm-admin" && (
+              <Tooltip title="Vô hiệu hoá">
                 <Button
                   type="text"
-                  icon={
-                    <span
-                      className="anticon"
-                      style={{ color: "green", fontSize: 18 }}
-                    >
-                      🔄
-                    </span>
+                  danger
+                  icon={<span style={{ color: "red", fontSize: 18 }}>🗑️</span>}
+                  onClick={() =>
+                    setDeactivateModal({ open: true, farmer: record })
                   }
                 />
-              </Popconfirm>
-            </Tooltip>
+              </Tooltip>
+            )
+          ) : (
+            // Chỉ farm-admin mới được kích hoạt lại nông dân
+            user?.role === "farm-admin" && (
+              <Tooltip title="Kích hoạt lại">
+                <Popconfirm
+                  title="Bạn chắc chắn muốn kích hoạt lại nông dân này?"
+                  okText="Kích hoạt"
+                  cancelText="Huỷ"
+                  onConfirm={() => handleActive(record)}
+                >
+                  <Button
+                    type="text"
+                    icon={
+                      <span
+                        className="anticon"
+                        style={{ color: "green", fontSize: 18 }}
+                      >
+                        🔄
+                      </span>
+                    }
+                  />
+                </Popconfirm>
+              </Tooltip>
+            )
           )}
         </div>
       ),
@@ -233,18 +243,20 @@ export default function FarmerList() {
       }}
     >
       <div style={{ display: "flex", gap: 12, marginBottom: 18 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          style={{
-            background: "#23643A",
-            border: 0,
-            borderRadius: 8,
-          }}
-          onClick={() => setModalOpen(true)}
-        >
-          Thêm nông dân
-        </Button>
+        {user?.role === "farm-admin" && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            style={{
+              background: "#23643A",
+              border: 0,
+              borderRadius: 8,
+            }}
+            onClick={() => setModalOpen(true)}
+          >
+            Thêm nông dân
+          </Button>
+        )}
         {user?.role === "expert" && (
           <Select
             allowClear

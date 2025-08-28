@@ -253,12 +253,12 @@ export default function FarmerTaskDetail() {
                     Đánh dấu hoàn thành
                   </Button>
                 )}
-                {(task.status === "assigned" ||
+                {/* {(task.status === "assigned" ||
                   task.status === "in-progress") && (
                   <Button danger onClick={() => handleChangeStatus("canceled")}>
                     Huỷ công việc
                   </Button>
-                )}
+                )} */}
               </div>
             </Descriptions.Item>
             <Descriptions.Item label="Ngày tạo">

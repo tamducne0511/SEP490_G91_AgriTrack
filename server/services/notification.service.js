@@ -84,6 +84,20 @@ const remove = async (id) => {
   return await Notification.updateOne({ _id: id }, { status: false });
 };
 
+// Tạo notification cho task bị xóa
+const createTaskDeleteNotification = async (task, deleteReason, deletedByUser) => {
+  const notificationData = {
+    farmId: task.farmId,
+    title: `Công việc "${task.name}" đã bị xóa`,
+    content: `Công việc "${task.name}" đã bị xóa bởi ${deletedByUser.fullName}. Lý do: ${deleteReason}`,
+    image: task.image || "",
+  };
+
+  const notification = new Notification(notificationData);
+  await notification.save();
+  return notification;
+};
+
 module.exports = {
   getListPagination,
   getTotal,
@@ -93,4 +107,5 @@ module.exports = {
   remove,
   markRead,
   getTotalUnread,
+  createTaskDeleteNotification,
 };
