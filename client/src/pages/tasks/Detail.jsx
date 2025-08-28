@@ -22,9 +22,11 @@ import {
   Descriptions,
   List,
   Avatar,
+  DatePicker,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
@@ -93,7 +95,12 @@ export default function TaskDetail() {
   }, [id, fetchDailyNotesByTaskId, fetchDailyNoteDetail]);
   useEffect(() => {
     if (taskDetail) {
-      form.setFieldsValue(taskDetail);
+      const formValues = {
+        ...taskDetail,
+        startDate: taskDetail.startDate ? dayjs(taskDetail.startDate) : null,
+        endDate: taskDetail.endDate ? dayjs(taskDetail.endDate) : null,
+      };
+      form.setFieldsValue(formValues);
       if (taskDetail.image) {
         setFileList([
           {
@@ -126,6 +133,12 @@ export default function TaskDetail() {
       formData.append("gardenId", selectedGardenId);
       formData.append("type", values.type);
       formData.append("priority", values.priority);
+      if (values.startDate) {
+        formData.append("startDate", values.startDate.format("YYYY-MM-DD"));
+      }
+      if (values.endDate) {
+        formData.append("endDate", values.endDate.format("YYYY-MM-DD"));
+      }
       if (fileList[0]?.originFileObj) {
         formData.append("image", fileList[0].originFileObj);
       } else if (fileList[0]?.url) {
@@ -300,6 +313,30 @@ export default function TaskDetail() {
                     ]}
                     size="large"
                     style={{ borderRadius: 8 }}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="startDate"
+                  label="Ngày bắt đầu"
+                >
+                  <DatePicker
+                    placeholder="Chọn ngày bắt đầu"
+                    size="large"
+                    style={{ borderRadius: 8, width: "100%" }}
+                    format="DD/MM/YYYY"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="endDate"
+                  label="Ngày kết thúc"
+                >
+                  <DatePicker
+                    placeholder="Chọn ngày kết thúc"
+                    size="large"
+                    style={{ borderRadius: 8, width: "100%" }}
+                    format="DD/MM/YYYY"
                   />
                 </Form.Item>
 

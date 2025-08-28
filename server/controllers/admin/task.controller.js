@@ -85,6 +85,8 @@ const update = async (req, res, next) => {
       priority: req.body.priority,
       gardenId: req.body.gardenId,
       image: req.file?.filename ? `/uploads/tasks/${req.file.filename}` : "",
+      startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+      endDate: req.body.endDate ? new Date(req.body.endDate) : null,
     });
 
     res.json({

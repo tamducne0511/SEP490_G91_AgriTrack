@@ -94,8 +94,12 @@ export default function TaskCreate() {
       formData.append("gardenId", selectedGardenId);
       formData.append("type", values.type);
       formData.append("priority", values.priority);
-      formData.append("startDate", values.startDate ? values.startDate : null);
-      formData.append("endDate", values.endDate ? values.endDate.toISOString() : null);
+      if (values.startDate) {
+        formData.append("startDate", values.startDate.format("YYYY-MM-DD"));
+      }
+      if (values.endDate) {
+        formData.append("endDate", values.endDate.format("YYYY-MM-DD"));
+      }
       if (fileList[0]?.originFileObj) {
         formData.append("image", fileList[0].originFileObj);
       }
