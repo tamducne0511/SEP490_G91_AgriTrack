@@ -8,10 +8,24 @@ import {
 import { EAuthToken, EFarm, EUser } from "@/variables/common";
 
 export const useAuthStore = create((set) => ({
-  user: null,
-  token: null,
+  user: (() => {
+    try {
+      const userStr = localStorage.getItem(EUser.CURRENT_USER);
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  })(),
+  token: localStorage.getItem(EAuthToken.ACCESS_TOKEN) || null,
   loading: false,
-  farmIds: null,
+  farmIds: (() => {
+    try {
+      const farmStr = localStorage.getItem(EFarm.CURRENT_FARM);
+      return farmStr ? JSON.parse(farmStr) : null;
+    } catch {
+      return null;
+    }
+  })(),
   farm: null,
   error: null,
 
@@ -29,14 +43,23 @@ export const useAuthStore = create((set) => ({
   },
 
   getMe: async () => {
+    set({ loading: true });
     try {
       const res = await getMeApi();
       const data = res.data;
       localStorage.setItem(EUser.CURRENT_USER, JSON.stringify(data.user));
       localStorage.setItem(EFarm.CURRENT_FARM, JSON.stringify(data.farmId));
-      set({ user: data.user, farmIds: data.farmId, farm: data.farm });
+      set({ user: data.user, farmIds: data.farmId, farm: data.farm, loading: false });
     } catch (err) {
-      set({ error: err?.message || "Lỗi lấy thông tin người dùng" });
+      console.error("getMe error:", err);
+      // Nếu lỗi 401, clear localStorage và redirect to login
+      if (err?.status === 401 || err?.response?.status === 401) {
+        localStorage.clear();
+        set({ user: null, token: null, farmIds: null, farm: null, loading: false });
+        window.location.pathname = "/login";
+        return;
+      }
+      set({ error: err?.message || "Lỗi lấy thông tin người dùng", loading: false });
     }
   },
 
@@ -60,7 +83,15 @@ export const useAuthStore = create((set) => ({
 
   logout: () => {
     localStorage.clear();
-    set({ user: null, token: null });
-    // window.location.reload();
+    set({ user: null, token: null, farmIds: null, farm: null });
+    window.location.pathname = "/login";
+  },
+
+  // Kiểm tra xem user có đăng nhập không
+  isAuthenticated: () => {
+    const token = localStorage.getItem(EAuthToken.ACCESS_TOKEN);
+    const user = localStorage.getItem(EUser.CURRENT_USER);
+    const result = !!(token && user);
+    return result;
   },
 }));

@@ -75,7 +75,7 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
             <EquipmentManager />
-          </ProtectedRoute>
+</ProtectedRoute>
         ),
       },
       {
@@ -190,14 +190,14 @@ const router = createBrowserRouter([
         path: RoutePaths.TASK_LIST,
         element: (
           <ProtectedRoute allowedRoles={["admin", "farm-admin", "expert"]}>
-            <TaskList />
+<TaskList />
           </ProtectedRoute>
         ),
       },
       {
         path: RoutePaths.TASK_CREATE,
         element: (
-          <ProtectedRoute allowedRoles={["admin", "farm-admin", "expert"]}>
+          <ProtectedRoute allowedRoles={[ "farm-admin", "expert"]}>
             <TaskCreate />
           </ProtectedRoute>
         ),
@@ -245,7 +245,7 @@ const router = createBrowserRouter([
       {
         path: "/request-detail/:id",
         element: (
-          <ProtectedRoute allowedRoles={["expert"]}>
+          <ProtectedRoute allowedRoles={["expert", "farmer", "farm-admin"]}>
             <TreeQuestionDetail />
           </ProtectedRoute>
         ),
@@ -261,7 +261,7 @@ const router = createBrowserRouter([
       {
         path: RoutePaths.FARM_SCHEDULE_LIST,
         element: (
-          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+          <ProtectedRoute allowedRoles={["expert", "farm-admin"]}>
             <FarmListPage />
           </ProtectedRoute>
         ),
@@ -269,7 +269,7 @@ const router = createBrowserRouter([
       {
         path: "/farm-schedule/:id",
         element: (
-          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+          <ProtectedRoute allowedRoles={["expert", "farm-admin"]}>
             <FarmScheduleDetailPage />
           </ProtectedRoute>
         ),
@@ -277,7 +277,7 @@ const router = createBrowserRouter([
       {
         path: "/farm-schedule-tree/:id",
         element: (
-          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+          <ProtectedRoute allowedRoles={["expert", "farm-admin"]}>
             <FarmScheduleTreeDetail />
           </ProtectedRoute>
         ),

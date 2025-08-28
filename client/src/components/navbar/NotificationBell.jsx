@@ -2,7 +2,7 @@ import { useAuthStore, useNotificationStore } from "@/stores";
 import { BellOutlined } from "@ant-design/icons";
 import { Badge, Button, Dropdown, List, Spin, Modal, Image } from "antd";
 import { useEffect, useState } from "react";
-import { ImageBaseUrl } from "@/variables/common";
+import { ImageBaseUrl, EAuthToken } from "@/variables/common";
 
 const NotificationBell = () => {
   const {
@@ -23,10 +23,21 @@ const NotificationBell = () => {
   const [previewData, setPreviewData] = useState(null);
 
   useEffect(() => {
+    // Chỉ gọi API nếu có token
+    const token = localStorage.getItem(EAuthToken.ACCESS_TOKEN);
+    if (!token) return;
+
     fetchNotifications({ page: 1 });
     fetchTotalNotiUnread();
 
     const intervalId = setInterval(() => {
+      // Kiểm tra token trước khi gọi API
+      const currentToken = localStorage.getItem(EAuthToken.ACCESS_TOKEN);
+      if (!currentToken) {
+        clearInterval(intervalId);
+        return;
+      }
+      
       fetchNotifications({ page: 1 });
       fetchTotalNotiUnread();
     }, 5000);

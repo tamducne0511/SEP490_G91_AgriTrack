@@ -8,7 +8,12 @@ const ProtectedRoute = ({
   allowedRoles = [], 
   redirectTo = "/unauthorized" 
 }) => {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
+
+  // Nếu không có token hoặc user, chuyển về trang login
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
 
   // Nếu không có user hoặc không có role, chuyển về trang unauthorized
   if (!user || !user.role) {
