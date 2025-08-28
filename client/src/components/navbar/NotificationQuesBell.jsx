@@ -42,8 +42,7 @@ const NotificationQuesBell = () => {
     return () => {
       clearInterval(intervalId);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, []); // Dependency array rỗng để chỉ chạy một lần
 
   const notificationCount =
     notificationQues?.filter((noti) => !noti.readBy.includes(user?._id))

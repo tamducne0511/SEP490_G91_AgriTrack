@@ -45,7 +45,7 @@ const NotificationBell = () => {
     return () => {
       clearInterval(intervalId);
     };
-  }, []);
+  }, []); // Dependency array rỗng để chỉ chạy một lần
 
   // Hàm mở modal preview
   const handlePreview = (item) => {

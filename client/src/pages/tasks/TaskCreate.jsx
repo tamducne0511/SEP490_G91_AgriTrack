@@ -14,7 +14,7 @@ import {
   Typography,
   Upload,
 } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
@@ -50,21 +50,25 @@ export default function TaskCreate() {
   const [selectedFarmId, setSelectedFarmId] = useState(undefined);
   const [selectedGardenId, setSelectedGardenId] = useState(undefined);
   const [formValues, setFormValues] = useState({});
-  const { getMe, user, farmIds } = useAuthStore();
-
-  useEffect(() => {
-    getMe();
-  }, [getMe]);
+  const { user, farmIds } = useAuthStore(); // Bỏ getMe, chỉ lấy user và farmIds
+  
+  // Sử dụng useRef để tránh gọi API nhiều lần
+  const hasLoadedGardens = useRef(false);
 
   const isExpert = user?.role === "expert";
 
   useEffect(() => {
-    fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
-  }, [fetchGardens]);
+    if (!hasLoadedGardens.current) {
+      fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
+      hasLoadedGardens.current = true;
+    }
+  }, []);
 
   useEffect(() => {
-    if (selectedFarmId) fetchGardensByFarmId(selectedFarmId, { pageSize: 1000 });
-  }, [selectedFarmId, fetchGardensByFarmId]);
+    if (selectedFarmId) {
+      fetchGardensByFarmId(selectedFarmId, { pageSize: 1000 });
+    }
+  }, [selectedFarmId]);
 
   const handleChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
