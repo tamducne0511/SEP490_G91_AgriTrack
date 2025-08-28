@@ -2,6 +2,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
 import AuthLayout from "@/layouts/AuthLayout";
 import PublicLayout from "@/layouts/PublicLayout";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import ChangePassword from "@/pages/change-password";
 import Dashboard from "@/pages/dashboard";
 import EquipmentList from "@/pages/equipments";
@@ -33,6 +34,7 @@ import FarmAdminList from "@/pages/users/farm-admin";
 import FarmAdminDetail from "@/pages/users/farm-admin/Detail";
 import FarmerList from "@/pages/users/farmer";
 import FarmerDetail from "@/pages/users/farmer/Detail";
+import Unauthorized from "@/pages/error/Unauthorized";
 import RedirectHome from "./RedirectHome";
 import { RoutePaths } from "./routes-constants";
 
@@ -46,71 +48,139 @@ const router = createBrowserRouter([
       },
       {
         path: RoutePaths.EXPERT_LIST,
-        element: <ExpertList />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <ExpertList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.FARM_ADMIN_LIST,
-        element: <FarmAdminList />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <FarmAdminList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.FARM_LIST,
-        element: <FarmList />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+            <FarmList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.EQUIPMENT_MANAGER,
-        element: <EquipmentManager />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+            <EquipmentManager />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/farm-detail/:id",
-        element: <FarmDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+            <FarmDetail />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/expert-detail/:id",
-        element: <ExpertDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <ExpertDetail />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/farm-admin-detail/:id",
-        element: <FarmAdminDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <FarmAdminDetail />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/farmer-detail/:id",
-        element: <FarmerDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["farm-admin", "expert"]}>
+            <FarmerDetail />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/garden-detail/:id",
-        element: <GardenDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin", "expert"]}>
+            <GardenDetail />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/task-detail/:id",
-        element: <TaskDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin", "expert"]}>
+            <TaskDetail />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/my-task/:id",
-        element: <FarmerTaskDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["farmer"]}>
+            <FarmerTaskDetail />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/equipment-detail/:id",
-        element: <EquipmentDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+            <EquipmentDetail />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/my-farm-task-question/:id",
-        element: <TreeQuestionDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["farmer", "expert"]}>
+            <TreeQuestionDetail />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.GARDEN_LIST,
-        element: <GardenList />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin", "expert"]}>
+            <GardenList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.FARMER_LIST,
-        element: <FarmerList />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin", "expert"]}>
+            <FarmerList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.MY_FARM_TASK_QUESTION,
-        element: <FarmTaskQuestionList />,
+        element: (
+          <ProtectedRoute allowedRoles={["farmer"]}>
+            <FarmTaskQuestionList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.MY_FARM_TASK_QUESTION_CREATE,
-        element: <AddTaskQuestion />,
+        element: (
+          <ProtectedRoute allowedRoles={["farmer"]}>
+            <AddTaskQuestion />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.NOTIFICATION_LIST,
@@ -118,19 +188,35 @@ const router = createBrowserRouter([
       },
       {
         path: RoutePaths.TASK_LIST,
-        element: <TaskList />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin", "expert"]}>
+            <TaskList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.TASK_CREATE,
-        element: <TaskCreate />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin", "expert"]}>
+            <TaskCreate />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.EQUIPMENT_CATEGORY_LIST,
-        element: <EquipmentCategoryList />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+            <EquipmentCategoryList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.EQUIPMENT_LIST,
-        element: <EquipmentList />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+            <EquipmentList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.CHANGE_PASSWORD,
@@ -146,27 +232,55 @@ const router = createBrowserRouter([
       },
       {
         path: RoutePaths.REQUEST_LIST,
-        element: <ExpertTaskQuestionPage />,
+        element: (
+          <ProtectedRoute allowedRoles={["expert"]}>
+            <ExpertTaskQuestionPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/unauthorized",
+        element: <Unauthorized />,
       },
       {
         path: "/request-detail/:id",
-        element: <TreeQuestionDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["expert"]}>
+            <TreeQuestionDetail />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.MY_TASK_LIST,
-        element: <FarmerTaskList />,
+        element: (
+          <ProtectedRoute allowedRoles={["farmer"]}>
+            <FarmerTaskList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: RoutePaths.FARM_SCHEDULE_LIST,
-        element: <FarmListPage />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+            <FarmListPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/farm-schedule/:id",
-        element: <FarmScheduleDetailPage />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+            <FarmScheduleDetailPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/farm-schedule-tree/:id",
-        element: <FarmScheduleTreeDetail />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin"]}>
+            <FarmScheduleTreeDetail />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

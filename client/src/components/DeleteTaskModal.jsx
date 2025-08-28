@@ -45,6 +45,9 @@ const DeleteTaskModal = ({
         <p style={{ margin: 0, color: "#666" }}>
           Bạn sắp xóa công việc: <strong>{task?.name}</strong>
         </p>
+        <p style={{ margin: "4px 0 0 0", color: "#666", fontSize: "14px" }}>
+          Trạng thái hiện tại: <strong>{task?.status === "completed" ? "Hoàn thành" : task?.status === false ? "Đã xóa" : task?.status}</strong>
+        </p>
         <p style={{ margin: "8px 0 0 0", color: "#ff4d4f", fontSize: "14px" }}>
           ⚠️ Hành động này không thể hoàn tác và sẽ gửi thông báo đến nông dân.
         </p>

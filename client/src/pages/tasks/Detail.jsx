@@ -446,6 +446,39 @@ export default function TaskDetail() {
               <Descriptions.Item label="Được giao cho">
                 {taskDetail?.farmerId?.fullName} - {taskDetail?.farmerId?.email}
               </Descriptions.Item>
+              {/* Hiển thị thông tin xóa nếu task có trạng thái false */}
+              {taskDetail.status === "false" && (
+                <>
+                  <Descriptions.Item label="Trạng thái">
+                    <Tag color="red">Đã xoá</Tag>
+                  </Descriptions.Item>
+                  {taskDetail.deleteReason && (
+                    <Descriptions.Item label="Lý do bị xóa">
+                      <div style={{ 
+                        padding: "8px 12px", 
+                        background: "#fff2f0", 
+                        border: "1px solid #ffccc7", 
+                        borderRadius: "6px",
+                        color: "#cf1322"
+                      }}>
+                        {taskDetail.deleteReason}
+                      </div>
+                    </Descriptions.Item>
+                  )}
+                  {taskDetail.deletedBy && (
+                    <Descriptions.Item label="Người xóa">
+                      <Tag color="red">
+                        {taskDetail.deletedBy.fullName || taskDetail.deletedBy.email || "Không xác định"}
+                      </Tag>
+                    </Descriptions.Item>
+                  )}
+                  {taskDetail.deletedAt && (
+                    <Descriptions.Item label="Thời gian xóa">
+                      {new Date(taskDetail.deletedAt).toLocaleString("vi-VN")}
+                    </Descriptions.Item>
+                  )}
+                </>
+              )}
             </Descriptions>
           </Card>
           <Card

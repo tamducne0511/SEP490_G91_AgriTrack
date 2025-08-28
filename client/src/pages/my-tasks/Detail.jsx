@@ -261,6 +261,36 @@ export default function FarmerTaskDetail() {
                 )} */}
               </div>
             </Descriptions.Item>
+            {/* Hiển thị thông tin xóa nếu task có trạng thái false */}
+            {task.status === "false" && (
+              <>
+                {task.deleteReason && (
+                  <Descriptions.Item label="Lý do bị xóa">
+                    <div style={{ 
+                      padding: "8px 12px", 
+                      background: "#fff2f0", 
+                      border: "1px solid #ffccc7", 
+                      borderRadius: "6px",
+                      color: "#cf1322"
+                    }}>
+                      {task.deleteReason}
+                    </div>
+                  </Descriptions.Item>
+                )}
+                {task.deletedBy && (
+                  <Descriptions.Item label="Người xóa">
+                    <Tag color="red">
+                      {task.deletedBy.fullName || task.deletedBy.email || "Không xác định"}
+                    </Tag>
+                  </Descriptions.Item>
+                )}
+                {task.deletedAt && (
+                  <Descriptions.Item label="Thời gian xóa">
+                    {new Date(task.deletedAt).toLocaleString("vi-VN")}
+                  </Descriptions.Item>
+                )}
+              </>
+            )}
             <Descriptions.Item label="Ngày tạo">
               {new Date(task.createdAt).toLocaleString("vi-VN")}
             </Descriptions.Item>
