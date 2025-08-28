@@ -2,7 +2,7 @@ import { RoutePaths } from "@/routes";
 import { useUserStore } from "@/stores";
 import { EyeOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Input, message, Modal, Popconfirm, Table, Tag, Tooltip } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ExpertModal from "./ExpertModal";
 import emailjs from "@emailjs/browser";
@@ -23,7 +23,9 @@ export default function ExpertList() {
   const [keyword, setKeyword] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const isSearching = useRef(false);
   const navigate = useNavigate();
+
   const [deactivateModal, setDeactivateModal] = useState({
     open: false,
     expert: null,
@@ -46,10 +48,10 @@ export default function ExpertList() {
     try {
       await deleteUser(deactivateModal.expert._id, "expert");
       await emailjs.send(
-        "service_qwirn1u",
-        "template_s48zz6f",
+        "service_x8zecr1",
+        "template_osa7wau",
         emailData,
-        "-DtfIEOTZV0sDYXEr"
+        "fHDVN_vT4SV3pDBiN"
       );
       message.success("Vô hiệu hoá chuyên gia thành công!");
     } catch (error) {
@@ -64,6 +66,14 @@ export default function ExpertList() {
   useEffect(() => {
     fetchUsers({ page, role: "expert", keyword });
   }, [page, keyword, fetchUsers]);
+
+  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    if (isSearching.current) {
+      setPage(1);
+      isSearching.current = false;
+    }
+  }, [keyword]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -87,14 +97,30 @@ export default function ExpertList() {
     try {
       await deleteUser(record._id, "expert");
       message.success("Vô hiệu hoá chuyên gia thành công!");
-    } catch {}
+    } catch { }
   };
 
   const handleActive = async (record) => {
+    const emailData = {
+      name: record.fullName,
+      email: record.email,
+      message: "Tài khoản chuyên gia của bạn đã được kích hoạt lại.",
+      time: new Date().toLocaleString("vi-VN"),
+    };
     try {
       await activeUser(record._id, "expert");
+      // Gửi email thông báo kích hoạt
+      await emailjs.send(
+        "service_x8zecr1",   // serviceId
+        "template_8z4o66x",
+        emailData,
+        "fHDVN_vT4SV3pDBiN" // publicKey
+      );
       message.success("Kích hoạt chuyên gia thành công!");
-    } catch {}
+    } catch (error) {
+      console.error("❌ Error activating expert:", error);
+      message.error("Có lỗi xảy ra khi kích hoạt chuyên gia.");
+    }
   };
 
   const columns = [
@@ -240,7 +266,10 @@ export default function ExpertList() {
             border: "1.5px solid #23643A",
             background: "#f8fafb",
           }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            isSearching.current = true;
+            setKeyword(e.target.value);
+          }}
           value={keyword}
         />
       </div>

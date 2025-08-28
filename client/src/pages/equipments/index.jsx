@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Table,
   Button,
@@ -48,11 +48,12 @@ export default function EquipmentList() {
   const [categoryFilter, setCategoryFilter] = useState(undefined);
   const [modal, setModal] = useState({ open: false, edit: false, initial: {} });
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const isSearching = useRef(false);
   const navigate = useNavigate();
 
   // Fetch category on mount
   useEffect(() => {
-    fetchCategories();
+    fetchCategories({ pageSize: 1000 }); // Lấy tất cả categories
   }, [fetchCategories]);
 
   // Fetch equipment mỗi khi filter hoặc page thay đổi
@@ -63,6 +64,19 @@ export default function EquipmentList() {
       category: categoryFilter,
     });
   }, [page, keyword, categoryFilter, fetchEquipments]);
+
+  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    if (isSearching.current) {
+      setPage(1);
+      isSearching.current = false;
+    }
+  }, [keyword]);
+
+  // Reset page khi categoryFilter thay đổi
+  useEffect(() => {
+    setPage(1);
+  }, [categoryFilter]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -77,7 +91,6 @@ export default function EquipmentList() {
       setModal({ open: false, edit: false, initial: {} });
       fetchEquipments({ page, keyword, categoryId: categoryFilter });
     } catch (err) {
-      message.error("Đã xảy ra lỗi");
     } finally {
       setConfirmLoading(false);
     }
@@ -224,7 +237,10 @@ export default function EquipmentList() {
             border: "1.5px solid #23643A",
             background: "#f8fafb",
           }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            isSearching.current = true;
+            setKeyword(e.target.value);
+          }}
           value={keyword}
         />
         <Select

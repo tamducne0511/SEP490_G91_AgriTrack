@@ -5,6 +5,7 @@ import { useTaskStore } from "@/stores";
 export default function AssignTaskModal({
   open,
   farmerId,
+  farmId,
   onOk,
   onCancel,
   initialTaskId,
@@ -13,10 +14,16 @@ export default function AssignTaskModal({
   const [selectedTask, setSelectedTask] = useState(initialTaskId || null);
 
   useEffect(() => {
-    if (open) fetchTasks();
+    if (open && farmId) {
+      // Chỉ fetch tasks của farm cụ thể và lấy tất cả (pageSize: 1000)
+      fetchTasks({ 
+        farmId: farmId,
+        pageSize: 1000 
+      });
+    }
     setSelectedTask(initialTaskId || null);
     // eslint-disable-next-line
-  }, [open]);
+  }, [open, farmId]);
 
   // Filter tasks để chỉ hiển thị những task có thể gán được
   const availableTasks = tasks.filter(task => 

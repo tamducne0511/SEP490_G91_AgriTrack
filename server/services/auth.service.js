@@ -20,15 +20,13 @@ const login = async (email, password) => {
   if (!(await comparePassword(password, user.password))) {
     throw new BadRequestException("Invalid email or password");
   }
-
-  let farmIds = [];
+ let farmIds = [];
 
   // Nếu là expert thì lấy danh sách farm từ bảng expertFarms
   if (user.role === "expert") {
     const expertFarms = await ExpertFarm.find({ expertId: user._id }).select("farmId");
     farmIds = expertFarms.map((ef) => ef.farmId);
   }
-
   const userInfo = {
     id: user._id,
     fullName: user.fullName,
@@ -38,9 +36,7 @@ const login = async (email, password) => {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
-
-  console.log(userInfo);
-
+console.log(userInfo);
   return {
     user: userInfo,
     token: generateToken(userInfo),

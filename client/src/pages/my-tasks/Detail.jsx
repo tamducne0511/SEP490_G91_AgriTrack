@@ -214,6 +214,9 @@ export default function FarmerTaskDetail() {
             <Descriptions.Item label="Mô tả">
               {task.description}
             </Descriptions.Item>
+            <Descriptions.Item label="Vườn">
+              {myTask.garden.name}
+            </Descriptions.Item>
             <Descriptions.Item label="Loại">
               <Tag color={typeColor[task.type]}>{typeLabel[task.type]}</Tag>
             </Descriptions.Item>
@@ -250,17 +253,47 @@ export default function FarmerTaskDetail() {
                     Đánh dấu hoàn thành
                   </Button>
                 )}
-                {(task.status === "assigned" ||
+                {/* {(task.status === "assigned" ||
                   task.status === "in-progress") && (
                   <Button danger onClick={() => handleChangeStatus("canceled")}>
                     Huỷ công việc
                   </Button>
-                )}
+                )} */}
               </div>
             </Descriptions.Item>
             <Descriptions.Item label="Ngày tạo">
               {new Date(task.createdAt).toLocaleString("vi-VN")}
             </Descriptions.Item>
+            <Descriptions.Item label="Ngày bắt đầu">
+               {new Date(task.startDate).toLocaleString("vi-VN")}
+            </Descriptions.Item>
+            <Descriptions.Item label="Ngày kết thúc">
+              {new Date(task.endDate).toLocaleString("vi-VN")}
+            </Descriptions.Item>
+            {/* Hiển thị thông tin xóa nếu task có trạng thái false */}
+            {task.status === "false" && (
+              <>
+                {task.deleteReason && (
+                  <Descriptions.Item label="Lý do bị xóa">
+                    <div style={{ 
+                      padding: "8px 12px", 
+                      background: "#fff2f0", 
+                      border: "1px solid #ffccc7", 
+                      borderRadius: "6px",
+                      color: "#cf1322"
+                    }}>
+                      {task.deleteReason}
+                    </div>
+                  </Descriptions.Item>
+                )}
+                
+                {task.deletedAt && (
+                  <Descriptions.Item label="Thời gian xóa">
+                    {new Date(task.deletedAt).toLocaleString("vi-VN")}
+                  </Descriptions.Item>
+                )}
+              </>
+            )}
             {task.image && (
               <Descriptions.Item label="Ảnh minh hoạ">
                 <Image

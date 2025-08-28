@@ -1,22 +1,37 @@
 const { validationResult } = require("express-validator");
 const { formatPagination } = require("../../utils/format.util");
 const taskService = require("../../services/task.service");
+const notificationService = require("../../services/notification.service");
+const userService = require("../../services/user.service");
 const NotFoundException = require("../../middlewares/exceptions/notfound");
 
 // Get list task with pagination and keyword search
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
   const keyword = req.query.keyword || "";
   const gardenId = req.query.gardenId || null;
   const farmId = req.user.role === "expert" ? (req.query.farmId || null) : req.user.farmId;
+
   const list = await taskService.getListPagination(
     farmId,
     gardenId,
     page,
-    keyword
+    keyword,
+    pageSize
   );
-  const total = await taskService.getTotal(farmId, gardenId, keyword);
-  res.json(formatPagination(page, total, list));
+  
+  if (pageSize >= 1000) {
+    res.json({
+      data: list,
+      totalItem: list.length,
+      page: 1,
+      pageSize: list.length,
+    });
+  } else {
+    const total = await taskService.getTotal(farmId, gardenId, keyword);
+    res.json(formatPagination(page, total, list));
+  }
 };
 
 // Create new task
@@ -24,6 +39,14 @@ const create = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
+  }
+
+  // Xử lý farmId cho expert
+  let farmId;
+  if (req.user.role === "expert") {
+    farmId = req.body.farmId; // Expert sẽ gửi farmId cụ thể
+  } else {
+    farmId = req.user.farmId; // Farm-admin chỉ có 1 farm
   }
 
   const payload = {
@@ -34,12 +57,11 @@ const create = async (req, res) => {
     farmId: req.user.role === "expert" ? req.body.farmId : req.user.farmId,
     gardenId: req.body.gardenId,
     image: req.file?.filename ? `/uploads/tasks/${req.file.filename}` : "",
+    startDate: req.body.startDate !== "null" ? new Date(req.body.startDate) : null,
     endDate: req.body.endDate !== "null" ? new Date(req.body.endDate) : null,
     createdBy: req.user.id,
   };
 
-  console.log(req.body.endDate);
-  console.log(payload);
   const task = await taskService.create(payload);
   res.status(201).json({
     message: "Task created successfully",
@@ -75,17 +97,39 @@ const update = async (req, res, next) => {
 };
 
 // Delete task
-const remove = async (req, res) => {
-  const id = req.params.id;
-  const task = await taskService.find(id);
-  if (!task) {
-    next(new NotFoundException("Not found task with id: " + id));
+const remove = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
 
-  await taskService.remove(id);
-  res.json({
-    message: "Task deleted successfully",
-  });
+  try {
+    const id = req.params.id;
+    const { deleteReason } = req.body;
+
+    // Kiểm tra quyền - chỉ expert và farm-admin mới được xóa task
+    if (req.user.role !== "expert" && req.user.role !== "farm-admin") {
+      return res.status(403).json({
+        message: "Chỉ chuyên gia và chủ trang trại mới có quyền xóa công việc"
+      });
+    }
+
+    // Xóa task
+    const task = await taskService.remove(id, req.user.id, deleteReason);
+
+    // Lấy thông tin user xóa task
+    const deletedByUser = await userService.find(req.user.id);
+
+    // Tạo notification
+    await notificationService.createTaskDeleteNotification(task, deleteReason, deletedByUser);
+
+    res.json({
+      message: "Task deleted successfully",
+      data: task,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 // Get detail

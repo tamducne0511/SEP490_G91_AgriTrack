@@ -4,9 +4,13 @@ const multer = require("multer");
 
 const farmValidation = require("../../middlewares/validators/farm.validation");
 const farmController = require("../../controllers/admin/farm.controller");
-const { configUploadFile } = require("../../utils/upload.util");
+const { configUploadFile, fileFilter } = require("../../utils/upload.util");
 const { isAdmin } = require("../../middlewares");
-const upload = multer({ storage: configUploadFile("uploads/farms") });
+const upload = multer({
+  storage: configUploadFile("uploads/farms"),
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 router.get("/", isAdmin, farmController.getList);
 router.post(

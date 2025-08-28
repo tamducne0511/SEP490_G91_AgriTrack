@@ -63,5 +63,3 @@ export default function ChangePasswordModal({ open, onOk, onCancel, loading }) {
     </Modal>
   );
 }
-
-

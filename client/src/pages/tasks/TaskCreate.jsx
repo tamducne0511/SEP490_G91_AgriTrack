@@ -1,10 +1,5 @@
 import { RoutePaths } from "@/routes";
-import {
-  useAuthStore,
-  useFarmStore,
-  useGardenStore,
-  useTaskStore,
-} from "@/stores";
+import { useAuthStore, useFarmStore, useGardenStore, useTaskStore } from "@/stores";
 import { ArrowLeftOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   Button,
@@ -47,9 +42,8 @@ const priorityLabel = {
 };
 
 export default function TaskCreate() {
-  const { fetchGardens, gardens,gardensByFarm } = useGardenStore();
+  const { fetchGardens, gardens, gardensByFarm, fetchGardensByFarmId } = useGardenStore();
   const { createTask } = useTaskStore();
-
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
@@ -65,16 +59,31 @@ export default function TaskCreate() {
   const isExpert = user?.role === "expert";
 
   useEffect(() => {
-    fetchGardens();
+    fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
   }, [fetchGardens]);
+
+  useEffect(() => {
+    if (selectedFarmId) fetchGardensByFarmId(selectedFarmId, { pageSize: 1000 });
+  }, [selectedFarmId, fetchGardensByFarmId]);
 
   const handleChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
   };
 
+  const availableGardens = gardens.filter(garden =>
+    // Chỉ hiển thị garden còn hoạt động 
+    garden.status === true
+  );
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+
+      // Kiểm tra farmId cho expert
+      if (user?.role === "expert" && !selectedFarmId) {
+        message.error("Vui lòng chọn trang trại!");
+        return;
+      }
 
       const formData = new FormData();
       formData.append("name", values.name);
@@ -85,11 +94,11 @@ export default function TaskCreate() {
       formData.append("gardenId", selectedGardenId);
       formData.append("type", values.type);
       formData.append("priority", values.priority);
-      formData.append("endDate", values.endDate ? values.endDate : null);
+      formData.append("startDate", values.startDate ? values.startDate : null);
+      formData.append("endDate", values.endDate ? values.endDate.toISOString() : null);
       if (fileList[0]?.originFileObj) {
         formData.append("image", fileList[0].originFileObj);
       }
-      console.log("Farm Id:", selectedFarmId);
       await createTask(formData);
       message.success("Tạo công việc thành công!");
       navigate(RoutePaths.TASK_LIST);
@@ -98,6 +107,7 @@ export default function TaskCreate() {
       console.error("Submission error:", err);
     }
   };
+
 
   return (
     <div
@@ -156,7 +166,6 @@ export default function TaskCreate() {
               >
                 <Input placeholder="Tên công việc" size="large" />
               </Form.Item>
-
               <Form.Item
                 name="description"
                 label="Mô tả"
@@ -197,9 +206,9 @@ export default function TaskCreate() {
                   options={
                     user?.role === "expert"
                       ? gardensByFarm.map((g) => ({
-                          value: g._id,
-                          label: g.name,
-                        }))
+                        value: g._id,
+                        label: g.name,
+                      }))
                       : gardens.map((g) => ({ value: g._id, label: g.name }))
                   }
                   onChange={setSelectedGardenId}
@@ -211,7 +220,17 @@ export default function TaskCreate() {
               <Form.Item
                 name="type"
                 label="Loại công việc"
-                rules={[{ required: true, message: "Chọn loại công việc" }]}
+                rules={[
+                  { required: true, message: "Chọn loại công việc" },
+                  {
+                    validator: (_, value) =>
+                      value === "collect" || value === "task-care"
+                        ? Promise.resolve()
+                        : Promise.reject(
+                          new Error("Type must be collect or task-care")
+                        ),
+                  },
+                ]}
               >
                 <Select
                   placeholder="Chọn loại"
@@ -222,7 +241,6 @@ export default function TaskCreate() {
                   size="large"
                 />
               </Form.Item>
-
               <Form.Item
                 name="priority"
                 label="Độ ưu tiên"
@@ -238,8 +256,27 @@ export default function TaskCreate() {
                   size="large"
                 />
               </Form.Item>
-
-              <Form.Item name="endDate" label="Ngày kết thúc">
+              <Form.Item
+                name="startDate"
+                label="Ngày bắt đầu"
+                rules={[
+                  {
+                    required: true,
+                    message: "Chọn ngày bắt đầu",
+                  },
+                  {
+                    validator: (_, value) => {
+                      if (!value) return Promise.resolve();
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0); // reset giờ về 0h
+                      if (value.toDate() < today) {
+                        return Promise.reject(new Error("Ngày bắt đầu phải từ hôm nay trở đi"));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
+              >
                 <DatePicker
                   style={{ width: "100%" }}
                   size="large"
@@ -247,6 +284,45 @@ export default function TaskCreate() {
                 />
               </Form.Item>
 
+              <Form.Item
+                name="endDate"
+                label="Ngày kết thúc"
+                dependencies={["startDate"]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Chọn ngày kết thúc",
+                  },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value) return Promise.resolve();
+
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+
+                      const startDate = getFieldValue("startDate");
+
+                      // Nếu endDate trước hôm nay → lỗi
+                      if (value.toDate() < today) {
+                        return Promise.reject(new Error("Ngày kết thúc phải từ hôm nay trở đi"));
+                      }
+
+                      // Nếu đã có startDate và endDate < startDate → lỗi
+                      if (startDate && value.isBefore(startDate, "day")) {
+                        return Promise.reject(new Error("Ngày kết thúc không được trước ngày bắt đầu"));
+                      }
+
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  size="large"
+                  format="DD/MM/YYYY"
+                />
+              </Form.Item>
               <Form.Item label="Ảnh minh hoạ">
                 <Upload
                   listType="picture-card"
@@ -281,7 +357,6 @@ export default function TaskCreate() {
                   )}
                 </Upload>
               </Form.Item>
-
               <div style={{ display: "flex", gap: 16, marginTop: 14 }}>
                 <Button
                   type="primary"
@@ -292,6 +367,7 @@ export default function TaskCreate() {
                     minWidth: 120,
                   }}
                   onClick={handleSubmit}
+                // loading={false}
                 >
                   Lưu công việc
                 </Button>
@@ -324,7 +400,6 @@ export default function TaskCreate() {
               <Descriptions.Item label="Tên công việc">
                 {formValues.name || <Text type="secondary">Chưa nhập</Text>}
               </Descriptions.Item>
-
               <Descriptions.Item label="Mô tả">
                 {formValues.description || (
                   <Text type="secondary">Chưa nhập</Text>
@@ -351,7 +426,6 @@ export default function TaskCreate() {
                   )}
                 </Descriptions.Item>
               )}
-
               <Descriptions.Item label="Vườn">
                 {selectedGardenId ? (
                   gardens.find((g) => g._id === selectedGardenId)?.name ||
@@ -370,7 +444,6 @@ export default function TaskCreate() {
                   <Text type="secondary">Chưa chọn</Text>
                 )}
               </Descriptions.Item>
-
               <Descriptions.Item label="Độ ưu tiên">
                 {formValues.priority ? (
                   <Tag color={priorityColor[formValues.priority]}>
@@ -380,7 +453,6 @@ export default function TaskCreate() {
                   <Text type="secondary">Chưa chọn</Text>
                 )}
               </Descriptions.Item>
-
               {fileList.length > 0 && (
                 <Descriptions.Item label="Ảnh">
                   <img

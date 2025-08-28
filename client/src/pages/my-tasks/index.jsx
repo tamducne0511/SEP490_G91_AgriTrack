@@ -1,5 +1,6 @@
 import { useTaskStore } from "@/stores/taskStore";
 import { SearchOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 import {
   Button,
   Input,
@@ -77,6 +78,18 @@ export default function FarmerTaskList() {
       title: "Ghi chú",
       dataIndex: "description",
       key: "description",
+    },
+    {
+      title: "Ngày bắt đầu",
+      dataIndex: "startDate",
+      key: "startDate",
+      render: (text) => dayjs(text).format("DD/MM/YYYY HH:mm"),
+    },
+    {
+      title: "Ngày kết thúc",
+      dataIndex: "endDate",
+      key: "endDate",
+      render: (text) => dayjs(text).format("DD/MM/YYYY HH:mm"),
     },
     {
       title: "Trạng thái",

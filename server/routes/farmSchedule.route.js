@@ -6,8 +6,12 @@ const { USER_ROLE } = require("../constants/app");
 const { isRoles, isExpert, isLogin } = require("../middlewares");
 const farmScheduleValidation = require("../middlewares/validators/farmSchedule.validation");
 const farmScheduleController = require("../controllers/farmSchedule.controller");
-const { configUploadFile } = require("../utils/upload.util");
-const upload = multer({ storage: configUploadFile("uploads/schedules") });
+const { configUploadFile, fileFilter } = require("../utils/upload.util");
+const upload = multer({
+  storage: configUploadFile("uploads/schedules"),
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 router.get(
   "/",

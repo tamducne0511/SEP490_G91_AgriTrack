@@ -2,7 +2,7 @@ import { RoutePaths } from "@/routes";
 import { useAuthStore, useFarmerStore } from "@/stores";
 import { EyeOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Input, message, Modal, Popconfirm, Select, Table, Tag, Tooltip } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import FarmerModal from "./FarmerModal";
 import { activeFarmerApi } from "@/services";
@@ -23,8 +23,8 @@ export default function FarmerList() {
   const [keyword, setKeyword] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const isSearching = useRef(false);
   const navigate = useNavigate();
-
   const { user, farmIds } = useAuthStore();
   const [selectedFarmId, setSelectedFarmId] = useState(undefined);
 
@@ -36,6 +36,14 @@ export default function FarmerList() {
     });
   }, [page, keyword, selectedFarmId, fetchFarmers]);
 
+  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    if (isSearching.current) {
+      setPage(1);
+      isSearching.current = false;
+    }
+  }, [keyword]);
+
   useEffect(() => {
     if (error) message.error(error);
   }, [error]);
@@ -46,11 +54,13 @@ export default function FarmerList() {
       await createFarmer(values);
       message.success("Thêm nông dân thành công!");
       setModalOpen(false);
+    } catch (er) {
+      // Error đã được handle trong store
+      message.error(er?.message || "Thêm nông dân thành công!");
     } finally {
       setConfirmLoading(false);
     }
   };
-
   const [deactivateModal, setDeactivateModal] = useState({
     open: false,
     farmer: null,
@@ -75,10 +85,10 @@ export default function FarmerList() {
 
       // Gửi mail
       await emailjs.send(
-        "service_qwirn1u",
-        "template_s48zz6f",
+        "service_x8zecr1",
+        "template_osa7wau",
         emailData,
-        "-DtfIEOTZV0sDYXEr"
+        "fHDVN_vT4SV3pDBiN"
       );
 
       message.success("Vô hiệu hoá thành công và email đã được gửi!");
@@ -95,16 +105,29 @@ export default function FarmerList() {
     try {
       await deleteFarmer(record._id);
       message.success("Vô hiệu hoá nông dân thành công!");
-    } catch {}
+    } catch { }
   };
   const handleActive = async (record) => {
+    const emailData = {
+      name: record.fullName,
+      email: record.email,
+      message: "Tài khoản của bạn đã được kích hoạt lại.",
+      time: new Date().toLocaleString("vi-VN"),
+    };
     try {
       await activeFarmerApi(record._id);
       fetchFarmers({ page, keyword });
-
-      message.success("Kích hoạt lại nông dân thành công!");
+      // Gửi email thông báo kích hoạt
+      await emailjs.send(
+        "service_x8zecr1",   // serviceId
+        "template_8z4o66x",
+        emailData,
+        "fHDVN_vT4SV3pDBiN" // publicKey
+      );
+      message.success("Kích hoạt nông dân thành công!");
     } catch (error) {
-      message.error("Có lỗi xảy ra!");
+      console.error("❌ Error activating farmer:", error);
+      message.error("Có lỗi xảy ra khi kích hoạt nông dân.");
     }
   };
 
@@ -166,8 +189,9 @@ export default function FarmerList() {
             />
           </Tooltip>
           {record.status ? (
-            // Trường hợp Farmer đang active -> Hiển thị nút Deactivate
-            <Tooltip title="Vô hiệu hoá">
+            // Trường hợp Farmer đang active -> Hiển thị nút Deactivate (chỉ cho farm-admin)
+            user?.role === "farm-admin" && (
+              <Tooltip title="Vô hiệu hoá">
               <Button
                 type="text"
                 danger
@@ -177,27 +201,31 @@ export default function FarmerList() {
                 }
               />
             </Tooltip>
+            )
           ) : (
-            <Tooltip title="Kích hoạt lại">
-              <Popconfirm
-                title="Bạn chắc chắn muốn kích hoạt lại nông dân này?"
-                okText="Kích hoạt"
-                cancelText="Huỷ"
-                onConfirm={() => handleActive(record)}
-              >
-                <Button
-                  type="text"
-                  icon={
-                    <span
-                      className="anticon"
-                      style={{ color: "green", fontSize: 18 }}
-                    >
-                      🔄
-                    </span>
-                  }
-                />
-              </Popconfirm>
-            </Tooltip>
+            // Chỉ farm-admin mới được kích hoạt lại nông dân
+            user?.role === "farm-admin" && (
+              <Tooltip title="Kích hoạt lại">
+                <Popconfirm
+                  title="Bạn chắc chắn muốn kích hoạt lại nông dân này?"
+                  okText="Kích hoạt"
+                  cancelText="Huỷ"
+                  onConfirm={() => handleActive(record)}
+                >
+                  <Button
+                    type="text"
+                    icon={
+                      <span
+                        className="anticon"
+                        style={{ color: "green", fontSize: 18 }}
+                      >
+                        🔄
+                      </span>
+                    }
+                  />
+                </Popconfirm>
+              </Tooltip>
+            )
           )}
         </div>
       ),
@@ -222,18 +250,20 @@ export default function FarmerList() {
       }}
     >
       <div style={{ display: "flex", gap: 12, marginBottom: 18 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          style={{
-            background: "#23643A",
-            border: 0,
-            borderRadius: 8,
-          }}
-          onClick={() => setModalOpen(true)}
-        >
-          Thêm nông dân
-        </Button>
+        {user?.role === "farm-admin" && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            style={{
+              background: "#23643A",
+              border: 0,
+              borderRadius: 8,
+            }}
+            onClick={() => setModalOpen(true)}
+          >
+            Thêm nông dân
+          </Button>
+        )}
         {user?.role === "expert" && (
           <Select
             allowClear
@@ -257,7 +287,10 @@ export default function FarmerList() {
             border: "1.5px solid #23643A",
             background: "#f8fafb",
           }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            isSearching.current = true;
+            setKeyword(e.target.value);
+          }}
           value={keyword}
         />
       </div>

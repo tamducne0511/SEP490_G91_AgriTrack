@@ -7,13 +7,13 @@ const mongoose = require("mongoose");
 const { LIMIT_ITEM_PER_PAGE } = require("../constants/app");
 const NotFoundException = require("../middlewares/exceptions/notfound");
 
-const getListPagination = async (farmId, page, keyword) => {
+const getListPagination = async (farmId, page, keyword, pageSize = LIMIT_ITEM_PER_PAGE) => {
   const list = await Garden.find({
     farmId: farmId,
     name: { $regex: keyword, $options: "i" },
   })
-    .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
-    .limit(LIMIT_ITEM_PER_PAGE);
+  .skip((page - 1) * pageSize)
+  .limit(pageSize);
 
   return list;
 };

@@ -21,7 +21,6 @@ const FarmerModal = ({
   const isExpert = user?.role === "expert";
 
   const [selectedFarmId, setSelectedFarmId] = useState(undefined);
-
   return (
     <Modal
       title={isEdit ? "Sửa nông dân" : "Thêm nông dân"}
@@ -35,7 +34,7 @@ const FarmerModal = ({
       destroyOnClose
     >
       <Form form={form} layout="vertical">
-        {isExpert && (
+      {isExpert && (
           <Form.Item
             name="farmId"
             label="Trang trại"

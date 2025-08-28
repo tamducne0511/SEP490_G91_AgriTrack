@@ -5,6 +5,7 @@ const farmService = require("../../services/farm.service");
 const { hashPassword } = require("../../utils/auth.util");
 const { USER_ROLE } = require("../../constants/app");
 const NotFoundException = require("../../middlewares/exceptions/notfound");
+const BadRequestException = require("../../middlewares/exceptions/badrequest");
 
 // Get list user with pagination and keyword search
 const getList = async (req, res) => {
@@ -21,7 +22,7 @@ const getListFarmer = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const keyword = req.query.keyword || "";
   const selectedFarmId = req.query.farmId; // nhận farmId từ frontend
-
+  
   let farmIdsToQuery;
 
   if (req.user.role === "expert") {
@@ -123,25 +124,21 @@ const remove = async (req, res) => {
 const removeFarmer = async (req, res, next) => {
   const id = req.params.id;
   const user = await userService.find(id);
-
   if (!user) {
     return next(new NotFoundException("Not found user with id: " + id));
   }
 
-  // Kiểm tra role
   if (user.role !== USER_ROLE.farmer) {
     return next(new BadRequestException("User is not a farmer"));
   }
 
-  // Kiểm tra farm
+  // Chuyên gia không được phép xóa nông dân
   if (req.user.role === USER_ROLE.expert) {
-    // expert có nhiều farm
-    const expertFarmIds = req.user.farmId.map(f => f.toString());
-    if (!expertFarmIds.includes(user.farmId.toString())) {
-      return next(new NotFoundException("Farmer not found in your farms"));
-    }
-  } else {
-    // farm-admin chỉ có 1 farm
+    return next(new BadRequestException("Chuyên gia không có quyền xóa nông dân"));
+  }
+
+  // Chỉ farm-admin mới được xóa nông dân của farm mình
+  if (req.user.role === USER_ROLE.farmAdmin) {
     if (user.farmId.toString() !== req.user.farmId) {
       return next(new NotFoundException("Farmer not found in your farm"));
     }
@@ -229,6 +226,37 @@ const deactive = async (req, res, next) => {
   }
 };
 
+// Admin change password for expert/farm-admin
+const adminChangePassword = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    const targetUser = await userService.find(id);
+    if (!targetUser) {
+      return next(new NotFoundException("Not found user with id: " + id));
+    }
+
+    if (![USER_ROLE.farmAdmin, USER_ROLE.expert, USER_ROLE.farmer].includes(targetUser.role)) {
+      return next(
+        new BadRequestException(
+          "Only 'farm-admin' and 'expert' passwords can be reset by admin or farm-admin for farmer"
+        )
+      );
+    }
+
+    await userService.updatePassword(id, newPassword);
+    return res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getList,
   create,
@@ -244,4 +272,5 @@ module.exports = {
   getListFarmAssignToExpert,
   active,
   deactive,
+  adminChangePassword,
 };

@@ -23,7 +23,7 @@ const AuthLayout = () => {
     user?.role &&
     (location.pathname === "/" || location.pathname === RoutePaths.LOGIN)
   ) {
-    return <Navigate to={getDefaultRoute(user.role)} replace />;
+    return <Navigate to={getDefaultRoute(user.role).path} replace />;
   }
 
   // Navbar sẽ tự render phần header và content trong main layout

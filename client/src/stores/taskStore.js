@@ -7,6 +7,7 @@ import {
   createTaskApi,
   deleteTaskApi,
   fetchDailyNoteDetailApi,
+  fetchDailyNotesByTaskIdApi,
   fetchFarmEquipmentApi,
   fetchTasksApi,
   getAssignedTaskDetail,
@@ -36,6 +37,21 @@ export const useTaskStore = create((set, get) => ({
         error: err?.message || "Lỗi lấy chi tiết ghi chú",
         loading: false,
         dailyNoteDetail: null,
+      });
+      throw err;
+    }
+  },
+
+  fetchDailyNotesByTaskId: async (taskId) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await fetchDailyNotesByTaskIdApi(taskId);
+      set({ loading: false });
+      return res.data;
+    } catch (err) {
+      set({
+        error: err?.message || "Lỗi lấy danh sách ghi chú",
+        loading: false,
       });
       throw err;
     }
@@ -94,10 +110,10 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  deleteTask: async (id) => {
+  deleteTask: async (id, deleteReason) => {
     set({ loading: true, error: null });
     try {
-      await deleteTaskApi(id);
+      await deleteTaskApi(id, deleteReason);
       set({ loading: false });
       const { pagination, fetchTasks } = get();
       fetchTasks({ page: pagination.page });
