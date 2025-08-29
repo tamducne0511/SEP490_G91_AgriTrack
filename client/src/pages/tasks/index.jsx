@@ -97,8 +97,11 @@ export default function TaskList() {
   };
 
   useEffect(() => {
-    fetchFarms(); // load danh sách farm cho expert
-  }, [fetchFarms]);
+  // Expert không cần gọi fetchFarms vì đã có farmIds từ auth store
+    if (user?.role === "expert") {
+      // Không gọi fetchFarms() nữa vì expert đã có farmIds từ auth store
+    }
+  }, [user?.role, farmIds]);
 
   useEffect(() => {
     fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens

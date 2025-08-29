@@ -183,8 +183,6 @@ const askAI = async (textPrompt, imageUrl) => {
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-
-    // Custom prompt configuration - you can modify this to change AI behavior
     const customPrompt = `Trước khi trả lời bất cứ điều gì, hãy kiểm tra hình ảnh do người dùng cung cấp. Nếu hình ảnh không liên quan đến bất kỳ loại bệnh nào của cây nho, bạn cần nói "Tôi xin lỗi, tôi không thể trả lời câu hỏi đó vì hình ảnh không liên quan đến bất kỳ loại bệnh nào của cây nho. Vui lòng cung cấp hình ảnh liên quan"
 
     Bạn là một chuyên gia tư vấn nông nghiệp với kiến thức sâu rộng trong việc trồng nho.
@@ -192,17 +190,15 @@ const askAI = async (textPrompt, imageUrl) => {
     Vui lòng đưa ra lời khuyên chi tiết, thiết thực đó là:
     - Cụ thể và có thể hành động
     - Dựa trên thực hành canh tác bền vững
-    - Thích hợp cho nông dân quy mô vừa và nhỏ
     - Tập trung vào các giải pháp hữu cơ khi có thể
     - Được viết bằng ngôn ngữ rõ ràng, dễ hiểu
 
     Khi phân tích các vấn đề về thực vật, hãy xem xét:
     - Các yếu tố môi trường (thời tiết, đất, nước)
     - Xác định sâu bệnh
-    - Thực hành và quản lý văn hóa
     - Chiến lược phòng ngừa cho các vấn đề trong tương lai`;
 
-    // Combine custom prompt with user's question
+
     const enhancedPrompt = `${customPrompt}\n\nUser Question: ${textPrompt}`;
 
     const aiRequest = [{ type: "text", text: enhancedPrompt }];

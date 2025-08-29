@@ -22,10 +22,11 @@ import {
   Descriptions,
   List,
   Avatar,
+  DatePicker,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
+import dayjs from "dayjs";
 const { Title, Text } = Typography;
 
 const typeLabel = {
@@ -93,7 +94,12 @@ export default function TaskDetail() {
   }, [id, fetchDailyNotesByTaskId, fetchDailyNoteDetail]);
   useEffect(() => {
     if (taskDetail) {
-      form.setFieldsValue(taskDetail);
+      const formValues = {
+        ...taskDetail,
+        startDate: taskDetail.startDate ? dayjs(taskDetail.startDate) : null,
+        endDate: taskDetail.endDate ? dayjs(taskDetail.endDate) : null,
+      };
+      form.setFieldsValue(formValues);
       if (taskDetail.image) {
         setFileList([
           {
@@ -126,6 +132,12 @@ export default function TaskDetail() {
       formData.append("gardenId", selectedGardenId);
       formData.append("type", values.type);
       formData.append("priority", values.priority);
+      if (values.startDate) {
+        formData.append("startDate", values.startDate.format("YYYY-MM-DD"));
+      }
+      if (values.endDate) {
+        formData.append("endDate", values.endDate.format("YYYY-MM-DD"));
+      }
       if (fileList[0]?.originFileObj) {
         formData.append("image", fileList[0].originFileObj);
       } else if (fileList[0]?.url) {
@@ -134,6 +146,7 @@ export default function TaskDetail() {
       await updateTask(id, formData);
       message.success("Cập nhật công việc thành công!");
       setEditMode(false);
+      // await fetchTaskDetail(id)
     } catch {
       message.error("Cập nhật thất bại!");
     } finally {
@@ -302,6 +315,59 @@ export default function TaskDetail() {
                     style={{ borderRadius: 8 }}
                   />
                 </Form.Item>
+                <Form.Item
+                  name="startDate"
+                  label="Ngày bắt đầu"
+                  rules={[
+                    { required: true, message: "Vui lòng chọn ngày bắt đầu" },
+                    {
+                      validator: (_, value) => {
+                        if (!value) return Promise.resolve();
+
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0); // reset giờ về 0h để so sánh ngày thực tế
+
+                        if (value.toDate() < today) {
+                          return Promise.reject(new Error("Ngày bắt đầu không được nhỏ hơn hôm nay"));
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
+                >
+                  <DatePicker
+                    placeholder="Chọn ngày bắt đầu"
+                    size="large"
+                    style={{ borderRadius: 8, width: "100%" }}
+                    format="DD/MM/YYYY"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="endDate"
+                  label="Ngày kết thúc"
+                  dependencies={["startDate"]}
+                  rules={[
+                    { required: true, message: "Vui lòng chọn ngày kết thúc" },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value) return Promise.resolve();
+                        const start = getFieldValue("startDate");
+                        if (start && value.isBefore(start, "day")) {
+                          return Promise.reject(new Error("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu"));
+                        }
+                        return Promise.resolve();
+                      },
+                    }),
+                  ]}
+                >
+                  <DatePicker
+                    placeholder="Chọn ngày kết thúc"
+                    size="large"
+                    style={{ borderRadius: 8, width: "100%" }}
+                    format="DD/MM/YYYY"
+                  />
+                </Form.Item>
 
                 <Form.Item
                   name="priority"
@@ -319,7 +385,6 @@ export default function TaskDetail() {
                     style={{ borderRadius: 8 }}
                   />
                 </Form.Item>
-
                 <div style={{ display: "flex", gap: 16, marginTop: 14 }}>
                   <Button
                     type="primary"
@@ -446,34 +511,34 @@ export default function TaskDetail() {
               <Descriptions.Item label="Được giao cho">
                 {taskDetail?.farmerId?.fullName} - {taskDetail?.farmerId?.email}
               </Descriptions.Item>
-            {/* Hiển thị thông tin xóa nếu task có trạng thái false */}
+              {/* Hiển thị thông tin xóa nếu task có trạng thái false */}
               {taskDetail.status === "false" && (
-              <>
-                <Descriptions.Item label="Trạng thái">
-                  <Tag color="red">Đã xoá</Tag>
-                </Descriptions.Item>
-                {taskDetail.deleteReason && (
-                  <Descriptions.Item label="Lý do bị xóa">
-                    <div style={{
-                      padding: "8px 12px",
-                      background: "#fff2f0",
-                      border: "1px solid #ffccc7",
-                      borderRadius: "6px",
-                      color: "#cf1322"
-                    }}>
-                      {taskDetail.deleteReason}
-                    </div>
+                <>
+                  <Descriptions.Item label="Trạng thái">
+                    <Tag color="red">Đã xoá</Tag>
                   </Descriptions.Item>
-                )}
-                {taskDetail.deletedAt && (
-                  <Descriptions.Item label="Thời gian xóa">
-                    {new Date(taskDetail.deletedAt).toLocaleString("vi-VN")}
-                  </Descriptions.Item>
-                )}
-              </>
-            )}
+                  {taskDetail.deleteReason && (
+                    <Descriptions.Item label="Lý do bị xóa">
+                      <div style={{
+                        padding: "8px 12px",
+                        background: "#fff2f0",
+                        border: "1px solid #ffccc7",
+                        borderRadius: "6px",
+                        color: "#cf1322"
+                      }}>
+                        {taskDetail.deleteReason}
+                      </div>
+                    </Descriptions.Item>
+                  )}
+                  {taskDetail.deletedAt && (
+                    <Descriptions.Item label="Thời gian xóa">
+                      {new Date(taskDetail.deletedAt).toLocaleString("vi-VN")}
+                    </Descriptions.Item>
+                  )}
+                </>
+              )}
             </Descriptions>
-            
+
           </Card>
           <Card
             title="Ghi chú hàng ngày"

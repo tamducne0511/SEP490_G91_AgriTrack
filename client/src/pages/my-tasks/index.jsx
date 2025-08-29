@@ -79,17 +79,21 @@ export default function FarmerTaskList() {
       dataIndex: "description",
       key: "description",
     },
-    {
+     {
       title: "Ngày bắt đầu",
       dataIndex: "startDate",
       key: "startDate",
-      render: (text) => dayjs(text).format("DD/MM/YYYY HH:mm"),
+      align: "center",
+      render: (startDate) =>
+        startDate ? new Date(startDate).toLocaleDateString("vi-VN") : "—",
     },
     {
       title: "Ngày kết thúc",
       dataIndex: "endDate",
       key: "endDate",
-      render: (text) => dayjs(text).format("DD/MM/YYYY HH:mm"),
+      align: "center",
+      render: (endDate) =>
+        endDate ? new Date(endDate).toLocaleDateString("vi-VN") : "—",
     },
     {
       title: "Trạng thái",

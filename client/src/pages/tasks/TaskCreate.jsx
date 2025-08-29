@@ -14,7 +14,7 @@ import {
   Typography,
   Upload,
 } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
@@ -50,11 +50,10 @@ export default function TaskCreate() {
   const [selectedFarmId, setSelectedFarmId] = useState(undefined);
   const [selectedGardenId, setSelectedGardenId] = useState(undefined);
   const [formValues, setFormValues] = useState({});
-  const { getMe, user, farmIds } = useAuthStore();
-
-  useEffect(() => {
-    getMe();
-  }, [getMe]);
+  const { user, farmIds } = useAuthStore(); // Bỏ getMe, chỉ lấy user và farmIds
+  
+  // Sử dụng useRef để tránh gọi API nhiều lần
+  const hasLoadedGardens = useRef(false);
 
   const isExpert = user?.role === "expert";
 
@@ -94,8 +93,12 @@ export default function TaskCreate() {
       formData.append("gardenId", selectedGardenId);
       formData.append("type", values.type);
       formData.append("priority", values.priority);
-      formData.append("startDate", values.startDate ? values.startDate : null);
-      formData.append("endDate", values.endDate ? values.endDate.toISOString() : null);
+      if (values.startDate) {
+        formData.append("startDate", values.startDate.format("YYYY-MM-DD"));
+      }
+      if (values.endDate) {
+        formData.append("endDate", values.endDate.format("YYYY-MM-DD"));
+      }
       if (fileList[0]?.originFileObj) {
         formData.append("image", fileList[0].originFileObj);
       }
