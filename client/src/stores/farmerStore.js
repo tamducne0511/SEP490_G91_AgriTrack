@@ -63,16 +63,16 @@ export const useFarmerStore = create((set, get) => ({
     }
   },
 
-  // Xoá farmer
-  deleteFarmer: async (id) => {
+  // Vô hiệu hóa farmer (có gửi nội dung qua email)
+  deleteFarmer: async (id, messageContent) => {
     set({ loading: true, error: null });
     try {
-      await deleteFarmerApi(id);
+      await deleteFarmerApi(id, { message: messageContent });
       set({ loading: false });
       const { pagination, fetchFarmers } = get();
       fetchFarmers({ page: pagination.page });
     } catch (err) {
-      set({ error: err?.message || "Lỗi xoá nông dân", loading: false });
+      set({ error: err?.message || "Lỗi vô hiệu hoá nông dân", loading: false });
       throw err;
     }
   },

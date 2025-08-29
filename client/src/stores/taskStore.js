@@ -110,10 +110,10 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  deleteTask: async (id) => {
+  deleteTask: async (id, deleteReason) => {
     set({ loading: true, error: null });
     try {
-      await deleteTaskApi(id);
+      await deleteTaskApi(id, deleteReason);
       set({ loading: false });
       const { pagination, fetchTasks } = get();
       fetchTasks({ page: pagination.page });

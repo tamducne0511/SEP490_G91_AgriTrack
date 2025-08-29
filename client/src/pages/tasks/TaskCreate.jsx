@@ -1,9 +1,10 @@
 import { RoutePaths } from "@/routes";
-import { useGardenStore, useTaskStore } from "@/stores";
+import { useAuthStore, useFarmStore, useGardenStore, useTaskStore } from "@/stores";
 import { ArrowLeftOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
+  DatePicker,
   Descriptions,
   Form,
   Input,
@@ -11,9 +12,9 @@ import {
   Select,
   Tag,
   Typography,
-  Upload
+  Upload,
 } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
@@ -41,24 +42,34 @@ const priorityLabel = {
 };
 
 export default function TaskCreate() {
-  const { fetchGardens, gardens } =
-    useGardenStore();
+  const { fetchGardens, gardens, gardensByFarm, fetchGardensByFarmId } = useGardenStore();
   const { createTask } = useTaskStore();
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
+  const [selectedFarmId, setSelectedFarmId] = useState(undefined);
   const [selectedGardenId, setSelectedGardenId] = useState(undefined);
   const [formValues, setFormValues] = useState({});
+  const { user, farmIds } = useAuthStore(); // Bỏ getMe, chỉ lấy user và farmIds
+  
+  // Sử dụng useRef để tránh gọi API nhiều lần
+  const hasLoadedGardens = useRef(false);
+
+  const isExpert = user?.role === "expert";
 
   useEffect(() => {
     fetchGardens({ pageSize: 1000 }); // Lấy tất cả gardens
   }, [fetchGardens]);
 
+  useEffect(() => {
+    if (selectedFarmId) fetchGardensByFarmId(selectedFarmId, { pageSize: 1000 });
+  }, [selectedFarmId, fetchGardensByFarmId]);
+
   const handleChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
   };
 
-  const availableGardens = gardens.filter(garden => 
+  const availableGardens = gardens.filter(garden =>
     // Chỉ hiển thị garden còn hoạt động 
     garden.status === true
   );
@@ -67,12 +78,27 @@ export default function TaskCreate() {
     try {
       const values = await form.validateFields();
 
+      // Kiểm tra farmId cho expert
+      if (user?.role === "expert" && !selectedFarmId) {
+        message.error("Vui lòng chọn trang trại!");
+        return;
+      }
+
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("description", values.description);
+      if (user?.role === "expert") {
+        formData.append("farmId", selectedFarmId);
+      }
       formData.append("gardenId", selectedGardenId);
       formData.append("type", values.type);
       formData.append("priority", values.priority);
+      if (values.startDate) {
+        formData.append("startDate", values.startDate.format("YYYY-MM-DD"));
+      }
+      if (values.endDate) {
+        formData.append("endDate", values.endDate.format("YYYY-MM-DD"));
+      }
       if (fileList[0]?.originFileObj) {
         formData.append("image", fileList[0].originFileObj);
       }
@@ -150,6 +176,27 @@ export default function TaskCreate() {
               >
                 <Input placeholder="Mô tả" size="large" />
               </Form.Item>
+
+              {/* Nếu expert thì chọn farm trước */}
+              {isExpert && (
+                <Form.Item
+                  name="farmId"
+                  label="Trang trại"
+                  rules={[{ required: true, message: "Chọn trang trại" }]}
+                >
+                  <Select
+                    placeholder="Chọn trang trại"
+                    value={selectedFarmId}
+                    options={farmIds?.map((f) => ({
+                      value: f.farm._id,
+                      label: f.farm.name,
+                    }))}
+                    onChange={setSelectedFarmId}
+                    size="large"
+                  />
+                </Form.Item>
+              )}
+
               <Form.Item
                 name="gardenId"
                 label="Vườn"
@@ -159,15 +206,20 @@ export default function TaskCreate() {
                   showSearch
                   placeholder="Chọn vườn"
                   value={selectedGardenId}
-                  options={availableGardens.map((g) => ({
-                    value: g._id,
-                    label: g.name,
-                  }))}
+                  options={
+                    user?.role === "expert"
+                      ? gardensByFarm.map((g) => ({
+                        value: g._id,
+                        label: g.name,
+                      }))
+                      : gardens.map((g) => ({ value: g._id, label: g.name }))
+                  }
                   onChange={setSelectedGardenId}
                   size="large"
+                  disabled={isExpert && !selectedFarmId}
                 />
               </Form.Item>
-        
+
               <Form.Item
                 name="type"
                 label="Loại công việc"
@@ -178,8 +230,8 @@ export default function TaskCreate() {
                       value === "collect" || value === "task-care"
                         ? Promise.resolve()
                         : Promise.reject(
-                            new Error("Type must be collect or task-care")
-                          ),
+                          new Error("Type must be collect or task-care")
+                        ),
                   },
                 ]}
               >
@@ -205,6 +257,73 @@ export default function TaskCreate() {
                     { value: "low", label: "Thấp" },
                   ]}
                   size="large"
+                />
+              </Form.Item>
+              <Form.Item
+                name="startDate"
+                label="Ngày bắt đầu"
+                rules={[
+                  {
+                    required: true,
+                    message: "Chọn ngày bắt đầu",
+                  },
+                  {
+                    validator: (_, value) => {
+                      if (!value) return Promise.resolve();
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0); // reset giờ về 0h
+                      if (value.toDate() < today) {
+                        return Promise.reject(new Error("Ngày bắt đầu phải từ hôm nay trở đi"));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  size="large"
+                  format="DD/MM/YYYY"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="endDate"
+                label="Ngày kết thúc"
+                dependencies={["startDate"]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Chọn ngày kết thúc",
+                  },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value) return Promise.resolve();
+
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+
+                      const startDate = getFieldValue("startDate");
+
+                      // Nếu endDate trước hôm nay → lỗi
+                      if (value.toDate() < today) {
+                        return Promise.reject(new Error("Ngày kết thúc phải từ hôm nay trở đi"));
+                      }
+
+                      // Nếu đã có startDate và endDate < startDate → lỗi
+                      if (startDate && value.isBefore(startDate, "day")) {
+                        return Promise.reject(new Error("Ngày kết thúc không được trước ngày bắt đầu"));
+                      }
+
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  size="large"
+                  format="DD/MM/YYYY"
                 />
               </Form.Item>
               <Form.Item label="Ảnh minh hoạ">
@@ -251,7 +370,7 @@ export default function TaskCreate() {
                     minWidth: 120,
                   }}
                   onClick={handleSubmit}
-                  loading={false}
+                // loading={false}
                 >
                   Lưu công việc
                 </Button>
@@ -289,6 +408,27 @@ export default function TaskCreate() {
                   <Text type="secondary">Chưa nhập</Text>
                 )}
               </Descriptions.Item>
+
+              {isExpert && (
+                <Descriptions.Item label="Trang trại">
+                  {selectedFarmId ? (
+                    (() => {
+                      const selectedFarm = farmIds.find((f) =>
+                        f.farm
+                          ? f.farm._id === selectedFarmId
+                          : f._id === selectedFarmId
+                      );
+                      return selectedFarm
+                        ? selectedFarm.farm
+                          ? selectedFarm.farm.name
+                          : selectedFarm.name
+                        : "Không xác định";
+                    })()
+                  ) : (
+                    <Text type="secondary">Chưa chọn</Text>
+                  )}
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label="Vườn">
                 {selectedGardenId ? (
                   gardens.find((g) => g._id === selectedGardenId)?.name ||
@@ -297,7 +437,7 @@ export default function TaskCreate() {
                   <Text type="secondary">Chưa chọn</Text>
                 )}
               </Descriptions.Item>
-           
+
               <Descriptions.Item label="Loại công việc">
                 {formValues.type ? (
                   <Tag color={typeColor[formValues.type]}>

@@ -55,16 +55,53 @@ const getDetail = async (id) => {
 };
 
 const getListPaginationByTreeId = async (treeId, page, keyword) => {
-  const list = await TaskQuestion.find({
+  // Chỉ lấy câu hỏi chính (không có parentId) để phân trang
+  const mainFilter = {
     treeId: treeId,
-    title: { $regex: keyword, $options: "i" },
-  })
+    $or: [
+      { parentId: null },
+      { parentId: { $exists: false } }
+    ]
+  };
+
+  // Tìm kiếm theo cả title và content
+  if (keyword) {
+    mainFilter.$and = [
+      {
+        $or: [
+          { title: { $regex: keyword, $options: "i" } },
+          { content: { $regex: keyword, $options: "i" } }
+        ]
+      }
+    ];
+  }
+
+
+
+  // Lấy câu hỏi chính theo trang
+  const mainQuestions = await TaskQuestion.find(mainFilter)
     .populate("userId", "fullName email role")
-    .select("userId fullName email title image content createdAt updatedAt")
+    .select("userId fullName email title image content createdAt updatedAt parentId")
     .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
     .limit(LIMIT_ITEM_PER_PAGE);
 
-  return [...list].map((item) => {
+  // Lấy tất cả replies cho các câu hỏi chính này
+  const mainQuestionIds = mainQuestions.map(q => q._id);
+  const replies = await TaskQuestion.find({
+    treeId: treeId,
+    parentId: { $in: mainQuestionIds }
+  })
+    .populate("userId", "fullName email role")
+    .select("userId fullName email title image content createdAt updatedAt parentId");
+
+
+
+  // Kết hợp câu hỏi chính và replies
+  const allQuestions = [...mainQuestions, ...replies];
+
+
+
+  return allQuestions.map((item) => {
     return {
       ...item._doc,
       createdBy: item.userId,
@@ -74,10 +111,28 @@ const getListPaginationByTreeId = async (treeId, page, keyword) => {
 };
 
 const getTotalByTreeId = async (treeId, keyword) => {
-  const total = await TaskQuestion.countDocuments({
+  // Chỉ đếm câu hỏi chính (không có parentId)
+  const filter = {
     treeId: treeId,
-    title: { $regex: keyword, $options: "i" },
-  });
+    $or: [
+      { parentId: null },
+      { parentId: { $exists: false } }
+    ]
+  };
+
+  // Tìm kiếm theo cả title và content
+  if (keyword) {
+    filter.$and = [
+      {
+        $or: [
+          { title: { $regex: keyword, $options: "i" } },
+          { content: { $regex: keyword, $options: "i" } }
+        ]
+      }
+    ];
+  }
+
+  const total = await TaskQuestion.countDocuments(filter);
 
   return total;
 };
@@ -128,8 +183,25 @@ const askAI = async (textPrompt, imageUrl) => {
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
+    const customPrompt = `Trước khi trả lời bất cứ điều gì, hãy kiểm tra hình ảnh do người dùng cung cấp. Nếu hình ảnh không liên quan đến bất kỳ loại bệnh nào của cây nho, bạn cần nói "Tôi xin lỗi, tôi không thể trả lời câu hỏi đó vì hình ảnh không liên quan đến bất kỳ loại bệnh nào của cây nho. Vui lòng cung cấp hình ảnh liên quan"
 
-    const aiRequest = [{ type: "text", text: textPrompt }];
+    Bạn là một chuyên gia tư vấn nông nghiệp với kiến thức sâu rộng trong việc trồng nho.
+
+    Vui lòng đưa ra lời khuyên chi tiết, thiết thực đó là:
+    - Cụ thể và có thể hành động
+    - Dựa trên thực hành canh tác bền vững
+    - Tập trung vào các giải pháp hữu cơ khi có thể
+    - Được viết bằng ngôn ngữ rõ ràng, dễ hiểu
+
+    Khi phân tích các vấn đề về thực vật, hãy xem xét:
+    - Các yếu tố môi trường (thời tiết, đất, nước)
+    - Xác định sâu bệnh
+    - Chiến lược phòng ngừa cho các vấn đề trong tương lai`;
+
+
+    const enhancedPrompt = `${customPrompt}\n\nUser Question: ${textPrompt}`;
+
+    const aiRequest = [{ type: "text", text: enhancedPrompt }];
 
     if (imageUrl) {
       const responseImage = await axios.get(imageUrl, {

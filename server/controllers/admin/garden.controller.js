@@ -40,14 +40,35 @@ const getList = async (req, res) => {
 // Get list garden of farm with pagination and keyword search
 const getListByFarmId = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
   const keyword = req.query.keyword || "";
-  const list = await gardenService.getListPagination(
-    req.params.farmId,
-    page,
-    keyword
-  );
-  const total = await gardenService.getTotal(req.params.farmId, keyword);
-  res.json(formatPagination(page, total, list));
+  
+  // Nếu pageSize >= 1000, lấy tất cả gardens của farm
+  if (pageSize >= 1000) {
+    const list = await gardenService.getListPagination(
+      req.params.farmId,
+      1,
+      keyword,
+      pageSize
+    );
+    const total = await gardenService.getTotal(req.params.farmId, keyword);
+    res.json({
+      message: "Gardens fetched successfully",
+      data: list,
+      totalItem: total,
+      page: 1,
+      pageSize: total,
+    });
+  } else {
+    const list = await gardenService.getListPagination(
+      req.params.farmId,
+      page,
+      keyword,
+      pageSize
+    );
+    const total = await gardenService.getTotal(req.params.farmId, keyword);
+    res.json(formatPagination(page, total, list));
+  }
 };
 
 // Create new garden

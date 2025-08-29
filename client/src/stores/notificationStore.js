@@ -51,12 +51,17 @@ export const useNotificationStore = create((set, get) => ({
       const data = await fetchTotalNotiUnread();
       set({ totalUnread: data?.data || 0, loading: false });
     } catch (err) {
+       // Không throw error nếu là lỗi 401, chỉ log và set totalUnread = 0
+      if (err?.status === 401 || err?.response?.status === 401) {
+        console.log("Token expired, skipping notification fetch");
+        set({ totalUnread: 0, loading: false });
+        return;
+      }
       set({
         error: err?.message || "Lỗi lấy tổng số thông báo chưa đọc",
         loading: false,
         totalUnread: 0,
       });
-      throw err;
     }
   },
 
@@ -85,12 +90,17 @@ export const useNotificationStore = create((set, get) => ({
       const data = await fetchTotalQuesNotiUnread();
       set({ totalQuesNotiUnread: data?.data || 0, loading: false });
     } catch (err) {
+      // Không throw error nếu là lỗi 401, chỉ log và set totalQuesNotiUnread = 0
+      if (err?.status === 401 || err?.response?.status === 401) {
+        console.log("Token expired, skipping question notification fetch");
+        set({ totalQuesNotiUnread: 0, loading: false });
+        return;
+      }
       set({
         error: err?.message || "Lỗi lấy tổng số câu hỏi chưa đọc",
         loading: false,
         totalQuesNotiUnread: 0,
       });
-      throw err;
     }
   },
 
@@ -136,6 +146,12 @@ export const useNotificationStore = create((set, get) => ({
         loading: false,
       });
     } catch (err) {
+      // Không throw error nếu là lỗi 401, chỉ log và set notificationQues = []
+      if (err?.status === 401 || err?.response?.status === 401) {
+        console.log("Token expired, skipping question notification fetch");
+        set({ notificationQues: [], loading: false });
+        return;
+      }
       set({
         error: err?.message || "Lỗi tải danh sách thông báo",
         loading: false,
@@ -166,6 +182,12 @@ export const useNotificationStore = create((set, get) => ({
         loading: false,
       });
     } catch (err) {
+      // Không throw error nếu là lỗi 401, chỉ log và set notifications = []
+      if (err?.status === 401 || err?.response?.status === 401) {
+        console.log("Token expired, skipping notification fetch");
+        set({ notifications: [], loading: false });
+        return;
+      }
       set({
         error: err?.message || "Lỗi tải danh sách thông báo",
         loading: false,

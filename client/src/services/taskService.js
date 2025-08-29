@@ -24,8 +24,10 @@ export const updateTaskApi = async (id, payload) => {
 };
 
 // Delete task
-export const deleteTaskApi = async (id) => {
-  const res = await client.delete(`/admin/tasks/${id}`);
+export const deleteTaskApi = async (id, deleteReason) => {
+  const res = await client.delete(`/admin/tasks/${id}`, {
+    data: { deleteReason }
+  });
   return res.data;
 };
 

@@ -50,7 +50,6 @@ const adminChangePassword = [
     .notEmpty()
     .withMessage("New password is required"),
 ];
-
 module.exports = {
   create,
   assignFarmToUser,

@@ -22,7 +22,7 @@ const getListFarmer = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const keyword = req.query.keyword || "";
   const selectedFarmId = req.query.farmId; // nhận farmId từ frontend
-
+  
   let farmIdsToQuery;
 
   if (req.user.role === "expert") {
@@ -130,15 +130,14 @@ const removeFarmer = async (req, res, next) => {
   if (user.role !== USER_ROLE.farmer) {
     return next(new BadRequestException("User is not a farmer"));
   }
-  // Kiểm tra farm
+
+  // Chuyên gia không được phép xóa nông dân
   if (req.user.role === USER_ROLE.expert) {
-    // expert có nhiều farm
-    const expertFarmIds = req.user.farmId.map(f => f.toString());
-    if (!expertFarmIds.includes(user.farmId.toString())) {
-      return next(new NotFoundException("Farmer not found in your farms"));
-    }
-  } else {
-    // farm-admin chỉ có 1 farm
+    return next(new BadRequestException("Chuyên gia không có quyền xóa nông dân"));
+  }
+
+  // Chỉ farm-admin mới được xóa nông dân của farm mình
+  if (req.user.role === USER_ROLE.farmAdmin) {
     if (user.farmId.toString() !== req.user.farmId) {
       return next(new NotFoundException("Farmer not found in your farm"));
     }

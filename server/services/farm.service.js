@@ -9,8 +9,8 @@ const getListPagination = async (page, keyword, pageSize = LIMIT_ITEM_PER_PAGE) 
   const listFarm = await Farm.find({
     name: { $regex: keyword, $options: "i" },
   })
-    .skip((page - 1) * pageSize)
-    .limit(pageSize);
+  .skip((page - 1) * pageSize)
+  .limit(pageSize);
 
   return listFarm;
 };

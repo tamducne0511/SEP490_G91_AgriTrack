@@ -102,6 +102,18 @@ const NAV_BY_ROLE = (idUser) => ({
   ],
   expert: [
     {
+      key: RoutePaths.FARMER_LIST,
+      paths: [RoutePaths.FARMER_LIST, "/farmer-detail/"],
+      icon: <UsergroupAddOutlined />,
+      label: "Quản lý nông dân",
+    },
+    {
+      key: RoutePaths.TASK_LIST,
+      paths: [RoutePaths.TASK_LIST, "/task-detail/"],
+      icon: <CopyOutlined />,
+      label: "Quản lý công việc",
+    },
+    {
       key: RoutePaths.REQUEST_LIST,
       paths: [RoutePaths.REQUEST_LIST, "/request-detail/"],
       icon: <BookOutlined />,

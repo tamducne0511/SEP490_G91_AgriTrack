@@ -2,7 +2,7 @@ import { useAuthStore, useNotificationStore } from "@/stores";
 import { BellOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { Badge, Button, Dropdown, List, Spin, Modal, Image } from "antd";
 import { useEffect, useState } from "react";
-import { ImageBaseUrl } from "@/variables/common";
+import { ImageBaseUrl, EAuthToken } from "@/variables/common";
 import { useNavigate } from "react-router-dom";
 
 const NotificationQuesBell = () => {
@@ -22,10 +22,19 @@ const NotificationQuesBell = () => {
   const [previewData, setPreviewData] = useState(null);
 
   useEffect(() => {
-    // THAY ĐỔI 3: Gọi hàm fetchNotificationsQues thay vì fetchNotifications
-    fetchNotificationsQues({ role: user?.role, id: farm?.id }); // Có thể truyền params nếu cần, ví dụ: fetchNotificationsQues({role: user?.role, id: farm?.id}{ role: 'expert' })
+    // Chỉ gọi API nếu có token và user
+    const token = localStorage.getItem(EAuthToken.ACCESS_TOKEN);
+    if (!token || !user) return;
+
+    fetchNotificationsQues({ role: user?.role, id: farm?.id });
 
     const intervalId = setInterval(() => {
+      // Kiểm tra token trước khi gọi API
+      const currentToken = localStorage.getItem(EAuthToken.ACCESS_TOKEN);
+      if (!currentToken || !user) {
+        clearInterval(intervalId);
+        return;
+      }
       fetchNotificationsQues({ role: user?.role, id: farm?._id });
     }, 5000); // Lặp lại mỗi 5 giây
 
@@ -33,7 +42,7 @@ const NotificationQuesBell = () => {
       clearInterval(intervalId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, []);
 
   const notificationCount =
     notificationQues?.filter((noti) => !noti.readBy.includes(user?._id))

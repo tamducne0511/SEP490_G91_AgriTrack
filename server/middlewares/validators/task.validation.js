@@ -61,9 +61,18 @@ const createDailyNote = [
     .withMessage("Quantity must be a number"),
 ];
 
+const deleteTask = [
+  body("deleteReason")
+    .notEmpty()
+    .withMessage("Lý do xóa công việc là bắt buộc")
+    .isLength({ min: 10, max: 500 })
+    .withMessage("Lý do xóa phải có từ 10 đến 500 ký tự"),
+];
+
 module.exports = {
   create,
   update,
   createDailyNote,
   changeStatus,
+  deleteTask,
 };
