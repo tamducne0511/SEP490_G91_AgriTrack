@@ -17,6 +17,7 @@ import {
   List,
   Modal,
   Pagination,
+  Select,
   Spin,
   Tag,
   Typography,
@@ -32,6 +33,49 @@ const { Title, Text } = Typography;
 const roleColor = {
   farmer: "green",
   expert: "geekblue",
+};
+
+// Function để trích xuất tên thành phố từ địa chỉ
+const extractCityFromAddress = (address) => {
+  if (!address) return "HaNoi"; // fallback
+  
+  const addressLower = address.toLowerCase();
+  
+  // Mapping các tên thành phố phổ biến
+  const cityMappings = {
+    "hà nội": "HaNoi",
+    "hanoi": "HaNoi", 
+    "tp. hồ chí minh": "Ho_Chi_Minh",
+    "tp hồ chí minh": "Ho_Chi_Minh",
+    "ho chi minh": "Ho_Chi_Minh",
+    "hồ chí minh": "Ho_Chi_Minh",
+    "đà nẵng": "Da_Nang",
+    "da nang": "Da_Nang",
+    "danang": "Da_Nang",
+    "hải phòng": "Hai_Phong",
+    "hai phong": "Hai_Phong",
+    "cần thơ": "Can_Tho",
+    "can tho": "Can_Tho",
+    "huế": "Hue",
+    "hue": "Hue",
+    "nha trang": "Nha_Trang",
+    "vũng tàu": "Vung_Tau",
+    "vung tau": "Vung_Tau",
+    "biên hòa": "Bien_Hoa",
+    "bien hoa": "Bien_Hoa",
+    "quy nhơn": "Quy_Nhon",
+    "quy nhon": "Quy_Nhon"
+  };
+  
+  // Tìm kiếm tên thành phố trong địa chỉ
+  for (const [cityName, cityCode] of Object.entries(cityMappings)) {
+    if (addressLower.includes(cityName)) {
+      return cityCode;
+    }
+  }
+  
+  // Nếu không tìm thấy, trả về Hà Nội làm mặc định
+  return "HaNoi";
 };
 
 export default function TreeQuestionDetail() {
@@ -56,6 +100,8 @@ export default function TreeQuestionDetail() {
     clearAIAnswer,
     weather,
     fetchWeather,
+    loadingWeather,
+    errorWeather,
     treeDetail,
     loadingTreeDetail,
     errorTreeDetail,
@@ -70,6 +116,9 @@ export default function TreeQuestionDetail() {
   // State cho phân trang
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
+  
+  // State cho chọn vị trí thời tiết
+  const [selectedLocation, setSelectedLocation] = useState("HaNoi");
 
   // State cho trả lời từng câu hỏi
   const [replyForm, setReplyForm] = useState({}); // { [questionId]: text }
@@ -80,9 +129,15 @@ export default function TreeQuestionDetail() {
     textPrompt: "",
   });
 
+  // Tự động fetch weather khi có thông tin trang trại
   useEffect(() => {
-    fetchWeather();
-  }, []);
+    if (treeDetail?.farm?.address) {
+      const cityCode = extractCityFromAddress(treeDetail.farm.address);
+      fetchWeather(cityCode);
+      // Cập nhật selectedLocation để UI hiển thị đúng
+      setSelectedLocation(cityCode);
+    }
+  }, [treeDetail?.farm?.address]);
 
   useEffect(() => {
     if (treeId) {
@@ -311,7 +366,40 @@ export default function TreeQuestionDetail() {
 
         {forecastTomorrow && (
           <Card
-            title={`Dự báo thời tiết ngày mai (${forecastTomorrow?.date})`}
+            title={
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span>Dự báo thời tiết ngày mai ({forecastTomorrow?.date})</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 14, color: "#666" }}>Vị trí:</span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontSize: 12, color: "#999" }}>
+                      {treeDetail?.farm?.address || "Đang tải..."}
+                    </span>
+                    <Select
+                      value={selectedLocation}
+                      onChange={(value) => {
+                        setSelectedLocation(value);
+                        fetchWeather(value);
+                      }}
+                      style={{ width: 200 }}
+                      placeholder="Chọn vị trí"
+                      options={[
+                        { value: "HaNoi", label: "Hà Nội" },
+                        { value: "HoChiMinh", label: "TP. Hồ Chí Minh" },
+                        { value: "DaNang", label: "Đà Nẵng" },
+                        { value: "HaiPhong", label: "Hải Phòng" },
+                        { value: "CanTho", label: "Cần Thơ" },
+                        { value: "Hue", label: "Huế" },
+                        { value: "NhaTrang", label: "Nha Trang" },
+                        { value: "VungTau", label: "Vũng Tàu" },
+                        { value: "BienHoa", label: "Biên Hòa" },
+                        { value: "QuyNhon", label: "Quy Nhơn" },
+                      ]}
+                    />
+                  </div>
+                </div>
+              </div>
+            }
             bordered={false}
             style={{
               borderRadius: 16,

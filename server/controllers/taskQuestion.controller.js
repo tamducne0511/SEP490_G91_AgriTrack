@@ -98,7 +98,8 @@ const askAI = async (req, res, next) => {
 };
 
 const getWeather = async (req, res) => {
-  const weatherData = await taskQuestionService.getWeather();
+  const location = req.query.location || "HaNoi";
+  const weatherData = await taskQuestionService.getWeather(location);
   res.json({
     message: "Weather data retrieved successfully",
     data: weatherData,

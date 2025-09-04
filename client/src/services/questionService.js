@@ -36,8 +36,9 @@ export const createNotificationQuesApi = async ({ questionId,title,content }) =>
   return res.data;
 };
 
-export const fetchWeatherApi = async () => {
-  const res = await client.get("/task-questions/weather/get");
+export const fetchWeatherApi = async (location) => {
+  const params = location ? { location } : {};
+  const res = await client.get("/task-questions/weather/get", { params });
   return res.data;
 };
 

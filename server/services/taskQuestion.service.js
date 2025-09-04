@@ -225,10 +225,10 @@ const askAI = async (textPrompt, imageUrl) => {
   }
 };
 
-const getWeather = async () => {
+const getWeather = async (location = "HaNoi") => {
   const axios = require("axios");
   const response = await axios.get(
-    `https://api.weatherapi.com/v1/forecast.json?key=${process.env.OPEN_WEATHER_API_KEY}&q=HaNoi&days=2&aqi=no&alerts=no`
+    `https://api.weatherapi.com/v1/forecast.json?key=${process.env.OPEN_WEATHER_API_KEY}&q=${encodeURIComponent(location)}&days=2&aqi=no&alerts=no`
   );
 
   return response.data;

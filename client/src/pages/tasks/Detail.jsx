@@ -147,6 +147,9 @@ export default function TaskDetail() {
       await updateTask(id, formData);
       message.success("Cập nhật công việc thành công!");
       setEditMode(false);
+      
+      // Refresh task detail để hiển thị dữ liệu mới
+      await fetchTaskDetail(id);
     } catch {
       message.error("Cập nhật thất bại!");
     } finally {
