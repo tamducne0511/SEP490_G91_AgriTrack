@@ -1,4 +1,4 @@
-import { createNotificationQuesApi } from "@/services";
+import { createNotificationQuesApi} from "@/services";
 import { useAuthStore, useTaskQuestionStore } from "@/stores";
 import { ImageBaseUrl } from "@/variables/common";
 import {
@@ -56,6 +56,7 @@ export default function TreeQuestionDetail() {
     clearAIAnswer,
     weather,
     fetchWeather,
+    loadingWeather,
     treeDetail,
     loadingTreeDetail,
     errorTreeDetail,
@@ -66,23 +67,25 @@ export default function TreeQuestionDetail() {
   const [addModal, setAddModal] = useState(false);
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
-
-  // State cho phân trang
+  const [farmDetail, setFarmDetail] = useState(null);
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
 
   // State cho trả lời từng câu hỏi
   const [replyForm, setReplyForm] = useState({}); // { [questionId]: text }
   const [aiSuggest, setAiSuggest] = useState({}); // { [questionId]: aiText }
+  const [weatherForQuestion, setWeatherForQuestion] = useState({}); // { [questionId]: weatherData }
   const [answerModal, setAnswerModal] = useState({
     open: false,
     question: null,
     textPrompt: "",
   });
-
   useEffect(() => {
-    fetchWeather();
-  }, []);
+    if (treeDetail?.farm) {
+      setFarmDetail(treeDetail.farm);
+      // Không cần gọi fetchWeather ở đây nữa vì sẽ gọi khi có câu hỏi cụ thể
+    }
+  }, [treeDetail]);
 
   useEffect(() => {
     if (treeId) {
@@ -204,10 +207,21 @@ export default function TreeQuestionDetail() {
       message.error(err?.message || "Không thể gửi trả lời");
     }
   };
-
   const [checkedMap, setCheckedMap] = useState({});
 
-  const forecastTomorrow = weather?.forecast?.forecastday?.[1];
+  // Function để lấy thời tiết cho câu hỏi cụ thể
+  const handleGetWeatherForQuestion = async (questionId) => {
+    try {
+      const weatherData = await fetchWeather(questionId);
+      setWeatherForQuestion(prev => ({
+        ...prev,
+        [questionId]: weatherData
+      }));
+    } catch (err) {
+      message.error("Không thể lấy thông tin thời tiết");
+    }
+  };
+
   return (
     <div
       style={{
@@ -295,8 +309,7 @@ export default function TreeQuestionDetail() {
               <div style={{ fontSize: 19, fontWeight: 700, color: "#23643A" }}>
                 Cây số:{" "}
                 {treeDetail.detail &&
-                  `${String.fromCharCode(65 + (treeDetail.detail.row || 0))}${
-                    treeDetail.detail.col
+                  `${String.fromCharCode(65 + (treeDetail.detail.row || 0))}${treeDetail.detail.col
                   }`}
               </div>
               <div style={{ color: "#444", margin: "5px 0 0 0", fontSize: 15 }}>
@@ -308,68 +321,6 @@ export default function TreeQuestionDetail() {
             </div>
           </Card>
         ) : null}
-
-        {forecastTomorrow && (
-          <Card
-            title={`Dự báo thời tiết ngày mai (${forecastTomorrow?.date})`}
-            bordered={false}
-            style={{
-              borderRadius: 16,
-              marginBottom: 24,
-              background: "#eafbf3",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-              <img
-                src={
-                  forecastTomorrow?.day?.condition?.icon
-                    ? forecastTomorrow?.day.condition.icon.startsWith("http")
-                      ? forecastTomorrow?.day.condition.icon
-                      : "https:" + forecastTomorrow?.day.condition.icon
-                    : ""
-                }
-                alt={forecastTomorrow?.day?.condition?.text}
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 10,
-                  background: "#fff",
-                  marginBottom: 8,
-                }}
-              />
-              <div>
-                <div
-                  style={{ fontWeight: 600, fontSize: 18, color: "#23643A" }}
-                >
-                  {weather?.location?.name}, {weather?.location?.country}
-                </div>
-                <div
-                  style={{ color: "#23643A", fontSize: 16, margin: "4px 0" }}
-                >
-                  {forecastTomorrow?.day?.condition?.text}
-                </div>
-                <div style={{ color: "#444" }}>
-                  <b>Nhiệt độ TB:</b> {forecastTomorrow?.day?.avgtemp_c}°C
-                  &nbsp;|&nbsp;
-                  <b>Cao nhất:</b> {forecastTomorrow?.day?.maxtemp_c}°C
-                  &nbsp;|&nbsp;
-                  <b>Thấp nhất:</b> {forecastTomorrow?.day?.mintemp_c}°C <br />
-                  <b>Độ ẩm TB:</b> {forecastTomorrow?.day?.avghumidity}%
-                  &nbsp;|&nbsp;
-                  <b>Mưa:</b> {forecastTomorrow?.day?.totalprecip_mm}mm <br />
-                  <b>Gió tối đa:</b> {forecastTomorrow?.day?.maxwind_kph} km/h{" "}
-                  <br />
-                  <b>Khả năng mưa:</b>{" "}
-                  {forecastTomorrow?.day?.daily_chance_of_rain}%
-                </div>
-                <div style={{ color: "#98a4a6", fontSize: 13, marginTop: 6 }}>
-                  Mặt trời mọc: {forecastTomorrow?.astro?.sunrise} &nbsp;|&nbsp;
-                  Lặn: {forecastTomorrow?.astro?.sunset}
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
       </div>
 
       <Card
@@ -419,7 +370,7 @@ export default function TreeQuestionDetail() {
                   }}
                 >
                   <div
-                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}
                   >
                     <Text strong style={{ fontSize: 16 }}>
                       {q.title}
@@ -432,6 +383,16 @@ export default function TreeQuestionDetail() {
                         ? "Chuyên gia"
                         : "Nông dân"}
                     </Tag>
+                    {/* Button xem thời tiết */}
+                    <Button 
+                      size="small" 
+                      icon={<SunOutlined />}
+                      onClick={() => handleGetWeatherForQuestion(q._id)}
+                      loading={loadingWeather}
+                      style={{ marginLeft: 8 }}
+                    >
+                      Xem thời tiết ngày mai
+                    </Button>
                   </div>
                   <div style={{ margin: "4px 0", color: "#4e4e4e" }}>
                     {q.content}
@@ -459,6 +420,42 @@ export default function TreeQuestionDetail() {
                     {" • "}
                     {new Date(q.createdAt).toLocaleString("vi-VN")}
                   </div>
+                  
+                  {/* Hiển thị thời tiết cho câu hỏi này */}
+                  {weatherForQuestion[q._id] && (
+                    <Card
+                      size="small"
+                      title={`Dự báo thời tiết ngày mai (${weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.date})`}
+                      style={{
+                        marginTop: 8,
+                        background: "#eafbf3",
+                        border: "1px solid #d6e4ff"
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <img
+                          src={weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.condition?.icon}
+                          alt="weather"
+                          style={{ width: 32, height: 32 }}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 600, color: "#23643A" }}>
+                            {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.condition?.text}
+                          </div>
+                          <div style={{ fontSize: 12, color: "#666" }}>
+                            Nhiệt độ TB: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.avgtemp_c}°C | 
+                            Cao nhất: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.maxtemp_c}°C | 
+                            Thấp nhất: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.mintemp_c}°C
+                          </div>
+                          <div style={{ fontSize: 12, color: "#666" }}>
+                            Độ ẩm TB: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.avghumidity}% | 
+                            Mưa: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.totalprecip_mm}mm | 
+                            Khả năng mưa: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.daily_chance_of_rain}%
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
                   {/* FORM trả lời (EXPERT) */}
                   {isReply && q?.createdBy?.role === "farmer" && (
                     <div
@@ -524,17 +521,19 @@ export default function TreeQuestionDetail() {
                             <Button
                               icon={<SunOutlined />}
                               onClick={async () => {
-                                if (!forecastTomorrow) {
+                                if (!weatherForQuestion[q._id]) {
                                   message.warning(
-                                    "Chưa có dữ liệu dự báo ngày mai."
+                                    "Vui lòng xem thời tiết trước khi hỏi AI về chăm sóc theo thời tiết."
                                   );
                                   return;
                                 }
+                                const weatherData = weatherForQuestion[q._id];
+                                const forecastTomorrow = weatherData?.forecast?.forecastday?.[1];
                                 const textPrompt =
-                                  `Dự báo thời tiết ngày mai tại ${weather?.location?.name}, ${weather?.location?.country}: ` +
+                                  `Dự báo thời tiết ngày mai tại ${treeDetail?.farm.address || weatherData?.location?.name}: ` +
                                   `${forecastTomorrow?.day?.condition?.text}, nhiệt độ trung bình ${forecastTomorrow?.day?.avgtemp_c}°C (cao nhất ${forecastTomorrow?.day?.maxtemp_c}°C, thấp nhất ${forecastTomorrow?.day?.mintemp_c}°C), ` +
-                                  `độ ẩm trung bình ${forecastTomorrow?.day?.avghumidity}%, lượng mưa dự kiến ${forecastTomorrow?.day?.totalprecip_mm}mm, gió tối đa ${forecastTomorrow?.day?.maxwind_kph} km/h. ` +
-                                  `Với điều kiện này, nên chăm sóc cây như thế nào?`;
+                                  `độ ẩm trung bình ${forecastTomorrow?.day?.avghumidity}%, lượng mưa dự kiến ${forecastTomorrow?.day?.totalprecip_mm}mm, khả năng mưa ${forecastTomorrow?.day?.daily_chance_of_rain}%. ` +
+                                  `Với điều kiện thời tiết này, nên chăm sóc cây như thế nào?`;
 
                                 try {
                                   setAnswerModal({
@@ -550,6 +549,7 @@ export default function TreeQuestionDetail() {
                               }}
                               loading={loadingAI}
                               style={{ fontWeight: 500 }}
+                              disabled={!weatherForQuestion[q._id]}
                             >
                               Gợi ý chăm sóc theo thời tiết
                             </Button>
@@ -746,7 +746,7 @@ export default function TreeQuestionDetail() {
                   ...answerModal.question,
                   textPrompt: answerModal.textPrompt,
                 });
-              } catch (err) {}
+              } catch (err) { }
             }}
             loading={loadingAI}
             disabled={!answerModal.textPrompt?.trim()}

@@ -29,15 +29,15 @@ export const askAIQuestionApi = async ({ textPrompt, imageUrl }) => {
   return res.data;
 };
 
-export const createNotificationQuesApi = async ({ questionId,title,content }) => {
+export const createNotificationQuesApi = async ({ questionId, title, content }) => {
   const res = await client.post("/question-notifications", {
-    questionId,title,content
+    questionId, title, content
   });
   return res.data;
 };
 
-export const fetchWeatherApi = async () => {
-  const res = await client.get("/task-questions/weather/get");
+export const fetchWeatherApi = async (questionId) => {
+  const res = await client.get(`/task-questions/weather/${questionId}`);
   return res.data;
 };
 

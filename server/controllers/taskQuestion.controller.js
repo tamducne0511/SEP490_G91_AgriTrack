@@ -98,7 +98,13 @@ const askAI = async (req, res, next) => {
 };
 
 const getWeather = async (req, res) => {
-  const weatherData = await taskQuestionService.getWeather();
+  const id = req.params.id
+  const detail = await taskQuestionService.getDetail(id)
+  if (!detail?.farm?.address) {
+    return res.status(404).json({ message: "Farm address not found" });
+  }
+  console.log(detail?.farm?.address)
+  const weatherData = await taskQuestionService.getWeather(detail?.farm?.address);
   res.json({
     message: "Weather data retrieved successfully",
     data: weatherData,

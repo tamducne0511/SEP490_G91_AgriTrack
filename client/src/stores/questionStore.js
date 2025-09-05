@@ -59,10 +59,10 @@ export const useTaskQuestionStore = create((set) => ({
       });
     }
   },
-  fetchWeather: async () => {
+  fetchWeather: async (questionId) => {
     set({ loadingWeather: true, errorWeather: null });
     try {
-      const data = await fetchWeatherApi();
+      const data = await fetchWeatherApi(questionId);
       set({ weather: data.data, loadingWeather: false });
       return data.data;
     } catch (err) {

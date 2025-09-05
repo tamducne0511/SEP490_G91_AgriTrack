@@ -240,12 +240,12 @@ const askAI = async (textPrompt, imageUrl) => {
   }
 };
 
-const getWeather = async () => {
+const getWeather = async (address) => {
   const axios = require("axios");
   const response = await axios.get(
-    `https://api.weatherapi.com/v1/forecast.json?key=${process.env.OPEN_WEATHER_API_KEY}&q=HaNoi&days=2&aqi=no&alerts=no`
+    `https://api.weatherapi.com/v1/forecast.json?key=${process.env.OPEN_WEATHER_API_KEY}&q=${encodeURIComponent(address)}&days=2&aqi=no&alerts=no`
   );
-
+  console.log(encodeURIComponent(address))
   return response.data;
 };
 
