@@ -29,6 +29,6 @@ router.post(
   farmQuestionValidation.askAI,
   taskQuestionController.askAI
 );
-router.get("/weather/get", isLogin, taskQuestionController.getWeather);
+router.get("/weather/:id", isLogin, taskQuestionController.getWeather);
 
 module.exports = router;
