@@ -38,5 +38,6 @@ router.get(
   isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]),
   farmScheduleController.find
 );
-
+router.post(
+  "/generate", farmScheduleController.generateTasks);
 module.exports = router;
