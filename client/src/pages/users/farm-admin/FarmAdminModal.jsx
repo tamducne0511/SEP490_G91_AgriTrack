@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Modal, Form, Input } from "antd";
 
+// Modal thêm/sửa chủ trang trại
 const FarmAdminModal = ({
   open,
   onOk,
@@ -11,6 +12,7 @@ const FarmAdminModal = ({
 }) => {
   const [form] = Form.useForm();
 
+  // Khi mở modal thì set value, đóng modal thì reset form
   useEffect(() => {
     if (open) form.setFieldsValue(initialValues);
     if (!open) form.resetFields();
