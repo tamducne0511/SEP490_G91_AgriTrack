@@ -12,17 +12,32 @@ import {
 } from "@/services"; // Update path if needed
 import { message } from "antd";
 
+/**
+ * Store quản lý trạng thái thiết bị và các thay đổi thiết bị (nhập/xuất).
+ * Bao gồm danh sách, phân trang, chi tiết, và các thao tác CRUD.
+ */
 export const useEquipmentStore = create((set, get) => ({
+  /** Danh sách thiết bị */
   equipments: [],
+  /** Phân trang danh sách thiết bị */
   pagination: { total: 0, page: 1, pageSize: 10 },
+  /** Cờ loading chung cho thiết bị */
   loading: false,
+  /** Thông báo lỗi chung cho thiết bị */
   error: null,
+  /** Chi tiết thiết bị hiện tại */
   equipmentDetail: null, // Added state for storing equipment detail
+
+  /** Danh sách thay đổi thiết bị (nhập/xuất) */
   equipmentChanges: [],
+  /** Phân trang danh sách thay đổi thiết bị */
   ecPagination: { total: 0, page: 1, pageSize: 10 },
+  /** Cờ loading cho thay đổi thiết bị */
   ecLoading: false,
+  /** Lỗi cho thay đổi thiết bị */
   ecError: null,
 
+  /** Lấy danh sách thay đổi thiết bị */
   fetchEquipmentChanges: async (params = {}) => {
     set({ ecLoading: true, ecError: null });
     try {
@@ -41,7 +56,7 @@ export const useEquipmentStore = create((set, get) => ({
     }
   },
 
-  // Approve equipment change
+  /** Phê duyệt bản ghi thay đổi thiết bị */
   approveEquipmentChange: async (id) => {
     set({ ecLoading: true, ecError: null });
     try {
@@ -55,7 +70,7 @@ export const useEquipmentStore = create((set, get) => ({
     }
   },
 
-  // Reject equipment change
+  /** Từ chối bản ghi thay đổi thiết bị */
   rejectEquipmentChange: async (id, reason) => {
     set({ ecLoading: true, ecError: null });
     try {
@@ -68,7 +83,8 @@ export const useEquipmentStore = create((set, get) => ({
       throw err;
     }
   },
-  // Fetch equipment list
+
+  /** Lấy danh sách thiết bị */
   fetchEquipments: async (params = {}) => {
     set({ loading: true, error: null });
     try {
@@ -87,7 +103,7 @@ export const useEquipmentStore = create((set, get) => ({
     }
   },
 
-  // Fetch equipment details by ID
+  /** Lấy chi tiết thiết bị theo id */
   fetchEquipmentDetail: async (id) => {
     set({ loading: true, error: null });
     try {
@@ -104,7 +120,7 @@ export const useEquipmentStore = create((set, get) => ({
     }
   },
 
-  // Create a new equipment
+  /** Tạo mới thiết bị */
   createEquipment: async (payload) => {
     set({ loading: true, error: null });
     try {
@@ -118,7 +134,7 @@ export const useEquipmentStore = create((set, get) => ({
     }
   },
 
-  // Update an equipment
+  /** Cập nhật thiết bị */
   updateEquipment: async (id, payload) => {
     set({ loading: true, error: null });
     try {
@@ -132,7 +148,7 @@ export const useEquipmentStore = create((set, get) => ({
     }
   },
 
-  // Delete an equipment
+  /** Xoá thiết bị */
   deleteEquipment: async (id) => {
     set({ loading: true, error: null });
     try {
@@ -146,7 +162,7 @@ export const useEquipmentStore = create((set, get) => ({
     }
   },
 
-  // Import equipment
+  /** Tạo phiếu nhập thiết bị */
   importEquipments: async (payload) => {
     set({ loading: true, error: null });
     try {
@@ -165,7 +181,7 @@ export const useEquipmentStore = create((set, get) => ({
     }
   },
 
-  // Export equipment
+  /** Tạo phiếu xuất thiết bị */
   exportEquipments: async (payload) => {
     set({ loading: true, error: null });
     try {
