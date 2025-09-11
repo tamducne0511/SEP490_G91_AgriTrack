@@ -4,9 +4,11 @@ const FarmSchedule = require("../models/farmSchedule.model");
 const Task = require("../models/task.model");
 const { OpenAI } = require("openai");
 
+// Hằng số số phần tử mỗi trang cho phân trang
 const { LIMIT_ITEM_PER_PAGE } = require("../constants/app");
 const NotFoundException = require("../middlewares/exceptions/notfound");
 
+// Lấy danh sách lịch của một nông trại có phân trang và lọc 
 const getListPagination = async (farmId, page, keyword) => {
   const list = await FarmSchedule.find({
     farmId: farmId,
@@ -22,6 +24,7 @@ const getListPagination = async (farmId, page, keyword) => {
   return list;
 };
 
+// Lấy tổng số bản ghi phân trang
 const getTotal = async (farmId, keyword) => {
   const total = await FarmSchedule.countDocuments({
     farmId: farmId,
@@ -31,6 +34,7 @@ const getTotal = async (farmId, keyword) => {
   return total;
 };
 
+// Tạo mới lịch nông trại; kiểm tra nông trại tồn tại, gán createdBy
 const create = async (userId, data) => {
   try {
     const farm = await Farm.findById(data.farmId);
@@ -47,6 +51,7 @@ const create = async (userId, data) => {
   }
 };
 
+// Cập nhật lịch nông trại theo id
 const update = async (id, data) => {
   const farmSchedule = await find(id);
   if (!farmSchedule) {
@@ -64,6 +69,7 @@ const update = async (id, data) => {
   return farmSchedule;
 };
 
+// Tìm lịch theo id; nếu id không hợp lệ trả về null
 const find = async (id) => {
   try {
     const farmSchedule = await FarmSchedule.findById(id);
@@ -73,6 +79,7 @@ const find = async (id) => {
   }
 };
 
+// Xóa mềm lịch nông vụ status=false
 const remove = async (id) => {
   return await FarmSchedule.updateOne({ _id: id }, { status: false });
 };

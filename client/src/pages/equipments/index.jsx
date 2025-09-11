@@ -20,6 +20,8 @@ import { useNavigate } from "react-router-dom";
 import { RoutePaths } from "@/routes";
 import { ImageBaseUrl } from "@/variables/common";
 import EquipmentModal from "./EquipmentModal";
+
+// Nhãn/ màu trạng thái thiết bị
 const statusLabel = {
   false: "Đã xoá",
   true: "Hoạt động",
@@ -29,6 +31,8 @@ const statusColor = {
   false: "red",
   true: "green",
 };
+
+// Trang danh sách thiết bị: filter theo từ khoá, danh mục; thêm/xoá/xem chi tiết
 export default function EquipmentList() {
   // Store hooks
   const {
@@ -43,6 +47,7 @@ export default function EquipmentList() {
 
   const { categories, fetchCategories } = useEquipmentCategoryStore();
 
+  // Local states cho filter và modal
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [categoryFilter, setCategoryFilter] = useState(undefined);
@@ -51,7 +56,7 @@ export default function EquipmentList() {
   const isSearching = useRef(false);
   const navigate = useNavigate();
 
-  // Fetch category on mount
+  // Fetch category on mount (phục vụ filter hiển thị tên danh mục)
   useEffect(() => {
     fetchCategories({ pageSize: 1000 }); // Lấy tất cả categories
   }, [fetchCategories]);
@@ -65,7 +70,7 @@ export default function EquipmentList() {
     });
   }, [page, keyword, categoryFilter, fetchEquipments]);
 
-  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  // Reset page khi keyword thay đổi (chỉ khi người dùng thực sự nhập search)
   useEffect(() => {
     if (isSearching.current) {
       setPage(1);
@@ -78,11 +83,12 @@ export default function EquipmentList() {
     setPage(1);
   }, [categoryFilter]);
 
+  // Hiển thị lỗi từ store
   useEffect(() => {
     if (error) message.error(error);
   }, [error]);
 
-  // Modal OK handler
+  // Modal OK handler (tạo thiết bị)
   const handleOk = async (values) => {
     setConfirmLoading(true);
     try {
@@ -105,6 +111,7 @@ export default function EquipmentList() {
     } catch {}
   };
 
+  // Cấu hình cột bảng
   const columns = [
     {
       title: "STT",
@@ -255,7 +262,7 @@ export default function EquipmentList() {
           onChange={setCategoryFilter}
         />
       </div>
-      {/* Table */}
+      {/* Bảng thiết bị */}
       <Table
         rowKey="_id"
         columns={columns}
@@ -280,7 +287,7 @@ export default function EquipmentList() {
         }}
       />
 
-      {/* Modal */}
+      {/* Modal thêm/sửa thiết bị */}
       <EquipmentModal
         open={modal.open}
         isEdit={modal.edit}

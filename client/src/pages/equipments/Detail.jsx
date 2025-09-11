@@ -15,6 +15,7 @@ import { useEquipmentCategoryStore, useEquipmentStore } from "@/stores"; // Impo
 import { RoutePaths } from "@/routes";
 import { ImageBaseUrl } from "@/variables/common";
 
+// Trang chi tiết thiết bị: xem, chỉnh sửa, và tạo phiếu nhập/xuất
 const EquipmentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -28,6 +29,8 @@ const EquipmentDetail = () => {
     updateEquipment,
   } = useEquipmentStore(); // Access equipment store
   const { categories, fetchCategories } = useEquipmentCategoryStore(); // Access category store
+
+  // Local states cho chỉnh sửa và modal nhập/xuất
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
@@ -39,20 +42,23 @@ const EquipmentDetail = () => {
   const [isModalVisible, setIsModalVisible] = useState(false); // Show modal state
   const [modalType, setModalType] = useState(""); // To differentiate import/export
 
+  // Tải chi tiết thiết bị và danh mục khi mount/ đổi id
   useEffect(() => {
     fetchEquipmentDetail(id); // Fetch equipment details using the store
     fetchCategories(); // Fetch categories to display category info
   }, [id, fetchEquipmentDetail, fetchCategories]);
+
+  // Hiển thị lỗi từ store
   useEffect(() => {
     if (error) message.error(error);
   }, [error]);
 
-  // Find the category
+  // Tìm category tương ứng của thiết bị
   const category = categories.find(
     (cat) => cat._id === equipmentDetail?.categoryId
   );
 
-  // Edit Equipment Handler
+  // Bắt đầu chỉnh sửa
   const handleEdit = () => {
     setIsEditing(true);
     setEditedName(equipmentDetail.name);
@@ -60,6 +66,8 @@ const EquipmentDetail = () => {
     setEditedQuantity(equipmentDetail.quantity);
     setEditedPrice(equipmentDetail.price);
   };
+
+  // Lưu chỉnh sửa
   const handleSave = async () => {
     try {
       await updateEquipment(id, {
@@ -79,21 +87,21 @@ const EquipmentDetail = () => {
     }
   };
 
-  // Import Equipment Handler (show modal)
+  // Mở modal nhập thiết bị
   const handleImportClick = () => {
     setModalType("import");
     setPrice(equipmentDetail.price); // Set price to the equipment price
     setIsModalVisible(true);
   };
 
-  // Export Equipment Handler (show modal)
+  // Mở modal xuất thiết bị
   const handleExportClick = () => {
     setModalType("export");
     setPrice(equipmentDetail.price); // Set price to the equipment price
     setIsModalVisible(true);
   };
 
-  // Handle Submit for Import/Export
+  // Submit nhập/xuất
   const handleSubmit = async () => {
     if (modalType === "import" && importQuantity <= 0) {
       message.error("Số lượng nhập phải lớn hơn 0.");
@@ -122,9 +130,11 @@ const EquipmentDetail = () => {
       );
     }
   };
-  console.log("equipmentDetail?.image", equipmentDetail?.image);
+
+  // Loading/ not found states
   if (loading) return <Spin style={{ margin: 80 }} />; // Loading state
   if (!equipmentDetail) return <div>Không tìm thấy thiết bị.</div>; // If no equipment found
+
   return (
     <div
       style={{
@@ -137,7 +147,7 @@ const EquipmentDetail = () => {
         boxShadow: "0 4px 24px #0001",
       }}
     >
-      {/* Equipment Info */}
+      {/* Thông tin thiết bị */}
       <div style={{ flex: 1, minWidth: 320 }}>
         <Button onClick={() => navigate(-1)} style={{ marginBottom: 16 }}>
           Quay lại
@@ -184,7 +194,7 @@ const EquipmentDetail = () => {
             </Descriptions.Item>
           </Descriptions>
 
-          {/* Edit Button */}
+          {/* Nút chỉnh sửa/ lưu */}
           {!isEditing ? (
             <Button
               type="primary"
@@ -203,7 +213,7 @@ const EquipmentDetail = () => {
             </Button>
           )}
 
-          {/* Import / Export Section */}
+          {/* Khu vực nhập/xuất thiết bị */}
           <div style={{ marginTop: 16 }}>
             <Button
               onClick={handleImportClick}
@@ -219,7 +229,7 @@ const EquipmentDetail = () => {
         </Card>
       </div>
 
-      {/* Modal for Import/Export */}
+      {/* Modal nhập/xuất thiết bị */}
       <Modal
         title={modalType === "import" ? "Nhập thiết bị" : "Xuất thiết bị"}
         visible={isModalVisible}

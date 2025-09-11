@@ -1,5 +1,9 @@
 const treeService = require("../../services/tree.service");
 
+/**
+ * Tạo dữ liệu cây cho một vườn theo ma trận row x col.
+ * Body: { row: number, col: number }
+ */
 const generateTree = async (req, res, next) => {
   try {
     const gardenId = req.params.gardenId;
@@ -13,6 +17,9 @@ const generateTree = async (req, res, next) => {
   }
 };
 
+/**
+ * Lấy danh sách cây của vườn, kèm tổng số câu hỏi và câu hỏi mới nhất.
+ */
 const getList = async (req, res, next) => {
   try {
     const gardenId = req.params.gardenId;
@@ -26,6 +33,10 @@ const getList = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /admin/tree/:id
+ * Lấy chi tiết một cây, bao gồm garden và farm liên quan.
+ */
 const getDetail = async (req, res, next) => {
   try {
     const tree = await treeService.getDetail(req.params.id);

@@ -1,10 +1,12 @@
+// Controller cho EquipmentChange (phiếu nhập/xuất thiết bị)
+// - Lấy danh sách có phân trang, tạo mới, duyệt/từ chối, xem chi tiết
 const { validationResult } = require("express-validator");
 const { formatPagination } = require("../../utils/format.util");
 const equipmentChangeService = require("../../services/equipmentChange.service");
 const { EQUIPMENT_CHANGE_STATUS } = require("../../constants/app");
 const NotFoundException = require("../../middlewares/exceptions/notfound");
 
-// Get list equipment change with pagination and keyword search
+// Lấy danh sách phiếu thay đổi theo trang và từ khóa tên thiết bị
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const status = req.query.status || "all";
@@ -20,7 +22,7 @@ const getList = async (req, res) => {
   res.json(formatPagination(page, total, list));
 };
 
-// Create new equipment change
+// Tạo phiếu thay đổi (nhập/xuất thiết bị)
 const create = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -43,7 +45,7 @@ const create = async (req, res) => {
   });
 };
 
-// Get detail
+// Xem chi tiết phiếu theo id
 const find = async (req, res, next) => {
   const id = req.params.id;
   const equipmentCategory = await equipmentChangeService.find(id);
@@ -56,7 +58,7 @@ const find = async (req, res, next) => {
   });
 };
 
-// Approve equipment change
+// Duyệt phiếu thay đổi (chỉ khi đang pending)
 const approve = async (req, res, next) => {
   const id = req.params.id;
   const equipmentCategory = await equipmentChangeService.find(id);
@@ -74,7 +76,7 @@ const approve = async (req, res, next) => {
   });
 };
 
-// Reject equipment change
+// Từ chối phiếu thay đổi (chỉ khi đang pending)
 const reject = async (req, res, next) => {
   const id = req.params.id;
   const equipmentCategory = await equipmentChangeService.find(id);
