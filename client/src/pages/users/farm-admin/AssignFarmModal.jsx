@@ -2,11 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Modal, Select, Form, Spin, Empty } from "antd";
 import { useFarmStore } from "@/stores";
 
+
+// Modal gán vườn cho user
 const AssignFarmModal = ({ open, onOk, onCancel, userId }) => {
   const { farms, fetchFarms, loading } = useFarmStore();
   const [search, setSearch] = useState("");
   const [farmId, setFarmId] = useState();
 
+// Khi mở modal thì fetch farms theo search, đóng modal thì reset
   useEffect(() => {
     if (open) fetchFarms({ page: 1, name: search, pageSize: 100 });
     if (!open) {
@@ -15,6 +18,7 @@ const AssignFarmModal = ({ open, onOk, onCancel, userId }) => {
     }
   }, [open, search, fetchFarms]);
 
+    // Xác nhận chọn vườn
   const handleOk = () => {
     if (!farmId) return;
     onOk(farmId);
