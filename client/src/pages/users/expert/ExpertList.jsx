@@ -31,6 +31,7 @@ export default function ExpertList() {
     if (error) message.error(error);
   }, [error]);
 
+  // Xử lý thêm chuyên gia mới
   const handleAdd = async (values) => {
     setConfirmLoading(true);
     try {
@@ -41,7 +42,8 @@ export default function ExpertList() {
       setConfirmLoading(false);
     }
   };
-
+  
+  // Xử lý vô hiệu hoá chuyên gia
   const handleDelete = async (record) => {
     try {
       await deleteUser(record._id, "expert");

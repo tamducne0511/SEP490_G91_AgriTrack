@@ -15,11 +15,11 @@ const AssignFarmModal = ({ open, onOk, onCancel, userId }) => {
     <Modal
       open={open}
       title="Chọn vườn để gán chuyên gia"
-      onOk={() => onOk(farmId)}
+      onOk={() => onOk(farmId)} // Truyền farmId đã chọn khi bấm OK
       onCancel={onCancel}
       okText="Xác nhận"
       cancelText="Huỷ"
-      destroyOnClose
+      destroyOnClose // Tự động hủy state khi modal đóng
     >
       <Form layout="vertical">
         <Form.Item
@@ -30,7 +30,7 @@ const AssignFarmModal = ({ open, onOk, onCancel, userId }) => {
           <Select
             placeholder="Chọn vườn"
             value={farmId}
-            onChange={setFarmId}
+            onChange={setFarmId} // Chuyển đổi dữ liệu farms thành options cho Select
             options={farms.map((f) => ({
               label: f.name,
               value: f._id,
