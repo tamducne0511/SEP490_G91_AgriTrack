@@ -1,11 +1,14 @@
 const express = require("express");
 const router = express.Router();
+// Multer dùng để xử lý upload file ảnh lịch nông vụ
 const multer = require("multer");
 
 const { USER_ROLE } = require("../constants/app");
 const { isRoles, isExpert, isLogin } = require("../middlewares");
+// Validator cho dữ liệu vào và controller xử lý nghiệp vụ
 const farmScheduleValidation = require("../middlewares/validators/farmSchedule.validation");
 const farmScheduleController = require("../controllers/farmSchedule.controller");
+// Cấu hình nơi lưu file và filter loại file hợp lệ
 const { configUploadFile, fileFilter } = require("../utils/upload.util");
 const upload = multer({
   storage: configUploadFile("uploads/schedules"),
