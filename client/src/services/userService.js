@@ -20,7 +20,12 @@ export const updateUserApi = async (id, payload) => {
 
 // DELETE user
 export const deleteUserApi = async (id) => {
-  const res = await client.delete(`/admin/users/${id}`);
+  const res = await client.post(`/admin/users/${id}/deactive`);
+  return res.data;
+};
+
+export const activeUserApi = async (id) => {
+  const res = await client.post(`/admin/users/${id}/active`);
   return res.data;
 };
 
@@ -53,5 +58,10 @@ export const unassignExpertFromFarmApi = async (assignedFarmId) => {
   const res = await client.delete(
     `/admin/users/unassign/expert-to-farm/${assignedFarmId}`
   );
+  return res.data;
+};
+
+export const adminChangePasswordApi = async (id, payload) => {
+  const res = await client.post(`/admin/users/${id}/change-password`, payload);
   return res.data;
 };

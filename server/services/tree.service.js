@@ -5,6 +5,11 @@ const NotFoundException = require("../middlewares/exceptions/notfound");
 const BadRequestException = require("../middlewares/exceptions/badrequest");
 const mongoose = require("mongoose");
 
+/**
+ * Tạo mảng  cây theo lưới row x col, bắt đầu từ 0.
+ * row - Số hàng
+ *  col - Số cột
+ */
 const genArrayData = (row, col) => {
   let data = [];
   for (let i = 0; i < row; i++) {
@@ -19,6 +24,13 @@ const genArrayData = (row, col) => {
   return data;
 };
 
+/**
+ * tạo tất cả cây theo ma trận row x col.
+ * Ném lỗi nếu vườn không tồn tại hoặc vườn đã có cây.
+ *  gardenId - Id của vườn
+ *  row - Số hàng cây
+ *  col - Số cột cây
+ */
 const generateTree = async (gardenId, row, col) => {
   const garden = Garden.findById(gardenId);
   if (!garden) {
@@ -45,6 +57,10 @@ const generateTree = async (gardenId, row, col) => {
   }
 };
 
+/**
+ * Lấy chi tiết một cây kèm garden và farm liên quan.
+ * id - Id cây
+ */
 const getDetail = async (id) => {
   const tree = await Tree.findById(id);
   if (!tree) {
@@ -61,6 +77,10 @@ const getDetail = async (id) => {
   };
 };
 
+/**
+ * Lấy danh sách cây của một vườn, kèm số câu hỏi và câu hỏi mới nhất cho từng cây.
+ * gardenId - Id vườn
+ */
 const getList = async (gardenId) => {
   const trees = await Tree.aggregate([
     {
@@ -77,8 +97,31 @@ const getList = async (gardenId) => {
       },
     },
     {
+      $lookup: {
+        from: "taskquestions",
+        let: { treeId: "$_id" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$treeId", "$$treeId"] } } },
+          { $sort: { createdAt: -1 } },
+          { $limit: 1 },
+          {
+            $lookup: {
+              from: "users",
+              localField: "userId",
+              foreignField: "_id",
+              as: "user",
+            },
+          },
+          { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+          { $project: { "user.password": 0 } },
+        ],
+        as: "latestQuestion",
+      },
+    },
+    {
       $addFields: {
         questionCount: { $size: "$questions" },
+        latestQuestion: { $arrayElemAt: ["$latestQuestion", 0] },
       },
     },
     {

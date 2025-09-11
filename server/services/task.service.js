@@ -11,22 +11,32 @@ const {
 const NotFoundException = require("../middlewares/exceptions/notfound");
 const TaskHistory = require("../models/taskHistory.model");
 const TaskDailyNote = require("../models/taskDailyNote.model");
+const BadRequestException = require("../middlewares/exceptions/badrequest");
 const mongoose = require("mongoose");
 
-const getListPagination = async (farmId, gardenId, page, keyword) => {
+const getListPagination = async (farmId, gardenId, page, keyword, pageSize = LIMIT_ITEM_PER_PAGE) => {
   const filter = {
-    farmId: farmId,
     name: { $regex: keyword, $options: "i" },
   };
+
+  // Xử lý farmId có thể là string hoặc mảng
+  if (Array.isArray(farmId)) {
+    if (farmId.length === 0) {
+      return []; // Trả về mảng rỗng nếu không có farm nào
+    }
+    filter.farmId = { $in: farmId };
+  } else {
+    filter.farmId = farmId;
+  }
 
   if (gardenId) {
     filter.gardenId = gardenId;
   }
 
   const list = await Task.find(filter)
-    .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
-    .limit(LIMIT_ITEM_PER_PAGE);
-
+    .skip((page - 1) * pageSize)
+    .limit(pageSize)
+    .populate("createdBy", "fullName");
   return list;
 };
 
@@ -44,9 +54,21 @@ const getListAssignedPagination = async (farmId, farmerId, page, keyword) => {
 
 const getTotal = async (farmId, gardenId, keyword) => {
   const filter = {
-    farmId: farmId,
     name: { $regex: keyword, $options: "i" },
   };
+
+  if (farmId) {
+    filter.farmId = farmId;
+  }
+  // Xử lý farmId có thể là string hoặc mảng
+  if (Array.isArray(farmId)) {
+    if (farmId.length === 0) {
+      return 0; // Trả về 0 nếu không có farm nào
+    }
+    filter.farmId = { $in: farmId };
+  } else {
+    filter.farmId = farmId;
+  }
 
   if (gardenId) {
     filter.gardenId = gardenId;
@@ -104,13 +126,15 @@ const update = async (id, data) => {
   task.type = data.type;
   task.priority = data.priority;
   task.description = data.description;
+  task.startDate = data.startDate;
+  task.endDate = data.endDate;
   await task.save();
   return task;
 };
 
 const find = async (id) => {
   try {
-    const task = await Task.findById(id);
+    const task = await Task.findById(id).populate("farmerId", "-password").populate("createdBy", "fullName");
     return task;
   } catch (error) {
     return null;
@@ -174,11 +198,38 @@ const getDetail = async (id) => {
   ]);
 
   const garden = await Garden.findById(task.gardenId);
-  return { task, histories: listTaskHistory, notes: listDailyNote, garden };
+  const farm = await Farm.findById(task.farmId);
+  return { task, histories: listTaskHistory, notes: listDailyNote, garden, farm };
 };
 
-const remove = async (id) => {
-  return await Task.updateOne({ _id: id }, { status: false });
+const remove = async (id, deletedBy, deleteReason) => {
+  const task = await Task.findById(id);
+  if (!task) {
+    throw new NotFoundException("Not found task with id: " + id);
+  }
+
+  // Kiểm tra trạng thái task
+  if (task.status === "completed") {
+    throw new BadRequestException("Cannot delete a completed task.");
+  }
+
+  // Cập nhật task
+  task.status = false; // Đánh dấu là đã xóa
+  task.deleteReason = deleteReason;
+  task.deletedBy = deletedBy;
+  task.deletedAt = new Date();
+  await task.save();
+
+  // Tạo task history
+  const taskHistory = new TaskHistory({
+    taskId: id,
+    farmerId: task.farmerId,
+    comment: `Task deleted. Reason: ${deleteReason}`,
+    status: "deleted",
+  });
+
+  await taskHistory.save();
+  return task;
 };
 
 const assignFarmer = async (taskId, farmerId) => {
@@ -186,7 +237,13 @@ const assignFarmer = async (taskId, farmerId) => {
   if (!task) {
     throw new NotFoundException("Not found task with id: " + taskId);
   }
-
+  if (task.farmerId) {
+    throw new BadRequestException("This task has already been assigned to a farmer.");
+  }
+  // Kiểm tra thêm trạng thái task
+  if (task.status === TASK_ASSIGN_STATUS.completed) {
+    throw new BadRequestException("Cannot assign a completed task.");
+  }
   const user = await User.findById(farmerId);
   if (!user || user.role !== USER_ROLE.farmer) {
     throw new NotFoundException("Not found user with id: " + farmerId);

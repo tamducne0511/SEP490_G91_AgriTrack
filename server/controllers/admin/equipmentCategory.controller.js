@@ -1,22 +1,47 @@
+// Controller cho Danh mục thiết bị (EquipmentCategory)
+// - Nhận request, gọi service, trả response chuẩn
+// - Áp dụng validate từ express-validator
 const { validationResult } = require("express-validator");
 const { formatPagination } = require("../../utils/format.util");
 const equipmentCategoryService = require("../../services/equipmentCategory.service");
+const NotFoundException = require("../../middlewares/exceptions/notfound");
 
-// Get list category with pagination and keyword search
+// Lấy danh sách danh mục có phân trang và tìm kiếm theo từ khóa
 const getList = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
   const keyword = req.query.keyword || "";
   const farmId = req.user.farmId;
-  const list = await equipmentCategoryService.getListPagination(
-    farmId,
-    page,
-    keyword
-  );
-  const total = await equipmentCategoryService.getTotal(farmId, keyword);
-  res.json(formatPagination(page, total, list));
+  
+  // Nếu pageSize >= 1000, trả về toàn bộ danh mục (bỏ qua phân trang)
+  if (pageSize >= 1000) {
+    const list = await equipmentCategoryService.getListPagination(
+      farmId,
+      1,
+      keyword,
+      pageSize
+    );
+    const total = await equipmentCategoryService.getTotal(farmId, keyword);
+    res.json({
+      message: "Categories fetched successfully",
+      data: list,
+      totalItem: total,
+      page: 1,
+      pageSize: total,
+    });
+  } else {
+    const list = await equipmentCategoryService.getListPagination(
+      farmId,
+      page,
+      keyword,
+      pageSize
+    );
+    const total = await equipmentCategoryService.getTotal(farmId, keyword);
+    res.json(formatPagination(page, total, list));
+  }
 };
 
-// Create new category
+// Tạo mới danh mục
 const create = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -30,6 +55,7 @@ const create = async (req, res) => {
     image: req.file?.filename ? `/uploads/categories/${req.file.filename}` : "",
   };
 
+  // Gọi service tạo danh mục
   const equipmentCategory = await equipmentCategoryService.create(payload);
   res.status(201).json({
     message: "Category created successfully",
@@ -37,7 +63,7 @@ const create = async (req, res) => {
   });
 };
 
-// Update existed category
+// Cập nhật danh mục theo id
 const update = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -46,6 +72,7 @@ const update = async (req, res, next) => {
 
   try {
     const id = req.params.id;
+    // Gọi service cập nhật
     const equipmentCategory = await equipmentCategoryService.update(id, {
       name: req.body.name,
       description: req.body.description,
@@ -63,7 +90,7 @@ const update = async (req, res, next) => {
   }
 };
 
-// Delete category
+// Xóa mềm danh mục (status=false)
 const remove = async (req, res) => {
   const id = req.params.id;
   const equipmentCategory = await equipmentCategoryService.find(id);
@@ -77,7 +104,7 @@ const remove = async (req, res) => {
   });
 };
 
-// Get detail
+// Lấy chi tiết danh mục theo id
 const find = async (req, res, next) => {
   const id = req.params.id;
   const equipmentCategory = await equipmentCategoryService.find(id);

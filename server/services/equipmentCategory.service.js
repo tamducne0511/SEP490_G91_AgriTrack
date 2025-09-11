@@ -4,17 +4,19 @@ const EquipmentCategory = require("../models/equipmentCategories.model");
 const { LIMIT_ITEM_PER_PAGE } = require("../constants/app");
 const NotFoundException = require("../middlewares/exceptions/notfound");
 
-const getListPagination = async (farmId, page, keyword) => {
+// Lấy danh sách danh mục theo phân trang và tên danh mục
+const getListPagination = async (farmId, page, keyword, pageSize = LIMIT_ITEM_PER_PAGE) => {
   const list = await EquipmentCategory.find({
     farmId: farmId,
     name: { $regex: keyword, $options: "i" },
   })
-    .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
-    .limit(LIMIT_ITEM_PER_PAGE);
+    .skip((page - 1) * pageSize)
+    .limit(pageSize);
 
   return list;
 };
 
+// Đếm tổng số danh mục 
 const getTotal = async (farmId, keyword) => {
   const total = await EquipmentCategory.countDocuments({
     farmId: farmId,
@@ -24,6 +26,7 @@ const getTotal = async (farmId, keyword) => {
   return total;
 };
 
+// Tạo mới danh mục sau khi xác thực Farm tồn tại
 const create = async (data) => {
   try {
     const farm = await Farm.findById(data.farmId);
@@ -39,6 +42,7 @@ const create = async (data) => {
   }
 };
 
+// Cập nhật danh mục: giữ nguyên image nếu không gửi ảnh mới
 const update = async (id, data) => {
   const equipmentCategory = await find(id);
   if (!equipmentCategory) {
@@ -52,6 +56,7 @@ const update = async (id, data) => {
   return equipmentCategory;
 };
 
+// Tìm danh mục theo id (trả null nếu id không hợp lệ)
 const find = async (id) => {
   try {
     const equipmentCategory = await EquipmentCategory.findById(id);
@@ -61,6 +66,7 @@ const find = async (id) => {
   }
 };
 
+// Xóa mềm danh mục (status=false)
 const remove = async (id) => {
   return await EquipmentCategory.updateOne({ _id: id }, { status: false });
 };

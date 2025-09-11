@@ -26,7 +26,7 @@ const getMe = async (req, res) => {
     response.user = user;
 
     if (user.role === USER_ROLE.expert) {
-      response.farms = await await userService.getListFarmAssignToExpert(
+      response.farmId = await userService.getListFarmAssignToExpert(
         user.id
       );
     } else if (

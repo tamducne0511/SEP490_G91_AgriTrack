@@ -1,30 +1,56 @@
-import { useNotificationStore } from "@/stores";
+import { useAuthStore, useNotificationStore } from "@/stores";
 import { BellOutlined } from "@ant-design/icons";
 import { Badge, Button, Dropdown, List, Spin, Modal, Image } from "antd";
 import { useEffect, useState } from "react";
-import { ImageBaseUrl } from "@/variables/common";
+import { ImageBaseUrl, EAuthToken } from "@/variables/common";
 
 const NotificationBell = () => {
-  const { notifications, loading, fetchNotifications, pagination } = useNotificationStore();
+  const {
+    notifications,
+    loading,
+    fetchNotifications,
+    pagination,
+    fetchTotalNotiUnread,
+    totalUnread,
+    markNotificationAsRead,
+  } = useNotificationStore();
   const [visible, setVisible] = useState(false);
+
+  const { user } = useAuthStore();
 
   // State cho modal preview
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState(null);
 
-  // Số thông báo (có thể là chưa đọc hoặc tổng số)
-  const notificationCount = pagination?.total || notifications?.length || 0;
-
   useEffect(() => {
+    // Chỉ gọi API nếu có token
+    const token = localStorage.getItem(EAuthToken.ACCESS_TOKEN);
+    if (!token) return;
     fetchNotifications({ page: 1 });
-    // eslint-disable-next-line
+    fetchTotalNotiUnread();
+
+    const intervalId = setInterval(() => {
+      // Kiểm tra token trước khi gọi API
+      const currentToken = localStorage.getItem(EAuthToken.ACCESS_TOKEN);
+      if (!currentToken) {
+        clearInterval(intervalId);
+        return;
+      }
+      fetchNotifications({ page: 1 });
+      fetchTotalNotiUnread();
+    }, 5000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, []);
 
   // Hàm mở modal preview
   const handlePreview = (item) => {
     setPreviewData(item);
     setPreviewOpen(true);
-    setVisible(false); // Đóng dropdown khi mở modal
+    setVisible(false);
+    markNotificationAsRead(item._id);
   };
 
   const dropdownContent = (
@@ -42,7 +68,9 @@ const NotificationBell = () => {
     >
       <Spin spinning={loading}>
         {!notifications || notifications.length === 0 ? (
-          <div style={{ padding: 20, textAlign: "center" }}>Không có thông báo</div>
+          <div style={{ padding: 20, textAlign: "center" }}>
+            Không có thông báo
+          </div>
         ) : (
           <List
             itemLayout="horizontal"
@@ -55,13 +83,14 @@ const NotificationBell = () => {
                   padding: 8,
                   transition: "background 0.2s",
                   cursor: "pointer",
+                  background: item.readBy.includes(user?._id)
+                    ? "white"
+                    : "rgb(217, 248, 180)",
                 }}
                 onClick={() => handlePreview(item)}
-                onMouseOver={(e) => (e.currentTarget.style.background = "#f8fafb")}
-                onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 <List.Item.Meta
-                style={{alignItems: 'center'}}
+                  style={{ alignItems: "center" }}
                   avatar={
                     item.image ? (
                       <Image
@@ -97,7 +126,8 @@ const NotificationBell = () => {
                         {item.content}
                       </span>
                       <span style={{ color: "#999", fontSize: 12 }}>
-                        {item.createdAt && new Date(item.createdAt).toLocaleString("vi-VN")}
+                        {item.createdAt &&
+                          new Date(item.createdAt).toLocaleString("vi-VN")}
                       </span>
                     </span>
                   }
@@ -120,7 +150,12 @@ const NotificationBell = () => {
         onOpenChange={setVisible}
         arrow
       >
-        <Badge count={notificationCount} size="small" overflowCount={99} offset={[0, 6]}>
+        <Badge
+          count={totalUnread}
+          size="small"
+          overflowCount={99}
+          offset={[0, 6]}
+        >
           <Button
             shape="circle"
             size="large"
@@ -161,10 +196,16 @@ const NotificationBell = () => {
                 />
               </div>
             ) : null}
-            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 6 }}>{previewData.title}</div>
-            <div style={{ color: "#666", marginBottom: 12 }}>{previewData.content}</div>
+            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 6 }}>
+              {previewData.title}
+            </div>
+            <div style={{ color: "#666", marginBottom: 12 }}>
+              {previewData.content}
+            </div>
             <div style={{ color: "#888", fontSize: 13 }}>
-              Ngày tạo: {previewData.createdAt && new Date(previewData.createdAt).toLocaleString("vi-VN")}
+              Ngày tạo:{" "}
+              {previewData.createdAt &&
+                new Date(previewData.createdAt).toLocaleString("vi-VN")}
             </div>
           </div>
         )}

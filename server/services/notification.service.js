@@ -15,6 +15,25 @@ const getListPagination = async (farmId, page, keyword) => {
   return list;
 };
 
+const markRead = async (notificationId, userId) => {
+  await Notification.findByIdAndUpdate(
+    notificationId,
+    {
+      $addToSet: { readBy: userId },
+    },
+    { new: true }
+  );
+};
+
+const getTotalUnread = async (userId, farmId) => {
+  const total = await Notification.countDocuments({
+    farmId: farmId,
+    readBy: { $ne: userId },
+  });
+
+  return total;
+};
+
 const getTotal = async (farmId, keyword) => {
   const total = await Notification.countDocuments({
     farmId: farmId,
@@ -65,6 +84,20 @@ const remove = async (id) => {
   return await Notification.updateOne({ _id: id }, { status: false });
 };
 
+// Tạo notification cho task bị xóa
+const createTaskDeleteNotification = async (task, deleteReason, deletedByUser) => {
+  const notificationData = {
+    farmId: task.farmId,
+    title: `Công việc "${task.name}" đã bị xóa`,
+    content: `Công việc "${task.name}" đã bị xóa bởi ${deletedByUser.fullName}. Lý do: ${deleteReason}`,
+    image: task.image || "",
+  };
+
+  const notification = new Notification(notificationData);
+  await notification.save();
+  return notification;
+};
+
 module.exports = {
   getListPagination,
   getTotal,
@@ -72,4 +105,7 @@ module.exports = {
   find,
   update,
   remove,
+  markRead,
+  getTotalUnread,
+  createTaskDeleteNotification,
 };

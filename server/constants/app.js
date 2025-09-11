@@ -1,4 +1,4 @@
-const LIMIT_ITEM_PER_PAGE = 20;
+const LIMIT_ITEM_PER_PAGE = 10;
 const USER_ROLE = {
   admin: "admin",
   farmAdmin: "farm-admin",

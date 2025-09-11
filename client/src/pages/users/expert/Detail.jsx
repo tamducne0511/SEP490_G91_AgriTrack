@@ -16,6 +16,8 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AssignFarmModal from "./AssignFarmModal";
+import ChangePasswordModal from "@/components/ChangePasswordModal";
+import { adminChangePasswordApi } from "@/services/userService";
 
 export default function ExpertDetail() {
   const { id } = useParams();
@@ -32,6 +34,7 @@ export default function ExpertDetail() {
 
   // State quản lý modal và loading
   const [assignModal, setAssignModal] = useState(false);
+
   const expert = userDetail?.user || {};
   // Hàm refresh dữ liệu chi tiết chuyên gia
   const refreshDetail = async () => {
@@ -91,6 +94,7 @@ export default function ExpertDetail() {
           <Button onClick={() => setAssignModal(true)} type="dashed">
             Gán trang trại
           </Button>
+          <Button danger onClick={() => setPwdModal(true)}>Đổi mật khẩu</Button>
         </Space>
 
         <Descriptions
@@ -111,6 +115,9 @@ export default function ExpertDetail() {
           <Descriptions.Item label="Ngày tạo">
             {new Date(expert.createdAt).toLocaleString("vi-VN")}
           </Descriptions.Item>
+          <Descriptions.Item label="Số điện thoại">
+            {expert.phone}
+          </Descriptions.Item>
         </Descriptions>
 
         <AssignFarmModal
@@ -118,6 +125,23 @@ export default function ExpertDetail() {
           userId={id}
           onOk={handleAssignFarm}
           onCancel={() => setAssignModal(false)}
+        />
+        <ChangePasswordModal
+          open={pwdModal}
+          loading={pwdLoading}
+          onCancel={() => setPwdModal(false)}
+          onOk={async ({ newPassword }) => {
+            try {
+              setPwdLoading(true);
+              await adminChangePasswordApi(id, { newPassword });
+              message.success("Đổi mật khẩu thành công");
+              setPwdModal(false);
+            } catch (e) {
+              message.error(e?.message || "Đổi mật khẩu thất bại");
+            } finally {
+              setPwdLoading(false);
+            }
+          }}
         />
       </div>
 

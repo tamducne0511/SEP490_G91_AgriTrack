@@ -2,7 +2,7 @@ import { client } from "@/configs";
 
 // GET list farmers
 export const fetchFarmersApi = async (params = {}) => {
-  const res = await client.get("/admin/users/farmers", { params });
+  const res = await client.get("/admin/users/list/farmers", { params });
   return res.data;
 };
 
@@ -21,6 +21,11 @@ export const updateFarmerApi = async (id, payload) => {
 // DELETE farmer
 export const deleteFarmerApi = async (id) => {
   const res = await client.delete(`/admin/users/farmers/${id}`);
+  return res.data;
+};
+
+export const activeFarmerApi = async (id) => {
+  const res = await client.post(`/admin/users/farmer/${id}/active`);
   return res.data;
 };
 

@@ -4,27 +4,32 @@ const multer = require("multer");
 
 const taskValidation = require("../../middlewares/validators/task.validation");
 const taskController = require("../../controllers/admin/task.controller");
-const { configUploadFile } = require("../../utils/upload.util");
-const { isFarmAdmin } = require("../../middlewares");
-const upload = multer({ storage: configUploadFile("uploads/tasks") });
+const { configUploadFile, fileFilter } = require("../../utils/upload.util");
+const { USER_ROLE } = require("../../constants/app");
+const { isFarmAdmin, isExpert, isRoles } = require("../../middlewares");
+const upload = multer({
+  storage: configUploadFile("uploads/tasks"),
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
-router.get("/", isFarmAdmin, taskController.getList);
+router.get("/", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), taskController.getList);
 router.post(
   "/",
-  isFarmAdmin,
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]),
   upload.single("image"),
   taskValidation.create,
   taskController.create
 );
 router.put(
   "/:id",
-  isFarmAdmin,
+  isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]),
   upload.single("image"),
   taskValidation.update,
   taskController.update
 );
-router.delete("/:id", isFarmAdmin, taskController.remove);
-router.get("/:id", isFarmAdmin, taskController.find);
-router.post("/:id/assign-farmer", isFarmAdmin, taskController.assignFarmer);
+router.delete("/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), taskValidation.deleteTask, taskController.remove);
+router.get("/:id", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), taskController.find);
+router.post("/:id/assign-farmer", isRoles([USER_ROLE.farmAdmin, USER_ROLE.expert]), taskController.assignFarmer);
 
 module.exports = router;

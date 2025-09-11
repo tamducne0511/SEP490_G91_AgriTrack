@@ -1,6 +1,37 @@
 const { validationResult } = require("express-validator");
 const { formatPagination } = require("../utils/format.util");
 const notificationService = require("../services/notification.service");
+const NotFoundException = require("../middlewares/exceptions/notfound");
+
+// Mark read notification for farmer and farm admin
+const markRead = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const notificationId = req.params.id;
+    const notification = await notificationService.markRead(
+      notificationId,
+      userId
+    );
+
+    res.json({
+      message: "Notification marked as read successfully",
+      data: notification,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get total unread notifications for farmer and farm admin
+const getTotalUnread = async (req, res) => {
+  const userId = req.user.id;
+  const farmId = req.user.farmId;
+  const totalUnread = await notificationService.getTotalUnread(userId, farmId);
+  res.json({
+    message: "Total unread notifications retrieved successfully",
+    data: totalUnread,
+  });
+};
 
 // Get list notification with pagination and keyword search
 const getList = async (req, res) => {
@@ -111,4 +142,6 @@ module.exports = {
   update,
   remove,
   find,
+  markRead,
+  getTotalUnread,
 };

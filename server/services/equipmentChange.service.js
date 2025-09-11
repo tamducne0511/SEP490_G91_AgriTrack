@@ -8,20 +8,101 @@ const {
 } = require("../constants/app");
 const BadRequestException = require("../middlewares/exceptions/badrequest");
 const NotFoundException = require("../middlewares/exceptions/notfound");
-const e = require("express");
 
-const getListPagination = async (farmId, status, page) => {
-  const list = await EquipmentChange.find({
+// Lấy danh sách phiếu thay đổi theo trang, lọc theo trạng thái và tìm theo tên thiết bị
+const getListPagination = async (farmId, status, page, keyword = "") => {
+  let query = {
     farmId: farmId,
     status: status === "all" ? { $ne: null } : status,
-  })
-    .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
-    .limit(LIMIT_ITEM_PER_PAGE);
+  };
 
-  return list;
+  // Nếu có keyword, tìm theo equipment name thông qua lookup
+  if (keyword) {
+    const list = await EquipmentChange.aggregate([
+      {
+        $match: {
+          farmId: farmId,
+          status: status === "all" ? { $ne: null } : status,
+        }
+      },
+      {
+        $lookup: {
+          from: "equipment",
+          localField: "equipmentId",
+          foreignField: "_id",
+          as: "equipment"
+        }
+      },
+      {
+        $unwind: "$equipment"
+      },
+      {
+        $match: {
+          "equipment.name": { $regex: keyword, $options: "i" }
+        }
+      },
+      {
+        $skip: (page - 1) * LIMIT_ITEM_PER_PAGE
+      },
+      {
+        $limit: LIMIT_ITEM_PER_PAGE
+      }
+    ]);
+    return list;
+  }
+
+  const list = await EquipmentChange.find(query)
+    .skip((page - 1) * LIMIT_ITEM_PER_PAGE)
+    .limit(LIMIT_ITEM_PER_PAGE)
+    .populate("farmId")
+    .populate("equipmentId")
+    .lean();
+
+  const mappedList = list.map((item) => {
+    const { farmId, equipmentId, ...rest } = item;
+    return {
+      ...rest,
+      farm: farmId,
+      equipment: equipmentId,
+    };
+  });
+
+  return mappedList;
 };
 
-const getTotal = async (farmId, status) => {
+// Đếm tổng số phiếu theo filter (có hỗ trợ tìm theo tên thiết bị)
+const getTotal = async (farmId, status, keyword = "") => {
+  if (keyword) {
+    const total = await EquipmentChange.aggregate([
+      {
+        $match: {
+          farmId: farmId,
+          status: status === "all" ? { $ne: null } : status,
+        }
+      },
+      {
+        $lookup: {
+          from: "equipment",
+          localField: "equipmentId",
+          foreignField: "_id",
+          as: "equipment"
+        }
+      },
+      {
+        $unwind: "$equipment"
+      },
+      {
+        $match: {
+          "equipment.name": { $regex: keyword, $options: "i" }
+        }
+      },
+      {
+        $count: "total"
+      }
+    ]);
+    return total[0]?.total || 0;
+  }
+
   const total = await EquipmentChange.countDocuments({
     farmId: farmId,
     status: status === "all" ? { $ne: null } : status,
@@ -30,6 +111,7 @@ const getTotal = async (farmId, status) => {
   return total;
 };
 
+// Tạo phiếu thay đổi: kiểm tra Farm/Equipment; ràng buộc số lượng khi xuất
 const create = async (data) => {
   try {
     const farm = await Farm.findById(data.farmId);
@@ -58,6 +140,7 @@ const create = async (data) => {
   }
 };
 
+// Tìm phiếu theo id (trả null nếu id không hợp lệ)
 const find = async (id) => {
   try {
     const equipmentChange = await EquipmentChange.findById(id);
@@ -67,6 +150,7 @@ const find = async (id) => {
   }
 };
 
+// Duyệt phiếu: cập nhật trạng thái, thời gian, người duyệt; đồng thời cập nhật số lượng thiết bị
 const approve = async (id, userId) => {
   try {
     const equipmentChange = await EquipmentChange.findById(id);
@@ -95,7 +179,7 @@ const approve = async (id, userId) => {
     equipmentChange.reviewedBy = userId;
     await equipmentChange.save();
 
-    // Update equipment quantity
+    // Cập nhật số lượng thiết bị theo loại phiếu
     equipment.quantity +=
       equipmentChange.type === EQUIPMENT_CHANGE_TYPE.import
         ? equipmentChange.quantity
@@ -107,6 +191,7 @@ const approve = async (id, userId) => {
   }
 };
 
+// Từ chối phiếu: cập nhật trạng thái, thời gian, người duyệt và lý do
 const reject = async (id, reason, userId) => {
   try {
     const equipmentChange = await EquipmentChange.findById(id);

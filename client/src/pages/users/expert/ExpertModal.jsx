@@ -22,7 +22,14 @@ const ExpertModal = ({
       title={isEdit ? "Sửa chuyên gia" : "Thêm chuyên gia"}
       open={open}
       className="custom-modal"
-      onOk={() => form.validateFields().then(onOk)}
+      onOk={async () => {
+        try {
+          const values = await form.validateFields();
+          onOk(values);
+        } catch (error) {
+          // Handle validation error
+        }
+      }}
       onCancel={onCancel}
       okText="Xác nhận"
       cancelText="Quay lại"

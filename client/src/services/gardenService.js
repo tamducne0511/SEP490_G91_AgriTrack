@@ -5,6 +5,11 @@ export const fetchGardensApi = async (params = {}) => {
   return res.data;
 };
 
+export const fetchGardenDetailApi = async (id) => {
+  const res = await client.get(`/admin/gardens/${id}`);
+  return res.data;
+};
+
 export const createGardenApi = async (payload) => {
   const formData = new FormData();
   Object.entries(payload).forEach(([key, value]) => {
@@ -33,5 +38,36 @@ export const updateGardenApi = async (id, payload) => {
 
 export const deleteGardenApi = async (id) => {
   const res = await client.delete(`/admin/gardens/${id}`);
+  return res.data;
+};
+
+export const generateZonesApi = async (gardenId, payload) => {
+  const res = await client.post(`/admin/zones/generate/${gardenId}`, payload);
+  return res.data;
+};
+
+export const fetchZonesByGardenIdApi = async (gardenId) => {
+  const res = await client.get(`/admin/zones/list/${gardenId}`);
+  return res.data;
+};
+
+export const generateTreesApi = async (gardenId, payload) => {
+  const res = await client.post(`/admin/trees/generate/${gardenId}`, payload);
+  return res.data;
+};
+
+export const fetchTreesByGardenIdApi = async (gardenId) => {
+  const res = await client.get(`/admin/trees/list/${gardenId}`);
+  return res.data;
+};
+
+export const fetchGardensByFarmIdApi = async (farmId, params = {}) => {
+  // Đúng endpoint API bạn đã gửi ảnh: /admin/gardens/farm/:farmId
+  const res = await client.get(`/admin/gardens/farm/${farmId}`, { params });
+  return res.data;
+};
+
+export const fetchTreeDetailApi = async (treeId) => {
+  const res = await client.get(`/admin/trees/${treeId}`);
   return res.data;
 };

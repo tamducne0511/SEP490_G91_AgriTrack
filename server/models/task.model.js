@@ -10,7 +10,8 @@ const taskSchema = new mongoose.Schema({
   gardenId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Garden",
-    required: true,
+    required: false,
+    default: null,
   },
 
   farmerId: {
@@ -58,6 +59,39 @@ const taskSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now,
+  },
+
+  startDate: {
+    type: Date,
+    required: false,
+  },
+  
+  endDate: {
+    type: Date,
+    required: false,
+  },
+
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+
+  // Thêm các trường cho việc xóa task
+  deleteReason: {
+    type: String,
+    default: null,
+  },
+
+  deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+
+  deletedAt: {
+    type: Date,
+    default: null,
   },
 });
 

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Table, Button, Input, Popconfirm, message } from "antd";
+import React, { useEffect, useState, useRef } from "react";
+import { Table, Button, Input, Popconfirm, message, Tag } from "antd";
 import {
   PlusOutlined,
   EditOutlined,
@@ -9,7 +9,15 @@ import {
 import { useEquipmentCategoryStore } from "@/stores";
 import EquipmentCategoryModal from "./CategoryModal";
 import { ImageBaseUrl } from "@/variables/common";
+const statusLabel = {
+  false: "Đã xoá",
+  true: "Hoạt động",
+};
 
+const statusColor = {
+  false: "red",
+  true: "green",
+};
 export default function EquipmentCategoryList() {
   const {
     categories,
@@ -27,21 +35,23 @@ export default function EquipmentCategoryList() {
   const [modal, setModal] = useState({ open: false, edit: false, initial: {} });
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const isSearching = useRef(false);
   // Fetch all categories on mount & khi search
   useEffect(() => {
-    fetchCategories({ page, name: keyword });
+    fetchCategories({ page, keyword });
   }, [page, keyword, fetchCategories]);
+
+  // Reset page khi keyword thay đổi (chỉ khi search, không phải khi pagination)
+  useEffect(() => {
+    if (isSearching.current) {
+      setPage(1);
+      isSearching.current = false;
+    }
+  }, [keyword]);
 
   useEffect(() => {
     if (error) message.error(error);
   }, [error]);
-
-  // Filter hiển thị client-side theo tên
-  const filteredData = categories.filter(
-    (c) =>
-      c.name?.toLowerCase().includes(keyword.trim().toLowerCase()) ||
-      c.description?.toLowerCase().includes(keyword.trim().toLowerCase())
-  );
 
   // Modal submit
   const handleOk = async (values) => {
@@ -105,6 +115,17 @@ export default function EquipmentCategoryList() {
       align: "center",
     },
     {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      align: "center",
+      render: (status) => (
+        <Tag color={statusColor[status] || "default"}>
+          {statusLabel[status] || status?.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
       title: "Chức năng",
       key: "action",
       align: "center",
@@ -123,7 +144,18 @@ export default function EquipmentCategoryList() {
             cancelText="Huỷ"
             onConfirm={() => handleDelete(record)}
           >
-            <Button type="link" icon={<DeleteOutlined />} danger />
+            <Button
+              type="link"
+              icon={
+                <span
+                  className="anticon"
+                  style={{ color: "red", fontSize: 18 }}
+                >
+                  🗑️
+                </span>
+              }
+              danger
+            />
           </Popconfirm>
         </span>
       ),
@@ -148,7 +180,10 @@ export default function EquipmentCategoryList() {
           prefix={<SearchOutlined />}
           placeholder="Tìm theo tên/mô tả"
           style={{ width: 280 }}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            isSearching.current = true;
+            setKeyword(e.target.value);
+          }}
           value={keyword}
         />
       </div>
