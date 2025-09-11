@@ -11,8 +11,8 @@ const FarmAdminModal = ({
   isEdit,
 }) => {
   const [form] = Form.useForm();
+  
 
-  // Khi mở modal thì set value, đóng modal thì reset form
   useEffect(() => {
     if (open) form.setFieldsValue(initialValues);
     if (!open) form.resetFields();
