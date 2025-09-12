@@ -17,6 +17,7 @@ const FarmerModal = ({
     if (!open) form.resetFields();
   }, [open, initialValues, form]);
 
+  // Lấy thông tin user và farmIDs từ auth store
   const { user, farmIds } = useAuthStore();
   const isExpert = user?.role === "expert";
 

@@ -48,6 +48,7 @@ export default function FarmerList() {
     if (error) message.error(error);
   }, [error]);
 
+  //Xử lý thêm nông dân 
   const handleAdd = async (values) => {
     setConfirmLoading(true);
     try {
@@ -67,6 +68,7 @@ export default function FarmerList() {
   });
   const [deactivateMessage, setDeactivateMessage] = useState("");
 
+  //Xử lý vô hiệu hóa nông dân và gửi email thông 
   const handleDeactivateConfirm = async () => {
     try {
       // Data chuẩn bị gửi cho emailjs

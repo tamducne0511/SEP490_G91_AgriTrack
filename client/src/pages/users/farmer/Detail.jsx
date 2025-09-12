@@ -25,6 +25,7 @@ export default function FarmerDetail() {
   const farm = userDetail?.farm || {};
   const tasks = userDetail?.tasks || [];
 
+  // Hàm refresh dữ liệu chi tiết nông dân
   const refreshDetail = async () => {
     try {
       await fetchUserDetail(id);
@@ -38,6 +39,7 @@ export default function FarmerDetail() {
     refreshDetail();
   }, [id]);
 
+  // Xử lý cập nhật thông tin nông dân
   const handleEdit = async (values) => {
     setConfirmLoading(true);
     try {
@@ -51,6 +53,7 @@ export default function FarmerDetail() {
     }
   };
 
+  // Xử lý gán công việc cho nông dân
   const handleAssignTask = async (taskId) => {
     console.log("Gán công việc:", taskId, "cho nông dân:", id);
     try {
@@ -63,6 +66,7 @@ export default function FarmerDetail() {
     }
   };
 
+  // Hiển thị loading nếu chưa có dữ liệu
   if (!farmer?._id) return <Spin style={{ margin: 80 }} />;
 
   return (
