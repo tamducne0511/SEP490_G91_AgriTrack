@@ -32,6 +32,7 @@ export default function FarmAdminDetail() {
   const farmAdmin = userDetail?.user || {};
   const farm = userDetail?.farm || null;
 
+  // Hàm Refresh dữ liệu chi tiết
   const refreshDetail = async () => {
     try {
       await fetchUserDetail(id);
@@ -45,6 +46,7 @@ export default function FarmAdminDetail() {
     refreshDetail();
   }, [id]);
 
+  // Xử lý cập nhật thông tin farm admin
   const handleEdit = async (values) => {
     setConfirmLoading(true);
     try {
@@ -58,6 +60,7 @@ export default function FarmAdminDetail() {
     }
   };
 
+  // Xử lý gán trang trại cho farm admin
   const handleAssignFarm = async (farmId) => {
     if (!farmId) return;
     try {
@@ -159,6 +162,7 @@ export default function FarmAdminDetail() {
             background: "#f8fafc",
           }}
         >
+          // Hiển thị thông tin trang trại nếu được gán
           {farm ? (
             <div style={{ display: "flex", gap: 18 }}>
               <Image
