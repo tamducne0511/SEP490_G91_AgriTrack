@@ -36,7 +36,7 @@ export default function AssignTaskModal({
       title="Gán công việc cho nông dân"
       open={open}
       onOk={() => {
-        if (!selectedTask) {
+        if (!selectedTask) { // Chỉ gán nếu đã chọn task
           return;
         }
         onOk(selectedTask);
@@ -51,6 +51,7 @@ export default function AssignTaskModal({
         value={selectedTask}
         placeholder="Chọn công việc"
         style={{ width: "100%" }}
+        // Chuyển đổi availableTasks thành options cho Select
         options={availableTasks.map((t) => ({
           value: t._id,
           label: t.name,
