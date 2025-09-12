@@ -15,8 +15,9 @@ const AssignFarmModal = ({ open, onOk, onCancel, userId }) => {
     }
   }, [open, search, fetchFarms]);
 
+  // Xử lý khi bấm nút OK
   const handleOk = () => {
-    if (!farmId) return;
+    if (!farmId) return; // Chỉ gọi onOk nếu đã chọn farm
     onOk(farmId);
   };
 

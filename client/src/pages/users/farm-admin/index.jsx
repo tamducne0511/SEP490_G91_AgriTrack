@@ -25,6 +25,7 @@ export default function FarmAdminList() {
   const isSearching = useRef(false);
   const navigate = useNavigate();
 
+  // State cho modal vô hiệu hóa và nội dung email
   const [deactivateModal, setDeactivateModal] = useState({
     open: false,
     admin: null,
@@ -43,6 +44,7 @@ export default function FarmAdminList() {
     }
   }, [keyword]);
 
+  // Xử lý thêm farm admin mới
   const handleAdd = async (values) => {
     setConfirmLoading(true);
     try {
@@ -54,6 +56,7 @@ export default function FarmAdminList() {
     }
   };
 
+  // Xử lý vô hiệu hoá farm admin và gửi email thông báo
   const handleDeactivateConfirm = async () => {
     if (!deactivateModal.admin) return;
 
@@ -88,6 +91,8 @@ export default function FarmAdminList() {
       message.success("Vô hiệu hoá trang trại thành công!");
     } catch { }
   };
+
+  // Xử lý kích hoạt lại farm admin và gửi email thông báo
   const handleActive = async (record) => {
     const emailData = {
       name: record.fullName,
