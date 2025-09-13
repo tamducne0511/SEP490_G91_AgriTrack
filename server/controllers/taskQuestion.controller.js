@@ -98,7 +98,7 @@ const askAI = async (req, res, next) => {
 };
 
 const getWeather = async (req, res) => {
-  const id = req.params.id
+  const id = req.params.id;
   const detail = await taskQuestionService.getDetail(id)
   if (!detail?.farm?.address) {
     return res.status(404).json({ message: "Farm address not found" });
@@ -111,6 +111,18 @@ const getWeather = async (req, res) => {
   });
 };
 
+const getWeatherByAdress = async (req, res) => {
+  const address = req.query.address;
+  if (!address) {
+    return res.status(400).json({ message: "Address query parameter is required" });
+  }
+  const weatherDataByAddress = await taskQuestionService.getWeather(address);
+  res.json({
+    message: "Weather data retrieved successfully",
+    data: weatherDataByAddress,
+  });
+}
+
 module.exports = {
   getList,
   create,
@@ -118,4 +130,5 @@ module.exports = {
   askAI,
   getWeather,
   getDetail,
+  getWeatherByAdress,
 };

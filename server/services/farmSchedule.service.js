@@ -91,11 +91,11 @@ const generateTasksFromSchedule = async (farmSchedule) => {
   const prompt = `
     Bạn là chuyên gia nông nghiệp. 
     Hãy phân tích lịch trình sau và chia thành các công việc chi tiết cho công nhân nông trại. Và ngày tháng phải liên tiếp từ công việc này đến công việc khác. Thời gian phải bắt đầu tính từ ngày hiện tại
-
+    13/09/2025
     Lịch trình: "${farmSchedule.description}"
 
     Yêu cầu output:
-    - Trả về JSON array
+    - Trả về chỉ JSON array
     - Mỗi object có cấu trúc:
       {
         "name": "Tên công việc",
@@ -134,7 +134,7 @@ const generateTasksFromSchedule = async (farmSchedule) => {
     }
   }
   
-  // ✅ Cách dùng
+  // Cách dùng
   const content = response.choices[0].message.content;
   const tasks = extractJSON(content);
   

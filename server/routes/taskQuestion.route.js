@@ -30,5 +30,6 @@ router.post(
   taskQuestionController.askAI
 );
 router.get("/weather/:id", isLogin, taskQuestionController.getWeather);
+router.get("/weather-by-address", isLogin, taskQuestionController.getWeatherByAdress);
 
 module.exports = router;
