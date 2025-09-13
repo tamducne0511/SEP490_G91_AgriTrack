@@ -26,26 +26,48 @@ import { useNavigate, useParams } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
+/**
+ * Component FarmDetail - Hiển thị chi tiết thông tin trang trại
+ * Bao gồm: thông tin trang trại, chủ trang trại, danh sách nông dân, chuyên gia và các vườn
+ * Cho phép chỉnh sửa thông tin trang trại
+ */
 export default function FarmDetail() {
+  // Lấy ID trang trại từ URL params
   const { id } = useParams();
+  
+  // Hook navigation để điều hướng
   const navigate = useNavigate();
+  
+  // Destructure các function và state từ farm store
   const { farmDetail, getFarmDetail, updateFarm, loading } = useFarmStore();
+  
+  // Form instance để quản lý form chỉnh sửa
   const [form] = Form.useForm();
+  
+  // State để quản lý trạng thái đang lưu
   const [saving, setSaving] = useState(false);
+  
+  // State để quản lý danh sách file upload ảnh
   const [fileList, setFileList] = useState([]);
 
+  // Effect để lấy chi tiết trang trại khi component mount hoặc ID thay đổi
   useEffect(() => {
     getFarmDetail(id);
   }, [id, getFarmDetail]);
 
+  // Effect để cập nhật form và fileList khi có dữ liệu farmDetail
   useEffect(() => {
     if (farmDetail) {
+      // Set giá trị cho form từ dữ liệu trang trại
       form.setFieldsValue(farmDetail?.farm || {});
+      
+      // Nếu có ảnh, set fileList với ảnh hiện tại
       if (farmDetail.farm?.image) {
         setFileList([
           {
             uid: "-1",
             name: "farm.jpg",
+            // Xử lý URL ảnh (kiểm tra xem có phải là URL đầy đủ hay chỉ là path)
             url: farmDetail.farm.image.startsWith("http")
               ? farmDetail.farm.image
               : ImageBaseUrl + farmDetail.farm.image,
@@ -53,15 +75,26 @@ export default function FarmDetail() {
           },
         ]);
       } else {
+        // Nếu không có ảnh, reset fileList
         setFileList([]);
       }
     }
   }, [farmDetail, form]);
 
+  /**
+   * Handler cho việc thay đổi file upload
+   * @param {Object} param - Object chứa fileList mới
+   * @param {Array} param.fileList - Danh sách file mới
+   */
   const handleChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
   };
 
+  /**
+   * Tạo initials từ tên (lấy chữ cái đầu của mỗi từ)
+   * @param {string} name - Tên cần tạo initials
+   * @returns {string} - Initials được tạo
+   */
   const getInitials = (name) =>
     name
       ?.split(" ")
@@ -69,15 +102,33 @@ export default function FarmDetail() {
       .join("")
       .toUpperCase() || "";
 
+  /**
+   * Handler cho việc lưu thay đổi thông tin trang trại
+   * Bao gồm validate form, xử lý ảnh và gọi API update
+   */
   const handleSave = async () => {
     try {
       setSaving(true);
+      
+      // Validate form và lấy giá trị
       const values = await form.validateFields();
+      
+      // Xử lý dữ liệu ảnh
       let imageData = null;
-      if (fileList[0]?.originFileObj) imageData = fileList[0].originFileObj;
-      else if (fileList[0]?.url) imageData = fileList[0].url;
+      if (fileList[0]?.originFileObj) {
+        // Nếu là file mới upload
+        imageData = fileList[0].originFileObj;
+      } else if (fileList[0]?.url) {
+        // Nếu là ảnh hiện tại
+        imageData = fileList[0].url;
+      }
+      
+      // Gọi API update trang trại
       await updateFarm(id, { ...values, image: imageData });
+      
       message.success("Cập nhật thành công!");
+      
+      // Reload lại dữ liệu trang trại
       getFarmDetail(id);
     } catch (err) {
       message.error("Cập nhật thất bại!");
@@ -86,9 +137,11 @@ export default function FarmDetail() {
     }
   };
 
+  // Hiển thị loading spinner nếu đang tải dữ liệu hoặc chưa có dữ liệu
   if (loading || !farmDetail)
     return <Spin style={{ margin: "80px auto", display: "block" }} />;
 
+  // Lấy thông tin trang trại từ farmDetail
   const farm = farmDetail.farm;
 
   return (
@@ -105,7 +158,7 @@ export default function FarmDetail() {
         gap: 28,
       }}
     >
-      {/* Title + Back button */}
+      {/* Header với nút quay lại và tiêu đề trang */}
       <div
         style={{
           display: "flex",
@@ -114,6 +167,7 @@ export default function FarmDetail() {
           marginBottom: 8,
         }}
       >
+        {/* Nút quay lại trang trước */}
         <Button
           icon={<ArrowLeftOutlined style={{ fontSize: 18 }} />}
           onClick={() => navigate(-1)}
@@ -127,6 +181,7 @@ export default function FarmDetail() {
         >
           Quay lại
         </Button>
+        {/* Tiêu đề hiển thị tên trang trại */}
         <Title
           level={3}
           style={{ margin: 0, color: "#1a1a1a", fontWeight: 600 }}
@@ -135,9 +190,9 @@ export default function FarmDetail() {
         </Title>
       </div>
 
-      {/* 2 columns */}
+      {/* Layout 2 cột chính */}
       <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
-        {/* Left: Farm Info/Edit */}
+        {/* Cột trái: Form chỉnh sửa thông tin trang trại */}
         <div style={{ flex: 1, minWidth: 360 }}>
           <Card
             bordered={false}
@@ -156,15 +211,17 @@ export default function FarmDetail() {
             >
               Thông tin & chỉnh sửa
             </Title>
+            {/* Form chỉnh sửa thông tin trang trại */}
             <Form form={form} layout="vertical">
+              {/* Upload ảnh trang trại */}
               <Form.Item label="Ảnh trang trại">
                 <Upload
                   listType="picture-card"
-                  beforeUpload={() => false}
-                  maxCount={1}
+                  beforeUpload={() => false} // Ngăn không cho upload tự động
+                  maxCount={1} // Chỉ cho phép upload 1 ảnh
                   fileList={fileList}
                   onChange={handleChange}
-                  accept="image/*"
+                  accept="image/*" // Chỉ chấp nhận file ảnh
                 >
                   {fileList.length >= 1 ? null : (
                     <div>
@@ -174,6 +231,8 @@ export default function FarmDetail() {
                   )}
                 </Upload>
               </Form.Item>
+              
+              {/* Input tên trang trại */}
               <Form.Item
                 name="name"
                 label="Tên trang trại"
@@ -183,6 +242,8 @@ export default function FarmDetail() {
               >
                 <Input placeholder="Nhập tên trang trại" size="large" />
               </Form.Item>
+              
+              {/* Textarea mô tả trang trại */}
               <Form.Item
                 name="description"
                 label="Mô tả"
@@ -195,6 +256,8 @@ export default function FarmDetail() {
                   maxLength={500}
                 />
               </Form.Item>
+              
+              {/* Input địa chỉ trang trại */}
               <Form.Item
                 name="address"
                 label="Địa chỉ"
@@ -202,7 +265,9 @@ export default function FarmDetail() {
               >
                 <Input placeholder="Nhập địa chỉ trang trại" size="large" />
               </Form.Item>
+              {/* Các nút hành động */}
               <div style={{ display: "flex", gap: 16, marginTop: 20 }}>
+                {/* Nút lưu thay đổi */}
                 <Button
                   type="primary"
                   style={{
@@ -213,10 +278,11 @@ export default function FarmDetail() {
                     height: 40,
                   }}
                   onClick={handleSave}
-                  loading={saving}
+                  loading={saving} // Hiển thị loading khi đang lưu
                 >
                   Lưu thay đổi
                 </Button>
+                {/* Nút hủy - reset form về trạng thái ban đầu */}
                 <Button
                   style={{
                     borderRadius: 10,
@@ -233,9 +299,9 @@ export default function FarmDetail() {
           </Card>
         </div>
 
-        {/* Right: Owner, Farmers, Experts, Gardens */}
+        {/* Cột phải: Thông tin chủ trang trại, nông dân, chuyên gia và các vườn */}
         <div style={{ flex: 1.5, minWidth: 360 }}>
-          {/* Owner */}
+          {/* Card thông tin chủ trang trại */}
           <Card
             title={
               <span style={{ color: "#1a1a1a", fontWeight: 600, fontSize: 16 }}>
@@ -253,6 +319,7 @@ export default function FarmDetail() {
             bodyStyle={{ padding: 20 }}
             hoverable
           >
+            {/* Hiển thị thông tin chủ trang trại */}
             <Descriptions
               size="middle"
               column={1}
@@ -272,7 +339,7 @@ export default function FarmDetail() {
             </Descriptions>
           </Card>
 
-          {/* Farmers */}
+          {/* Card danh sách nông dân */}
           <Card
             title={
               <span style={{ color: "#1a1a1a", fontWeight: 600, fontSize: 16 }}>
@@ -290,6 +357,7 @@ export default function FarmDetail() {
             bodyStyle={{ padding: 20 }}
             hoverable
           >
+            {/* List hiển thị danh sách nông dân */}
             <List
               dataSource={farmDetail.farmers || []}
               renderItem={(farmer) => (
@@ -320,7 +388,7 @@ export default function FarmDetail() {
             />
           </Card>
 
-          {/* Experts */}
+          {/* Card danh sách chuyên gia */}
           <Card
             title={
               <span style={{ color: "#1a1a1a", fontWeight: 600, fontSize: 16 }}>
@@ -339,6 +407,7 @@ export default function FarmDetail() {
             bodyStyle={{ padding: 20 }}
             hoverable
           >
+            {/* List hiển thị danh sách chuyên gia */}
             <List
               dataSource={farmDetail.experts || []}
               renderItem={(expert) => (
@@ -369,7 +438,7 @@ export default function FarmDetail() {
             />
           </Card>
 
-          {/* Gardens */}
+          {/* Card danh sách các vườn trực thuộc */}
           <Card
             title={
               <span style={{ color: "#1a1a1a", fontWeight: 600, fontSize: 16 }}>
@@ -387,6 +456,7 @@ export default function FarmDetail() {
             bodyStyle={{ padding: 20 }}
             hoverable
           >
+            {/* List hiển thị danh sách các vườn */}
             <List
               dataSource={farmDetail.gardens || []}
               renderItem={(garden) => (
