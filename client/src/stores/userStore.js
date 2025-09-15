@@ -52,6 +52,7 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
+  // Hàm tạo user mới
   createUser: async (payload) => {
     set({ loading: true });
     try {
@@ -66,6 +67,7 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
+  // Hàm chỉnh sửa user
   updateUser: async (id, payload) => {
     set({ loading: true });
     try {
@@ -80,6 +82,7 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
+  // Hàm xóa user
   deleteUser: async (id, role) => {
     set({ loading: true });
     try {
@@ -95,6 +98,7 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
+  // Hàm kích hoạt user
   activeUser: async (id, role) => {
     set({ loading: true });
     try {
@@ -109,6 +113,7 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
+  // Hàm gán user cho farm
   assignUserToFarm: async (farmId, userId) => {
     set({ loading: true });
     try {
@@ -121,6 +126,7 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
+  // Hàm quản lý expert-farm assignment
   getListFarmAssignedExpert: async (id) => {
     set({ loading: true });
     try {
@@ -141,6 +147,7 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
+  // Hàm gán chuyên gia cho farm
   assignExpertToFarm: async (expertId, farmId) => {
     set({ loading: true });
     try {
@@ -155,6 +162,7 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
+  // Hàm hủy gán chuyên gia cho farm
   unassignExpertFromFarm: async (assignedFarmId) => {
     set({ loading: true });
     try {
