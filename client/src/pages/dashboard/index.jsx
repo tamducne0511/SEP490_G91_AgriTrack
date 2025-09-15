@@ -14,7 +14,7 @@ import {
   Legend,
 } from "recharts";
 
-// Helper để rút gọn label và hiển thị tooltip
+// Helper function để rút gọn label và hiển thị tooltip khi quá dài
 const truncate = (str, n) =>
   str.length > n ? str.substr(0, n - 1) + "…" : str;
 
@@ -34,6 +34,7 @@ export default function Dashboard() {
     fetchDashboard();
   }, [fetchDashboard]);
 
+  // Dữ liệu cho Bar chart - thống kê các hạng mục chính
   const barData = [
     { label: "Trang trại", value: dashboard?.totalFarm || 0 },
     { label: "Vườn", value: dashboard?.totalGarden || 0 },
@@ -47,20 +48,22 @@ export default function Dashboard() {
     { label: "Loại thiết bị", value: dashboard?.totalEquipmentCategory || 0 },
   ];
 
-  // Pie data
+  // Dữ liệu cho Pie chart nhân sự
   const pieStaff = [
     { name: "Chủ trang trại", value: dashboard?.totalFarmAdmin || 0 },
     { name: "Nông dân", value: dashboard?.totalFarmer || 0 },
     { name: "Chuyên gia", value: dashboard?.totalExpert || 0 },
   ];
+  // Dữ liệu cho Pie chart loại task
   const pieTask = [
     { name: "Task Chăm sóc", value: dashboard?.totalCareTask || 0 },
     { name: "Task Thu hoạch", value: dashboard?.totalCollectTask || 0 },
   ];
 
-  // Table data
+  // Dữ liệu cho bảng summary
   const summaryList = barData;
 
+  // Columns config cho table
   const columns = [
     { title: "Hạng mục", dataIndex: "label", key: "label" },
     { title: "Số lượng", dataIndex: "value", key: "value" },
