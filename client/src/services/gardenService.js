@@ -1,15 +1,18 @@
 import { client } from "@/configs";
 
+// Lấy danh sách tất cả vườn với các tham số lọc tùy chọn
 export const fetchGardensApi = async (params = {}) => {
   const res = await client.get("/admin/gardens", { params });
   return res.data;
 };
 
+// Lấy thông tin chi tiết của 1 vườn cụ thể theo ID
 export const fetchGardenDetailApi = async (id) => {
   const res = await client.get(`/admin/gardens/${id}`);
   return res.data;
 };
 
+// Tạo vườn với dư liệu form
 export const createGardenApi = async (payload) => {
   const formData = new FormData();
   Object.entries(payload).forEach(([key, value]) => {
@@ -23,6 +26,7 @@ export const createGardenApi = async (payload) => {
   return res.data;
 };
 
+// Cập nhật thông tin vườn theo ID
 export const updateGardenApi = async (id, payload) => {
   const formData = new FormData();
   Object.entries(payload).forEach(([key, value]) => {
