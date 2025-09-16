@@ -40,37 +40,44 @@ export const updateGardenApi = async (id, payload) => {
   return res.data;
 };
 
+// Xóa một vườn theo ID
 export const deleteGardenApi = async (id) => {
   const res = await client.delete(`/admin/gardens/${id}`);
   return res.data;
 };
 
+// Tạo tự động các zone cho một vườn
 export const generateZonesApi = async (gardenId, payload) => {
   const res = await client.post(`/admin/zones/generate/${gardenId}`, payload);
   return res.data;
 };
 
+// Lấy danh sách các zones thuộc về một vườn
 export const fetchZonesByGardenIdApi = async (gardenId) => {
   const res = await client.get(`/admin/zones/list/${gardenId}`);
   return res.data;
 };
 
+// Tạo tự động các trees (cây) cho một vườn
 export const generateTreesApi = async (gardenId, payload) => {
   const res = await client.post(`/admin/trees/generate/${gardenId}`, payload);
   return res.data;
 };
 
+// Lấy danh sách các trees thuộc về một vườn
 export const fetchTreesByGardenIdApi = async (gardenId) => {
   const res = await client.get(`/admin/trees/list/${gardenId}`);
   return res.data;
 };
 
+// Lấy danh sách các vườn thuộc về một farm
 export const fetchGardensByFarmIdApi = async (farmId, params = {}) => {
   // Đúng endpoint API bạn đã gửi ảnh: /admin/gardens/farm/:farmId
   const res = await client.get(`/admin/gardens/farm/${farmId}`, { params });
   return res.data;
 };
 
+// Lấy thông tin chi tiết của một tree cụ thể
 export const fetchTreeDetailApi = async (treeId) => {
   const res = await client.get(`/admin/trees/${treeId}`);
   return res.data;
