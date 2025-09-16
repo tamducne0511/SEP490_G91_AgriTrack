@@ -107,12 +107,14 @@ export default function TreeQuestionDetail() {
     question: null,     // Câu hỏi đang được hỏi AI
     textPrompt: "",    // Prompt gửi cho AI
   });
+
   // ========== USE EFFECT HOOKS ==========
   
   /**
    * Effect cập nhật farmDetail khi treeDetail thay đổi
    * Chỉ cập nhật thông tin farm, không fetch thời tiết ở đây
    */
+  const [value, setValue] = useState("");
   useEffect(() => {
     if (treeDetail?.farm) {
       setFarmDetail(treeDetail.farm);
@@ -533,8 +535,8 @@ export default function TreeQuestionDetail() {
                         : "Nông dân"}
                     </Tag>
                     {/* Button xem thời tiết */}
-                    <Button 
-                      size="small" 
+                    <Button
+                      size="small"
                       icon={<SunOutlined />}
                       onClick={() => handleGetWeatherForQuestion(q._id)}
                       loading={loadingWeather}
@@ -569,7 +571,7 @@ export default function TreeQuestionDetail() {
                     {" • "}
                     {new Date(q.createdAt).toLocaleString("vi-VN")}
                   </div>
-                  
+
                   {/* Hiển thị thời tiết cho câu hỏi này */}
                   {weatherForQuestion[q._id] && (
                     <Card
@@ -592,13 +594,13 @@ export default function TreeQuestionDetail() {
                             {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.condition?.text}
                           </div>
                           <div style={{ fontSize: 12, color: "#666" }}>
-                            Nhiệt độ TB: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.avgtemp_c}°C | 
-                            Cao nhất: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.maxtemp_c}°C | 
+                            Nhiệt độ TB: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.avgtemp_c}°C |
+                            Cao nhất: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.maxtemp_c}°C |
                             Thấp nhất: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.mintemp_c}°C
                           </div>
                           <div style={{ fontSize: 12, color: "#666" }}>
-                            Độ ẩm TB: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.avghumidity}% | 
-                            Mưa: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.totalprecip_mm}mm | 
+                            Độ ẩm TB: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.avghumidity}% |
+                            Mưa: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.totalprecip_mm}mm |
                             Khả năng mưa: {weatherForQuestion[q._id]?.forecast?.forecastday?.[1]?.day?.daily_chance_of_rain}%
                           </div>
                         </div>

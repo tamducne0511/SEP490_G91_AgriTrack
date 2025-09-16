@@ -32,12 +32,11 @@ export default function ExpertDetail() {
     unassignExpertFromFarm,
   } = useUserStore();
 
+  // State quản lý modal và loading
   const [assignModal, setAssignModal] = useState(false);
-  const [pwdModal, setPwdModal] = useState(false);
-  const [pwdLoading, setPwdLoading] = useState(false);
 
   const expert = userDetail?.user || {};
-
+  // Hàm refresh dữ liệu chi tiết chuyên gia
   const refreshDetail = async () => {
     try {
       await fetchUserDetail(id);
@@ -51,7 +50,7 @@ export default function ExpertDetail() {
   useEffect(() => {
     refreshDetail();
   }, [id]);
-
+  // Xử lý gán chuyên gia vào trang trại
   const handleAssignFarm = async (farmId) => {
     if (!farmId) return;
     try {
@@ -63,6 +62,7 @@ export default function ExpertDetail() {
       // message.error(err?.message || "Lỗi khi gán trang trại");
     }
   };
+  // Xử lý bỏ gán chuyên gia khỏi trang trại
   const handleUnassignFarm = async (assignedFarmId) => {
     try {
       await unassignExpertFromFarm(assignedFarmId); // gọi store

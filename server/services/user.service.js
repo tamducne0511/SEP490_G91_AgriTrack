@@ -94,7 +94,7 @@ const assignFarmToUser = async (userId, farmId) => {
 
   if (user.farmId && user.farmId.toString() === farmId) {
     throw new BadRequestException("Farm already assigned to this user");
-  }
+  } 
 
   const farm = await Farm.findById(farmId);
   if (!farm) {

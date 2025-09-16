@@ -115,11 +115,30 @@ const find = async (req, res, next) => {
     data: farmSchedule,
   });
 };
+const generateTasks = async (req, res, next) => {
+  try {
+    const { scheduleId } = req.body;
 
+    const farmSchedule = await farmScheduleService.find(scheduleId);
+    if (!farmSchedule) {
+      return res.status(404).json({ message: "FarmSchedule not found" });
+    }
+
+    const tasks = await farmScheduleService.generateTasksFromSchedule(farmSchedule);
+
+    res.status(201).json({
+      message: "Tasks generated successfully from FarmSchedule description",
+      data: tasks,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 module.exports = {
   getList,
   create,
   update,
   remove,
   find,
+  generateTasks,
 };
