@@ -16,6 +16,8 @@ import {
   Image,
   Card,
   Typography,
+  Drawer,
+  List,
 } from "antd";
 import {
   DeleteOutlined,
@@ -43,6 +45,7 @@ export default function FarmScheduleTreeDetail() {
     fetchScheduleDetail,
     updateSchedule,
     deleteSchedule,
+    generateTasksByAI,
   } = useFarmScheduleStore();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -51,6 +54,9 @@ export default function FarmScheduleTreeDetail() {
   const [treeDesc, setTreeDesc] = useState(""); // TinyMCE HTML string
   const [fileList, setFileList] = useState([]);
   const [isEditorLoaded, setIsEditorLoaded] = useState(false);
+  const [genOpen, setGenOpen] = useState(false);
+  const [genLoading, setGenLoading] = useState(false);
+  const [genResult, setGenResult] = useState([]);
 
   // Fetch schedule detail khi trang được load
   useEffect(() => {
@@ -258,7 +264,43 @@ export default function FarmScheduleTreeDetail() {
             >
               Chỉnh sửa
             </Button>
+            
+            
           )}
+
+          {/* Tạo việc bằng AI */}
+          {!isEditMode && (
+            <Button
+              type="primary"
+              style={{ marginLeft: 16, background: "#23643A" }}
+              onClick={() => {
+                Modal.confirm({
+                  title: "Tạo công việc bằng AI?",
+                  content:
+                    "AI sẽ phân tích mô tả lịch và tạo các công việc liên tiếp trong khoảng thời gian.",
+                  okText: "Tạo ngay",
+                  cancelText: "Hủy",
+                  onOk: async () => {
+                    try {
+                      setGenLoading(true);
+                      const tasks = await generateTasksByAI(id);
+                      setGenResult(tasks || []);
+                      setGenOpen(true);
+                      message.success("Đã tạo công việc bằng AI!");
+                    } catch (err) {
+                      message.error(err?.message || "Không thể tạo công việc bằng AI");
+                    } finally {
+                      setGenLoading(false);
+                    }
+                  },
+                });
+              }}
+            >
+              Tạo việc bằng AI
+            </Button>
+          )}
+
+          {genLoading && <Spin style={{ marginLeft: 12 }} />}
 
           <Form
             form={form}
@@ -407,6 +449,34 @@ export default function FarmScheduleTreeDetail() {
               </Form.Item>
             )}
           </Form>
+          {/* Kết quả tạo công việc bằng AI */}
+          <Drawer
+            title="Kết quả tạo công việc AI"
+            open={genOpen}
+            onClose={() => setGenOpen(false)}
+            width={560}
+          >
+            <List
+              dataSource={genResult}
+              rowKey="_id"
+              renderItem={(t) => (
+                <List.Item>
+                  <div style={{ width: "100%" }}>
+                    <div style={{ fontWeight: 600 }}>{t.name}</div>
+                    <div style={{ color: "#666", margin: "4px 0" }}>{t.description}</div>
+                    <div style={{ fontSize: 12, color: "#888" }}>
+                      Ưu tiên: <b>{t.priority}</b> &nbsp;|&nbsp;
+                      {t.startDate && `Từ: ${new Date(t.startDate).toLocaleDateString("vi-VN")}`} &nbsp;→&nbsp;
+                      {t.endDate && `Đến: ${new Date(t.endDate).toLocaleDateString("vi-VN")}`}
+                    </div>
+                  </div>
+                </List.Item>
+              )}
+            />
+            <div style={{ textAlign: "right", marginTop: 12 }}>
+              <Button onClick={() => setGenOpen(false)}>Đóng</Button>
+            </div>
+          </Drawer>
         </>
       )}
     </div>

@@ -37,6 +37,7 @@ import FarmerDetail from "@/pages/users/farmer/Detail";
 import Unauthorized from "@/pages/error/Unauthorized";
 import RedirectHome from "./RedirectHome";
 import { RoutePaths } from "./routes-constants";
+import TaskGarnchart from "@/pages/tasks/Garnchart";
 
 const router = createBrowserRouter([
   {
@@ -195,9 +196,17 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: RoutePaths.TASK_GARNCHART,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "farm-admin", "expert","farmer"]}>
+            <TaskGarnchart />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: RoutePaths.TASK_CREATE,
         element: (
-          <ProtectedRoute allowedRoles={[ "farm-admin", "expert"]}>
+          <ProtectedRoute allowedRoles={["farm-admin", "expert"]}>
             <TaskCreate />
           </ProtectedRoute>
         ),

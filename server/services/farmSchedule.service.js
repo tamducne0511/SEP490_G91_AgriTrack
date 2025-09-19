@@ -80,62 +80,53 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const generateTasksFromSchedule = async (farmSchedule) => {
-  // Tạo prompt cho AI
-  const prompt = `
-    Bạn là chuyên gia nông nghiệp. 
-    Hãy phân tích lịch trình sau và chia thành các công việc chi tiết cho công nhân nông trại. Và ngày tháng phải liên tiếp từ công việc này đến công việc khác. Thời gian phải bắt đầu tính từ ngày hiện tại
-    13/09/2025
-    Lịch trình: "${farmSchedule.description}"
+  const prompt = `Bạn là chuyên gia nông nghiệp.
+Hãy phân tích lịch trình công việc sau và chia thành các công việc chi tiết cho công nhân nông trại.
 
-    Yêu cầu output:
-    - Trả về chỉ JSON array
-    - Mỗi object có cấu trúc:
-      {
-        "name": "Tên công việc",
-        "description": "Mô tả chi tiết",
-        "priority": "high|medium|low",
-        "startDate": "yyyy-mm-dd",
-        "endDate": "yyyy-mm-dd"
-      }
-  `;
+- Thời gian bắt đầu từ ngày **18/09/2025**.
+- Ngày bắt đầu và kết thúc của các công việc phải **liên tiếp nhau, không được trùng hoặc bỏ trống**.
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [{ role: "user", content: prompt }],
-    max_tokens: 1000,
-  });
+Lịch trình: "${farmSchedule.description}"
 
-  function extractJSON(content) {
+Trả về duy nhất một JSON object với key "tasks" là một array, không thêm giải thích, không markdown.
+Mỗi object trong "tasks" có cấu trúc:
+{
+  "name": "Tên công việc",
+  "description": "Mô tả chi tiết",
+  "priority": "high|medium|low",
+  "startDate": "yyyy-mm-dd",
+  "endDate": "yyyy-mm-dd"
+}
+`;
+
+  let tasks = null;
+  const maxRetries = 3;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    // con
     try {
-      // Nếu có block ```json ... ```
-      const match = content.match(/```json([\s\S]*?)```/);
-      if (match) {
-        return JSON.parse(match[1].trim());
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 3000,
+        response_format: { type: "json_object" },
+      });
+      console.log("AI response:", response.choices[0].message.content);
+      const parsed = JSON.parse(response.choices[0].message.content);
+
+      if (!parsed.tasks || !Array.isArray(parsed.tasks)) {
+        throw new Error("Response JSON không có field 'tasks' hợp lệ.");
       }
-  
-      // Nếu có block ``` ... ```
-      const altMatch = content.match(/```([\s\S]*?)```/);
-      if (altMatch) {
-        return JSON.parse(altMatch[1].trim());
-      }
-  
-      // Nếu không có block nào, thử parse trực tiếp
-      return JSON.parse(content.trim());
+
+      tasks = parsed.tasks;
+      console.log(`Parse JSON thành công ở lần thử ${attempt}`);
+      break;
     } catch (err) {
-      console.error("❌ Lỗi parse JSON:", err.message);
-      return null;
+      console.error(`❌ Lỗi parse JSON (lần ${attempt}):`, err.message);
+      if (attempt === maxRetries) {
+        throw new Error("AI response is not valid JSON sau 3 lần thử.");
+      }
     }
-  }
-  
-  // Cách dùng
-  const content = response.choices[0].message.content;
-  const tasks = extractJSON(content);
-  
-  if (tasks) {
-    console.log("Tasks parse OK:", tasks);
-  } else {
-    console.log("Không parse được JSON hợp lệ.");
-    throw new Error("AI response is not valid JSON. Please try again.");
   }
 
   // Lưu vào DB
