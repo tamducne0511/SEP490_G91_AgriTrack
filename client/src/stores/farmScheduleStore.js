@@ -5,6 +5,7 @@ import {
   createFarmScheduleApi,
   updateFarmScheduleApi,
   deleteFarmScheduleApi,
+  generateTasksFromScheduleApi
 } from "@/services/farmScheduleService";
 
 export const useFarmScheduleStore = create((set) => ({
@@ -65,6 +66,17 @@ export const useFarmScheduleStore = create((set) => ({
       set({ deleting: false });
     } catch (err) {
       set({ error: err?.message || "Lỗi xoá lịch", deleting: false });
+      throw err;
+    }
+  },
+  generateTasksByAI: async (scheduleId) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await generateTasksFromScheduleApi(scheduleId);
+      set({ loading: false });
+      return res.data; // danh sách task đã tạo
+    } catch (err) {
+      set({ loading: false, error: err?.message || "Lỗi sinh công việc bằng AI" });
       throw err;
     }
   },

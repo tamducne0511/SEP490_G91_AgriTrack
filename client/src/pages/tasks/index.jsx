@@ -442,6 +442,13 @@ export default function TaskList() {
           }}
           disabled={!selectedFarmId && user?.role === "expert"}
         />
+        <Button
+          type="primary"
+          style={{ background: "#23643A", border: 0, borderRadius: 8 }}
+          onClick={() => navigate(RoutePaths.TASK_GARNCHART)}
+        >
+          Garnchart
+        </Button>
       </div>
 
       {/* Filter thời gian */}
