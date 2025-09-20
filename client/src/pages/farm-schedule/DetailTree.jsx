@@ -77,15 +77,15 @@ export default function FarmScheduleTreeDetail() {
       setFileList(
         scheduleDetail.image
           ? [
-              {
-                uid: "-1",
-                name: "schedule_image.jpg",
-                status: "done",
-                url: scheduleDetail.image.startsWith("http")
-                  ? scheduleDetail.image
-                  : ImageBaseUrl + scheduleDetail.image,
-              },
-            ]
+            {
+              uid: "-1",
+              name: "schedule_image.jpg",
+              status: "done",
+              url: scheduleDetail.image.startsWith("http")
+                ? scheduleDetail.image
+                : ImageBaseUrl + scheduleDetail.image,
+            },
+          ]
           : []
       );
     }
@@ -152,6 +152,34 @@ export default function FarmScheduleTreeDetail() {
           style={{ marginBottom: 16, marginRight: 8 }}
         >
           Quay lại
+        </Button>
+        <Button
+          type="primary"
+          style={{ marginLeft: 16, background: "#23643A" }}
+          onClick={() => {
+            Modal.confirm({
+              title: "Tạo công việc bằng AI?",
+              content:
+                "AI sẽ phân tích mô tả lịch và tạo các công việc liên tiếp trong khoảng thời gian.",
+              okText: "Tạo ngay",
+              cancelText: "Hủy",
+              onOk: async () => {
+                try {
+                  setGenLoading(true);
+                  const tasks = await generateTasksByAI(id);
+                  setGenResult(tasks || []);
+                  setGenOpen(true);
+                  message.success("Đã tạo công việc bằng AI!");
+                } catch (err) {
+                  message.error(err?.message || "Không thể tạo công việc bằng AI");
+                } finally {
+                  setGenLoading(false);
+                }
+              },
+            });
+          }}
+        >
+          Tạo việc bằng AI
         </Button>
         {loading ? (
           <Spin style={{ margin: 40 }} />
@@ -223,7 +251,35 @@ export default function FarmScheduleTreeDetail() {
                 dangerouslySetInnerHTML={{ __html: treeDesc }}
               />
             </div>
+            <div><Drawer
+              title="Kết quả tạo công việc AI"
+              open={genOpen}
+              onClose={() => setGenOpen(false)}
+              width={560}
+            >
+              <List
+                dataSource={genResult}
+                rowKey="_id"
+                renderItem={(t) => (
+                  <List.Item>
+                    <div style={{ width: "100%" }}>
+                      <div style={{ fontWeight: 600 }}>{t.name}</div>
+                      <div style={{ color: "#666", margin: "4px 0" }}>{t.description}</div>
+                      <div style={{ fontSize: 12, color: "#888" }}>
+                        Ưu tiên: <b>{t.priority}</b> &nbsp;|&nbsp;
+                        {t.startDate && `Từ: ${new Date(t.startDate).toLocaleDateString("vi-VN")}`} &nbsp;→&nbsp;
+                        {t.endDate && `Đến: ${new Date(t.endDate).toLocaleDateString("vi-VN")}`}
+                      </div>
+                    </div>
+                  </List.Item>
+                )}
+              />
+              <div style={{ textAlign: "right", marginTop: 12 }}>
+                <Button onClick={() => setGenOpen(false)}>Đóng</Button>
+              </div>
+            </Drawer></div>
           </Card>
+
         )}
       </div>
     );
@@ -264,8 +320,8 @@ export default function FarmScheduleTreeDetail() {
             >
               Chỉnh sửa
             </Button>
-            
-            
+
+
           )}
 
           {/* Tạo việc bằng AI */}

@@ -34,7 +34,8 @@ export default function ExpertDetail() {
 
   // State quản lý modal và loading
   const [assignModal, setAssignModal] = useState(false);
-
+  const [pwdModal, setPwdModal] = useState(false);
+  const [pwdLoading, setPwdLoading] = useState(false);
   const expert = userDetail?.user || {};
   // Hàm refresh dữ liệu chi tiết chuyên gia
   const refreshDetail = async () => {
@@ -156,7 +157,7 @@ export default function ExpertDetail() {
           }}
         >
           {Array.isArray(listFarmAssignedExpert) &&
-          listFarmAssignedExpert.length > 0 ? (
+            listFarmAssignedExpert.length > 0 ? (
             listFarmAssignedExpert.map((item) => (
               <div
                 key={item?.farm?._id}

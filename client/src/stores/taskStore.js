@@ -14,6 +14,7 @@ import {
   getAssignedTasksApi,
   getTaskDetail,
   updateTaskApi,
+  TaskExportExcelApi,
 } from "@/services";
 import { create } from "zustand";
 
@@ -177,7 +178,7 @@ export const useTaskStore = create((set, get) => ({
   fetchFarmEquipment: async (params = {}) => {
     set({ loading: true, error: null });
     try {
-      const data = await fetchFarmEquipmentApi({...params, status: 1});
+      const data = await fetchFarmEquipmentApi({ ...params, status: 1 });
       set({ equipmentList: data.data || [], loading: false });
     } catch (err) {
       set({
@@ -209,4 +210,23 @@ export const useTaskStore = create((set, get) => ({
       throw err;
     }
   },
+  exportExcel: async (params = {}) => {
+    set({ loading: true, error: null });
+    try {
+      const blob = await TaskExportExcelApi(params);
+      // Tạo URL cho file blob
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "tasks.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      set({ loading: false });
+    } catch (err) {
+      set({ error: err?.message || "Lỗi xuất Excel", loading: false });
+      throw err;
+    }
+  }
+
 }));
