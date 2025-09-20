@@ -160,7 +160,21 @@ const assignFarmer = async (req, res, next) => {
 const exportExcel = async (req, res, next) => {
   try {
     const { farmId, gardenId, keyword } = req.query;
-    const tasks = await taskService.exportTask(farmId, gardenId, keyword || "");
+    
+    // Validate farm access permissions
+    let allowedFarmId = farmId;
+    if (req.user.role === "expert") {
+      // Expert có thể chọn farm từ danh sách farm được phép truy cập
+      if (farmId && !req.user.farmId.includes(farmId)) {
+        return res.status(403).json({ message: "Bạn không có quyền truy cập farm này" });
+      }
+      allowedFarmId = farmId || req.user.farmId; // Nếu không chọn farm thì lấy tất cả farm của expert
+    } else {
+      // Farm-admin chỉ có thể export farm của mình
+      allowedFarmId = req.user.farmId;
+    }
+    
+    const tasks = await taskService.exportTask(allowedFarmId, gardenId, keyword || "");
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Tasks');
     worksheet.columns = [

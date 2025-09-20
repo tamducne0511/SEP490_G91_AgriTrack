@@ -752,8 +752,18 @@ export default function TaskList() {
           type="primary"
           style={{ background: "#23643A", border: 0, borderRadius: 8 }}
           onClick={() => {
+            // Đảm bảo farmId được gửi đúng theo quyền của user
+            let exportFarmId = selectedFarmId;
+            if (user?.role === "expert" && !selectedFarmId) {
+              // Expert không chọn farm thì gửi tất cả farm của họ
+              exportFarmId = farmIds?.map(f => f.farm._id);
+            } else if (user?.role === "farmAdmin") {
+              // Farm admin chỉ có thể export farm của mình
+              exportFarmId = user.farmId;
+            }
+            
             exportExcel({
-              farmId: selectedFarmId,
+              farmId: exportFarmId,
               gardenId: selectedGardenId,
               keyword,
               // startDate: startDateFilter ? startDateFilter.format('YYYY-MM-DD') : undefined,
