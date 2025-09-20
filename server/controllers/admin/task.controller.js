@@ -4,6 +4,7 @@ const taskService = require("../../services/task.service");
 const notificationService = require("../../services/notification.service");
 const userService = require("../../services/user.service");
 const NotFoundException = require("../../middlewares/exceptions/notfound");
+const ExcelJS = require('exceljs');
 
 // Get list task with pagination and keyword search
 const getList = async (req, res) => {
@@ -19,7 +20,7 @@ const getList = async (req, res) => {
     keyword,
     pageSize
   );
-  
+
   if (pageSize >= 1000) {
     res.json({
       data: list,
@@ -156,6 +157,50 @@ const assignFarmer = async (req, res, next) => {
     data: result,
   });
 };
+const exportExcel = async (req, res, next) => {
+  try {
+    const { farmId, gardenId, keyword } = req.query;
+    const tasks = await taskService.exportTask(farmId, gardenId, keyword || "");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Tasks');
+    worksheet.columns = [
+      { header: "STT", key: "stt", width: 5 },
+      { header: "Tên công việc", key: "name", width: 25 },
+      { header: "Loại", key: "type", width: 15 },
+      { header: "Ngày bắt đầu", key: "startDate", width: 15 },
+      { header: "Ngày kết thúc", key: "endDate", width: 15 },
+      { header: "Người tạo", key: "createdBy", width: 20 },
+      { header: "Ưu tiên", key: "priority", width: 15 },
+      { header: "Trạng thái", key: "status", width: 15 },
+    ]
+    tasks.forEach((t, i) => {
+      worksheet.addRow({
+        stt: i + 1,
+        name: t.name,
+        type: t.type,
+        startDate: t.startDate ? t.startDate.toISOString().split("T")[0] : "",
+        endDate: t.endDate ? t.endDate.toISOString().split("T")[0] : "",
+        createdBy: t.createdBy ? t.createdBy.fullName : "",
+        priority: t.priority,
+        status: t.status,
+      });
+    });
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=" + "tasks.xlsx"
+    );
+    await workbook.xlsx.write(res);
+    res.status(200).end();
+  }
+  catch (e) { 
+    console.log(e);
+    res.status(500).json({ message: "Lỗi xuất excel" });
+   }
+}
 
 module.exports = {
   getList,
@@ -164,4 +209,5 @@ module.exports = {
   remove,
   find,
   assignFarmer,
+  exportExcel,
 };

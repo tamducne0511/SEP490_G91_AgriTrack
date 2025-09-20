@@ -287,6 +287,26 @@ const changeStatusAssigned = async (taskId, farmerId, status) => {
   await taskHistory.save();
   return task;
 };
+const exportTask = async (farmId, gardenId, keyword = "") => {
+const filter = {
+    name: { $regex: keyword, $options: "i" },
+  };
+  if (farmId) {
+    if (Array.isArray(farmId)) {
+      filter.farmId = { $in: farmId };
+    } else{
+      filter.farmId = farmId;
+    }
+  }
+  if (gardenId) {
+    filter.gardenId = gardenId;
+  }
+  const tasks = await Task.find(filter).
+  populate("farmId", "name").
+  populate("gardenId", "name").
+  populate("createdBy", "fullName");
+  return tasks;
+}
 
 module.exports = {
   getListPagination,
@@ -300,4 +320,5 @@ module.exports = {
   getTotalAssigned,
   getDetail,
   changeStatusAssigned,
+  exportTask,
 };

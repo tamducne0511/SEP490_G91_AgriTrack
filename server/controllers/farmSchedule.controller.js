@@ -118,7 +118,6 @@ const find = async (req, res, next) => {
 const generateTasks = async (req, res, next) => {
   try {
     const { scheduleId } = req.body;
-
     const farmSchedule = await farmScheduleService.find(scheduleId);
     if (!farmSchedule) {
       return res.status(404).json({ message: "FarmSchedule not found" });

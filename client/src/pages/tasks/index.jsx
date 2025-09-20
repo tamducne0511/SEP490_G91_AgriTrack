@@ -63,6 +63,7 @@ export default function TaskList() {
     error,
     fetchTasks,
     deleteTask,
+    exportExcel,
   } = useTaskStore();
   const { user, farmIds } = useAuthStore();
   const { fetchFarms } = useFarmStore();
@@ -442,6 +443,20 @@ export default function TaskList() {
           }}
           disabled={!selectedFarmId && user?.role === "expert"}
         />
+        <Button 
+          type="primary"
+          style={{ background: "#23643A", border: 0, borderRadius: 8 }}
+          onClick={() => {
+            exportExcel({
+              farmId: selectedFarmId,
+              gardenId: selectedGardenId,
+              keyword,
+              // startDate: startDateFilter ? startDateFilter.format('YYYY-MM-DD') : undefined,
+              // endDate: endDateFilter ? endDateFilter.format('YYYY-MM-DD') : undefined,
+            })
+          }} >
+          Xuất Excel
+        </Button>
         <Button
           type="primary"
           style={{ background: "#23643A", border: 0, borderRadius: 8 }}
