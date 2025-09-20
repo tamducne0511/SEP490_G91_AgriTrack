@@ -9,3 +9,4 @@ export * from "./equipmentCategoryStore";
 export * from "./dashboardStore";
 export * from "./equipmentStore";
 export * from "./questionStore";
+export * from "./newsStore";

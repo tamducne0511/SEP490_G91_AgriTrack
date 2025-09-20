@@ -41,7 +41,8 @@ const adminRoutes = [
   { path: "/tasks", route: require("./routes/admin/task.route") },
   { path: "/trees", route: require("./routes/admin/tree.route") },
   { path: "/equipment-categories", route: require("./routes/admin/equipmentCategory.route") },
-  { path: "/equipment-changes", route: require("./routes/admin/equipmentChange.route") }
+  { path: "/equipment-changes", route: require("./routes/admin/equipmentChange.route") },
+  { path: "/news", route: require("./routes/admin/news.route") }
 ];
 
 const webRoutes = [

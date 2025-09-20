@@ -9,3 +9,4 @@ export * from "./equipmentCategoryService";
 export * from "./dashboardService";
 export * from "./equipmentService";
 export * from "./questionService";
+export * from "./newsService";

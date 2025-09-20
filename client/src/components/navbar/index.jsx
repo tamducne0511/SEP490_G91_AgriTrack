@@ -17,6 +17,7 @@ import {
   TeamOutlined,
   UserOutlined,
   UsergroupAddOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { Dropdown, Layout, Menu, Typography } from "antd";
 import { useState } from "react";
@@ -57,6 +58,12 @@ const NAV_BY_ROLE = (idUser) => ({
       icon: <AimOutlined />,
       label: "Quản lý trang trại",
     },
+    {
+      key: RoutePaths.NEWS_LIST,
+      paths: [RoutePaths.NEWS_LIST, "/news-detail/", "/news-edit/"],
+      icon: <FileTextOutlined />,
+      label: "Tin tức",
+    },
   ],
   "farm-admin": [
     {
@@ -94,6 +101,12 @@ const NAV_BY_ROLE = (idUser) => ({
       label: "Lịch nông vụ",
     },
     {
+      key: RoutePaths.NEWS_LIST,
+      paths: [RoutePaths.NEWS_LIST, "/news-detail/"],
+      icon: <FileTextOutlined />,
+      label: "Tin tức",
+    },
+    {
       key: RoutePaths.NOTIFICATION_LIST,
       paths: [RoutePaths.NOTIFICATION_LIST],
       icon: <BellOutlined />,
@@ -126,6 +139,12 @@ const NAV_BY_ROLE = (idUser) => ({
       label: "Lịch nông vụ",
     },
     {
+      key: RoutePaths.NEWS_LIST,
+      paths: [RoutePaths.NEWS_LIST, "/news-detail/", "/news-edit/", "/news-list/create"],
+      icon: <FileTextOutlined />,
+      label: "Tin tức",
+    },
+    {
       key: RoutePaths.NOTIFICATION_LIST,
       paths: [RoutePaths.NOTIFICATION_LIST],
       icon: <BellOutlined />,
@@ -144,6 +163,12 @@ const NAV_BY_ROLE = (idUser) => ({
       paths: [RoutePaths.MY_FARM_TASK_QUESTION, "/my-farm-task-question/"],
       icon: <QuestionCircleOutlined />,
       label: "Câu hỏi",
+    },
+    {
+      key: RoutePaths.NEWS_LIST,
+      paths: [RoutePaths.NEWS_LIST, "/news-detail/"],
+      icon: <FileTextOutlined />,
+      label: "Tin tức",
     },
   ],
 });

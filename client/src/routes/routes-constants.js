@@ -36,4 +36,8 @@ export const RoutePaths = {
   FARM_SCHEDULE_DETAIL: (id) => `/farm-schedule/${id}`,
   FARM_SCHEDULE_TREE_DETAIL: (id) => `/farm-schedule-tree/${id}`,
   TASK_GARNCHART: "/task-garnchart",
+  NEWS_LIST: "/news-list",
+  NEWS_CREATE: "/news-list/create",
+  NEWS_DETAIL: (id) => `/news-detail/${id}`,
+  NEWS_EDIT: (id) => `/news-edit/${id}`,
 };

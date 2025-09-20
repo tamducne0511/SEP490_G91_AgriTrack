@@ -38,6 +38,9 @@ import Unauthorized from "@/pages/error/Unauthorized";
 import RedirectHome from "./RedirectHome";
 import { RoutePaths } from "./routes-constants";
 import TaskGarnchart from "@/pages/tasks/Garnchart";
+import NewsList from "@/pages/news";
+import NewsForm from "@/pages/news/NewsForm";
+import NewsDetail from "@/pages/news/NewsDetail";
 
 const router = createBrowserRouter([
   {
@@ -288,6 +291,30 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["expert", "farm-admin"]}>
             <FarmScheduleTreeDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: RoutePaths.NEWS_LIST,
+        element: <NewsList />,
+      },
+      {
+        path: RoutePaths.NEWS_CREATE,
+        element: (
+          <ProtectedRoute allowedRoles={["expert"]}>
+            <NewsForm />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: RoutePaths.NEWS_DETAIL(":id"),
+        element: <NewsDetail />,
+      },
+      {
+        path: RoutePaths.NEWS_EDIT(":id"),
+        element: (
+          <ProtectedRoute allowedRoles={["expert"]}>
+            <NewsForm />
           </ProtectedRoute>
         ),
       },
