@@ -248,6 +248,7 @@ export default function TaskList() {
     const start = new Date(task.startDate || task.start);
     const end = new Date(task.endDate || task.end);
   
+    // Kiểm tra trạng thái trước
     if (task.status === "canceled") return "Đã huỷ";
     if (task.status === false) return "Đã xoá";
     if (task.status === "completed") {
@@ -255,37 +256,57 @@ export default function TaskList() {
         ? "Hoàn thành đúng hạn"
         : `Hoàn thành trễ ${Math.floor((now - end) / 86400000)} ngày`;
     }
+    if (task.status === "un-assign") return "Chưa giao";
   
+    // Xử lý các trạng thái active
     if (task.status === "assigned" || task.status === "in-progress") {
+      // Kiểm tra ngày bắt đầu
       if (now < start) return "Chưa tới ngày bắt đầu";
+      
+      // Kiểm tra quá hạn
       if (now > end) return `Quá hạn ${Math.floor((now - end) / 86400000)} ngày`;
+      
+      // Xử lý theo trạng thái
       if (task.status === "in-progress") {
         const daysLeft = Math.floor((end - now) / 86400000);
         if (daysLeft <= 2) return `Sắp tới hạn (còn ${daysLeft} ngày)`;
         return `Đang thực hiện (còn ${daysLeft} ngày)`;
-      }  
+      } else if (task.status === "assigned") {
+        const daysLeft = Math.floor((end - now) / 86400000);
+        if (daysLeft <= 2) return `Sắp tới hạn (còn ${daysLeft} ngày)`;
+        return `Chờ thực hiện (còn ${daysLeft} ngày)`;
+      }
     }
-  
-    if (task.status === "un-assign") return "Chưa giao";
     
-    console.log("Unknown task status:", task.status);
+    // Fallback cho các trạng thái khác
+    console.log("Unknown task status:", task.status, "for task:", task.name);
     return "Chưa xác định";
-    // return "Không xác định";
   }
 
-  // Hàm lấy màu sắc cho task
-  const getTaskColor = (status) => {
-    switch (status) {
-      case "completed":
-        return "#52c41a";
-      case "in-progress":
-        return "#1890ff";
-      case "assigned":
-        return "#faad14";
-      case "canceled":
-        return "#ff4d4f";
-      default:
-        return "#d9d9d9";
+  // Hàm lấy màu sắc cho task theo tiến độ
+  const getTaskColor = (task) => {
+    const progressText = getProgressState(task);
+    
+    if (progressText.includes("Hoàn thành")) {
+      return "#52c41a"; // Xanh lá - Hoàn thành
+    } else if (progressText.includes("Sắp tới hạn")) {
+      return "#fa8c16"; // Cam - Sắp tới hạn
+    } else if (progressText.includes("Quá hạn")) {
+      return "#ff4d4f"; // Đỏ - Quá hạn
+    } else if (progressText.includes("Đang thực hiện")) {
+      return "#1890ff"; // Xanh dương - Đang thực hiện
+    } else if (progressText.includes("Chờ thực hiện")) {
+      return "#13c2c2"; // Xanh ngọc - Chờ thực hiện
+    } else if (progressText.includes("Chưa tới ngày bắt đầu")) {
+      return "#722ed1"; // Tím - Chưa tới ngày bắt đầu
+    } else if (progressText.includes("Chưa giao")) {
+      return "#d9d9d9"; // Xám nhạt - Chưa giao
+    } else if (progressText.includes("Đã huỷ")) {
+      return "#8c8c8c"; // Xám - Đã huỷ
+    } else if (progressText.includes("Đã xoá")) {
+      return "#595959"; // Xám đậm - Đã xoá
+    } else {
+      return "#d9d9d9"; // Xám nhạt - Mặc định
     }
   };
   // format dữ liệu của gantt-task-react
@@ -347,8 +368,10 @@ export default function TaskList() {
               ? 50
               : 0,
           styles: {
-            progressColor: getTaskColor(task.status),
-            progressSelectedColor: getTaskColor(task.status),
+            progressColor: getTaskColor(task),
+            progressSelectedColor: getTaskColor(task),
+            backgroundColor: getTaskColor(task),
+            backgroundSelectedColor: getTaskColor(task),
           },
         };
       })
@@ -691,6 +714,8 @@ export default function TaskList() {
           style={{ width: 200 }}
           placeholder="Chọn trạng thái"
           value={statusFilter}
+          mode="multiple"            // Cho phép chọn nhiều
+        // allowClear 
           options={[
             { value: "un-assign", label: "Chưa giao" },
             { value: "assigned", label: "Chờ thực hiện" },
@@ -713,8 +738,12 @@ export default function TaskList() {
             { value: "Chưa tới ngày bắt đầu", label: "Chưa tới ngày bắt đầu" },
             { value: "Sắp tới hạn", label: "Sắp tới hạn" },
             { value: "Đang thực hiện", label: "Đang thực hiện" },
+            { value: "Chờ thực hiện", label: "Chờ thực hiện" },
             { value: "Quá hạn", label: "Quá hạn" },
             { value: "Hoàn thành", label: "Hoàn thành" },
+            { value: "Chưa giao", label: "Chưa giao" },
+            { value: "Đã huỷ", label: "Đã huỷ" },
+            { value: "Đã xoá", label: "Đã xoá" },
           ]}
           onChange={(value) => {
             setProgressFilter(value);
@@ -777,68 +806,102 @@ export default function TaskList() {
 
       {/* Gantt Chart Controls - chỉ hiện khi ở mode gantt */}
       {viewMode === "gantt" && (
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            marginBottom: 16,
-            padding: "12px",
-            background: "#f8fafb",
-            borderRadius: "8px",
-            border: "1px solid #e8eaed",
-          }}
-        >
-          <span style={{ fontWeight: 500, color: "#23643A", marginRight: 8 }}>
-            Gantt View:
-          </span>
-          <Button
-            size="small"
-            type={ganttView === ViewMode.Day ? "primary" : "default"}
-            onClick={() => setGanttView(ViewMode.Day)}
+        <>
+          <div
             style={{
-              background: ganttView === ViewMode.Day ? "#23643A" : undefined,
-              border: ganttView === ViewMode.Day ? 0 : undefined,
+              display: "flex",
+              gap: 8,
+              marginBottom: 16,
+              padding: "12px",
+              background: "#f8fafb",
+              borderRadius: "8px",
+              border: "1px solid #e8eaed",
             }}
           >
-            Ngày
-          </Button>
-          <Button
-            size="small"
-            type={ganttView === ViewMode.Week ? "primary" : "default"}
-            onClick={() => setGanttView(ViewMode.Week)}
-            style={{
-              background: ganttView === ViewMode.Week ? "#23643A" : undefined,
-              border: ganttView === ViewMode.Week ? 0 : undefined,
-            }}
-          >
-            Tuần
-          </Button>
-          <Button
-            size="small"
-            type={ganttView === ViewMode.Month ? "primary" : "default"}
-            onClick={() => setGanttView(ViewMode.Month)}
-            style={{
-              background: ganttView === ViewMode.Month ? "#23643A" : undefined,
-              border: ganttView === ViewMode.Month ? 0 : undefined,
-            }}
-          >
-            Tháng
-          </Button>
-          {/* <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: "14px", color: "#666" }}>Hiển thị danh sách:</span>
+            <span style={{ fontWeight: 500, color: "#23643A", marginRight: 8 }}>
+              Gantt View:
+            </span>
             <Button
               size="small"
-              type={showTaskList ? "primary" : "default"}
-              onClick={() => setShowTaskList(!showTaskList)}
-              style={{ 
-                background: showTaskList ? "#23643A" : undefined,
-                border: showTaskList ? 0 : undefined
+              type={ganttView === ViewMode.Day ? "primary" : "default"}
+              onClick={() => setGanttView(ViewMode.Day)}
+              style={{
+                background: ganttView === ViewMode.Day ? "#23643A" : undefined,
+                border: ganttView === ViewMode.Day ? 0 : undefined,
               }}
             >
-              {showTaskList ? "Có" : "Không"}
+              Ngày
             </Button>
-          </div> */}
-        </div>
+            <Button
+              size="small"
+              type={ganttView === ViewMode.Week ? "primary" : "default"}
+              onClick={() => setGanttView(ViewMode.Week)}
+              style={{
+                background: ganttView === ViewMode.Week ? "#23643A" : undefined,
+                border: ganttView === ViewMode.Week ? 0 : undefined,
+              }}
+            >
+              Tuần
+            </Button>
+            <Button
+              size="small"
+              type={ganttView === ViewMode.Month ? "primary" : "default"}
+              onClick={() => setGanttView(ViewMode.Month)}
+              style={{
+                background: ganttView === ViewMode.Month ? "#23643A" : undefined,
+                border: ganttView === ViewMode.Month ? 0 : undefined,
+              }}
+            >
+              Tháng
+            </Button>
+          </div>
+
+          {/* Legend cho màu sắc tiến độ */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 12,
+              marginBottom: 16,
+              padding: "12px",
+              background: "#f0f8ff",
+              borderRadius: "8px",
+              border: "1px solid #d6e4ff",
+            }}
+          >
+            <span style={{ fontWeight: 500, color: "#23643A", marginRight: 8 }}>
+              Chú thích màu sắc:
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#52c41a", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Hoàn thành</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#fa8c16", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Sắp tới hạn</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#ff4d4f", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Quá hạn</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#1890ff", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Đang thực hiện</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#13c2c2", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Chờ thực hiện</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#722ed1", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Chưa tới ngày bắt đầu</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#8c8c8c", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Đã huỷ</span>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Filter thời gian */}
@@ -1004,7 +1067,6 @@ export default function TaskList() {
                   ? 250
                   : 80
               }
-              barBackgroundColor={ganttView === ViewMode.Day ? "#1e4d2b" : "#23643A"}
               rowHeight={ganttView === ViewMode.Day ? 35 : 40}
               fontSize={ganttView === ViewMode.Day ? 10 : 12}
               locale="vi-VN"

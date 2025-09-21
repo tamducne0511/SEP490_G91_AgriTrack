@@ -1,5 +1,5 @@
 import { useTaskStore } from "@/stores/taskStore";
-import { SearchOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
+import { SearchOutlined, EyeOutlined, DeleteOutlined, BarChartOutlined, TableOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   Button,
@@ -10,12 +10,16 @@ import {
   Typography,
   Tooltip,
   Popconfirm,
+  Select,
+  DatePicker,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RoutePaths } from "@/routes";
+import { ViewMode, Gantt } from "gantt-task-react";
 
 const { Title } = Typography;
+const { RangePicker } = DatePicker;
 
 const statusLabel = {
   "un-assign": "Chưa giao",
@@ -35,17 +39,262 @@ const statusColor = {
   false: "grey",
 };
 
+const typeLabel = {
+  collect: "Thu hoạch",
+  "task-care": "Chăm sóc",
+};
+
+const typeColor = {
+  collect: "geekblue",
+  "task-care": "green",
+};
+
 export default function FarmerTaskList() {
   const { tasks, pagination, loading, error, fetchTasksFarmer, deleteTask } =
     useTaskStore();
 
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
+  const [viewMode, setViewMode] = useState("table"); // "table" hoặc "gantt"
+  const [ganttView, setGanttView] = useState(ViewMode.Month); // ViewMode cho Gantt
+  const [startDateFilter, setStartDateFilter] = useState(null);
+  const [endDateFilter, setEndDateFilter] = useState(null);
+  const [progressFilter, setProgressFilter] = useState(undefined);
+  const [allTasks, setAllTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
   const navigate = useNavigate();
 
+  // Hàm kiểm tra có filter nào đang được áp dụng không
+  const hasActiveFilters = () => {
+    return (
+      startDateFilter ||
+      endDateFilter ||
+      keyword ||
+      progressFilter
+    );
+  };
+
+  // Hàm đếm số filter đang được áp dụng
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (startDateFilter) count++;
+    if (endDateFilter) count++;
+    if (keyword) count++;
+    if (progressFilter) count++;
+    return count;
+  };
+
+  // Hàm return tiến độ của task
+  function getProgressState(task) {
+    const now = new Date();
+    const start = new Date(task.startDate || task.start);
+    const end = new Date(task.endDate || task.end);
+  
+    // Kiểm tra trạng thái trước
+    if (task.status === "canceled") return "Đã huỷ";
+    if (task.status === false) return "Đã xoá";
+    if (task.status === "completed") {
+      return now <= end
+        ? "Hoàn thành đúng hạn"
+        : `Hoàn thành trễ ${Math.floor((now - end) / 86400000)} ngày`;
+    }
+    if (task.status === "un-assign") return "Chưa giao";
+  
+    // Xử lý các trạng thái active
+    if (task.status === "assigned" || task.status === "in-progress") {
+      // Kiểm tra ngày bắt đầu
+      if (now < start) return "Chưa tới ngày bắt đầu";
+      
+      // Kiểm tra quá hạn
+      if (now > end) return `Quá hạn ${Math.floor((now - end) / 86400000)} ngày`;
+      
+      // Xử lý theo trạng thái
+      if (task.status === "in-progress") {
+        const daysLeft = Math.floor((end - now) / 86400000);
+        if (daysLeft <= 2) return `Sắp tới hạn (còn ${daysLeft} ngày)`;
+        return `Đang thực hiện (còn ${daysLeft} ngày)`;
+      } else if (task.status === "assigned") {
+        const daysLeft = Math.floor((end - now) / 86400000);
+        if (daysLeft <= 2) return `Sắp tới hạn (còn ${daysLeft} ngày)`;
+        return `Chờ thực hiện (còn ${daysLeft} ngày)`;
+      }
+    }
+    
+    // Fallback cho các trạng thái khác
+    console.log("Unknown task status:", task.status, "for task:", task.name);
+    return "Chưa xác định";
+  }
+
+  // Hàm lấy màu sắc cho task theo tiến độ
+  const getTaskColor = (task) => {
+    const progressText = getProgressState(task);
+    
+    if (progressText.includes("Hoàn thành")) {
+      return "#52c41a"; // Xanh lá - Hoàn thành
+    } else if (progressText.includes("Sắp tới hạn")) {
+      return "#fa8c16"; // Cam - Sắp tới hạn
+    } else if (progressText.includes("Quá hạn")) {
+      return "#ff4d4f"; // Đỏ - Quá hạn
+    } else if (progressText.includes("Đang thực hiện")) {
+      return "#1890ff"; // Xanh dương - Đang thực hiện
+    } else if (progressText.includes("Chờ thực hiện")) {
+      return "#13c2c2"; // Xanh ngọc - Chờ thực hiện
+    } else if (progressText.includes("Chưa tới ngày bắt đầu")) {
+      return "#722ed1"; // Tím - Chưa tới ngày bắt đầu
+    } else if (progressText.includes("Chưa giao")) {
+      return "#d9d9d9"; // Xám nhạt - Chưa giao
+    } else if (progressText.includes("Đã huỷ")) {
+      return "#8c8c8c"; // Xám - Đã huỷ
+    } else if (progressText.includes("Đã xoá")) {
+      return "#595959"; // Xám đậm - Đã xoá
+    } else {
+      return "#d9d9d9"; // Xám nhạt - Mặc định
+    }
+  };
+
+  // format dữ liệu của gantt-task-react
+  const getGanttData = () => {
+    if (!filteredTasks || !Array.isArray(filteredTasks)) {
+      return [];
+    }
+
+    return filteredTasks
+      .map((task) => {
+        if (!task || !task._id) return null;
+
+        let startDate = null;
+        let endDate = null;
+
+        if (task.startDate) {
+          startDate = new Date(task.startDate);
+          if (isNaN(startDate.getTime())) {
+            startDate = null;
+          }
+        }
+
+        if (task.endDate) {
+          endDate = new Date(task.endDate);
+          if (isNaN(endDate.getTime())) {
+            endDate = null;
+          }
+        }
+
+        if (!startDate) return null;
+
+        if (!endDate) {
+          endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+        }
+
+        if (endDate < startDate) {
+          endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+        }
+
+        return {
+          id: task._id,
+          name: task.name || "Chưa có tên",
+          start: startDate,
+          end: endDate,
+          type: "task",
+          status: task.status,
+          progressFilter: getProgressState(task),
+          progress:
+            task.status === "completed"
+              ? 100
+              : task.status === "in-progress"
+              ? 50
+              : 0,
+          styles: {
+            progressColor: getTaskColor(task),
+            progressSelectedColor: getTaskColor(task),
+            backgroundColor: getTaskColor(task),
+            backgroundSelectedColor: getTaskColor(task),
+          },
+        };
+      })
+      .filter(Boolean);
+  };
+
+  const ganttData = getGanttData().filter(
+    (t) =>
+      t &&
+      t.start instanceof Date &&
+      t.end instanceof Date &&
+      !isNaN(t.start.getTime()) &&
+      !isNaN(t.end.getTime())
+  );
+
+  // Event handlers cho Gantt Chart
+  const handleTaskChange = (task) => {
+    console.log("Task changed:", task);
+    // Logic cập nhật task nếu cần
+  };
+
+  const handleTaskDelete = (task) => {
+    const conf = window.confirm(
+      `Bạn có chắc muốn xóa công việc "${task.name}"?`
+    );
+    if (conf) {
+      handleDelete({ _id: task.id, name: task.name });
+    }
+    return conf;
+  };
+
+  const handleProgressChange = (task) => {
+    console.log("Progress changed:", task);
+  };
+
+  const handleDblClick = (task) => {
+    console.log("Double clicked task:", task);
+    navigate(RoutePaths.MY_TASK_DETAIL(task.id));
+  };
+
   useEffect(() => {
-    fetchTasksFarmer({ page, keyword });
-  }, [page, keyword]);
+    fetchTasksFarmer({ pageSize: 1000 }); // Lấy tất cả tasks
+  }, []);
+
+  // Filter dữ liệu ở frontend
+  useEffect(() => {
+    let filtered = [...allTasks];
+
+    if (keyword) {
+      filtered = filtered.filter((task) =>
+        task.name.toLowerCase().includes(keyword.toLowerCase())
+      );
+    }
+
+    if (startDateFilter) {
+      const startDate = startDateFilter.toDate();
+      filtered = filtered.filter((task) => {
+        if (!task.startDate) return false;
+        return new Date(task.startDate) >= startDate;
+      });
+    }
+
+    if (endDateFilter) {
+      const endDate = endDateFilter.toDate();
+      endDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((task) => {
+        if (!task.endDate) return false;
+        return new Date(task.endDate) <= endDate;
+      });
+    }
+
+    if (progressFilter) {
+      filtered = filtered.filter((task) => {
+        const progressText = getProgressState(task);
+        return progressText.includes(progressFilter);
+      });
+    }
+
+    setFilteredTasks(filtered);
+  }, [allTasks, keyword, startDateFilter, endDateFilter, progressFilter]);
+
+  // Cập nhật allTasks khi có dữ liệu mới
+  useEffect(() => {
+    if (tasks && tasks.length > 0) {
+      setAllTasks(tasks);
+    }
+  }, [tasks]);
 
   useEffect(() => {
     if (error) message.error(error);
@@ -66,8 +315,7 @@ export default function FarmerTaskList() {
       title: "STT",
       align: "center",
       width: 60,
-      render: (_, __, idx) =>
-        (page - 1) * (pagination.pageSize || 10) + idx + 1,
+      render: (_, __, idx) => (page - 1) * 10 + idx + 1,
     },
     {
       title: "Tên công việc",
@@ -75,11 +323,22 @@ export default function FarmerTaskList() {
       key: "name",
     },
     {
+      title: "Loại",
+      dataIndex: "type",
+      key: "type",
+      align: "center",
+      render: (type) => (
+        <Tag color={typeColor[type] || "default"}>
+          {typeLabel[type] || type}
+        </Tag>
+      ),
+    },
+    {
       title: "Ghi chú",
       dataIndex: "description",
       key: "description",
     },
-     {
+    {
       title: "Ngày bắt đầu",
       dataIndex: "startDate",
       key: "startDate",
@@ -94,6 +353,20 @@ export default function FarmerTaskList() {
       align: "center",
       render: (endDate) =>
         endDate ? new Date(endDate).toLocaleDateString("vi-VN") : "—",
+    },
+    {
+      title: "Tiến độ",
+      key: "progress",
+      align: "center",
+      render: (_, record) => {
+        const progressText = getProgressState(record);
+        let color = "default";
+        if (progressText.includes("Sắp tới hạn")) color = "orange";
+        else if (progressText.includes("Quá hạn")) color = "red";
+        else if (progressText.includes("Hoàn thành")) color = "green";
+        else if (progressText.includes("Chưa")) color = "blue";
+        return <Tag color={color}>{progressText}</Tag>;
+      },
     },
     {
       title: "Trạng thái",
@@ -120,12 +393,6 @@ export default function FarmerTaskList() {
               onClick={() => navigate(RoutePaths.MY_TASK_DETAIL(record._id))}
             />
           </Tooltip>
-
-          {/* <Tooltip title="Xoá công việc">
-            <Popconfirm title="Xoá công việc này?" okText="Xoá" cancelText="Huỷ" onConfirm={() => handleDelete(record)}>
-              <Button type="text" danger icon={<DeleteOutlined style={{ color: "red", fontSize: 18 }} />} />
-            </Popconfirm>
-          </Tooltip> */}
         </div>
       ),
     },
@@ -152,7 +419,7 @@ export default function FarmerTaskList() {
         Danh sách công việc của bạn
       </Title>
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 18 }}>
+      <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
         <Input
           allowClear
           prefix={<SearchOutlined />}
@@ -166,33 +433,357 @@ export default function FarmerTaskList() {
           onChange={(e) => setKeyword(e.target.value)}
           value={keyword}
         />
+        <Select
+          allowClear
+          style={{ width: 200 }}
+          placeholder="Chọn tiến độ"
+          value={progressFilter}
+          options={[
+            { value: "Chưa tới ngày bắt đầu", label: "Chưa tới ngày bắt đầu" },
+            { value: "Sắp tới hạn", label: "Sắp tới hạn" },
+            { value: "Đang thực hiện", label: "Đang thực hiện" },
+            { value: "Chờ thực hiện", label: "Chờ thực hiện" },
+            { value: "Quá hạn", label: "Quá hạn" },
+            { value: "Hoàn thành", label: "Hoàn thành" },
+            { value: "Chưa giao", label: "Chưa giao" },
+            { value: "Đã huỷ", label: "Đã huỷ" },
+            { value: "Đã xoá", label: "Đã xoá" },
+          ]}
+          onChange={(value) => {
+            setProgressFilter(value);
+            setPage(1);
+          }}
+        />
+
+        {/* Button chuyển đổi view mode */}
+        <div style={{ display: "flex", gap: 4, marginLeft: "auto" }}>
+          <Button
+            type={viewMode === "table" ? "primary" : "default"}
+            icon={<TableOutlined />}
+            style={{
+              background: viewMode === "table" ? "#23643A" : undefined,
+              border: viewMode === "table" ? 0 : undefined,
+              borderRadius: 8,
+            }}
+            onClick={() => setViewMode("table")}
+          >
+            Bảng
+          </Button>
+          <Button
+            type={viewMode === "gantt" ? "primary" : "default"}
+            icon={<BarChartOutlined />}
+            style={{
+              background: viewMode === "gantt" ? "#23643A" : undefined,
+              border: viewMode === "gantt" ? 0 : undefined,
+              borderRadius: 8,
+            }}
+            onClick={() => setViewMode("gantt")}
+          >
+            Gantt Chart
+          </Button>
+        </div>
       </div>
 
-      <Table
-        rowKey="_id"
-        columns={columns}
-        dataSource={tasks}
-        loading={loading}
-        pagination={{
-          current: page,
-          total: pagination.total,
-          pageSize: pagination.pageSize,
-          onChange: setPage,
-          showSizeChanger: false,
+      {/* Gantt Chart Controls - chỉ hiện khi ở mode gantt */}
+      {viewMode === "gantt" && (
+        <>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              marginBottom: 16,
+              padding: "12px",
+              background: "#f8fafb",
+              borderRadius: "8px",
+              border: "1px solid #e8eaed",
+            }}
+          >
+            <span style={{ fontWeight: 500, color: "#23643A", marginRight: 8 }}>
+              Gantt View:
+            </span>
+            <Button
+              size="small"
+              type={ganttView === ViewMode.Day ? "primary" : "default"}
+              onClick={() => setGanttView(ViewMode.Day)}
+              style={{
+                background: ganttView === ViewMode.Day ? "#23643A" : undefined,
+                border: ganttView === ViewMode.Day ? 0 : undefined,
+              }}
+            >
+              Ngày
+            </Button>
+            <Button
+              size="small"
+              type={ganttView === ViewMode.Week ? "primary" : "default"}
+              onClick={() => setGanttView(ViewMode.Week)}
+              style={{
+                background: ganttView === ViewMode.Week ? "#23643A" : undefined,
+                border: ganttView === ViewMode.Week ? 0 : undefined,
+              }}
+            >
+              Tuần
+            </Button>
+            <Button
+              size="small"
+              type={ganttView === ViewMode.Month ? "primary" : "default"}
+              onClick={() => setGanttView(ViewMode.Month)}
+              style={{
+                background: ganttView === ViewMode.Month ? "#23643A" : undefined,
+                border: ganttView === ViewMode.Month ? 0 : undefined,
+              }}
+            >
+              Tháng
+            </Button>
+          </div>
+
+          {/* Legend cho màu sắc tiến độ */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 12,
+              marginBottom: 16,
+              padding: "12px",
+              background: "#f0f8ff",
+              borderRadius: "8px",
+              border: "1px solid #d6e4ff",
+            }}
+          >
+            <span style={{ fontWeight: 500, color: "#23643A", marginRight: 8 }}>
+              Chú thích màu sắc:
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#52c41a", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Hoàn thành</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#fa8c16", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Sắp tới hạn</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#ff4d4f", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Quá hạn</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#1890ff", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Đang thực hiện</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#13c2c2", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Chờ thực hiện</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#722ed1", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Chưa tới ngày bắt đầu</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 12, backgroundColor: "#8c8c8c", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>Đã huỷ</span>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Filter thời gian */}
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          marginBottom: 18,
+          flexWrap: "wrap",
+          padding: "16px",
+          background: "#f8fafb",
+          borderRadius: "8px",
+          border: "1px solid #e8eaed",
         }}
-        bordered
-        size="middle"
-        scroll={{ x: true }}
-        components={{
-          header: {
-            cell: (props) => (
-              <th {...props} style={{ ...props.style, ...tableHeaderStyle }}>
-                {props.children}
-              </th>
-            ),
-          },
-        }}
-      />
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontWeight: 500, color: "#23643A" }}>
+            Bộ lọc thời gian:
+          </span>
+        </div>
+        <Tooltip title="Lọc theo ngày bắt đầu công việc">
+          <DatePicker
+            placeholder="Ngày bắt đầu công việc"
+            value={startDateFilter}
+            onChange={(date) => {
+              setStartDateFilter(date);
+              setPage(1);
+            }}
+            style={{ width: 200 }}
+            format="DD/MM/YYYY"
+          />
+        </Tooltip>
+        <Tooltip title="Lọc theo ngày kết thúc công việc">
+          <DatePicker
+            placeholder="Ngày kết thúc công việc"
+            value={endDateFilter}
+            onChange={(date) => {
+              setEndDateFilter(date);
+              setPage(1);
+            }}
+            style={{ width: 200 }}
+            format="DD/MM/YYYY"
+          />
+        </Tooltip>
+        <Button
+          onClick={() => {
+            setStartDateFilter(null);
+            setEndDateFilter(null);
+            setProgressFilter(undefined);
+            setPage(1);
+          }}
+          style={{
+            borderRadius: 8,
+            background: "#ff4d4f",
+            borderColor: "#ff4d4f",
+            color: "white",
+          }}
+          disabled={!hasActiveFilters()}
+        >
+          Xóa bộ lọc ({getActiveFilterCount()})
+        </Button>
+      </div>
+
+      {/* Hiển thị thông tin filter đang áp dụng */}
+      {hasActiveFilters() && (
+        <div
+          style={{
+            marginBottom: 16,
+            padding: "8px 12px",
+            background: "#e6f7ff",
+            border: "1px solid #91d5ff",
+            borderRadius: "6px",
+            fontSize: "14px",
+          }}
+        >
+          <span style={{ fontWeight: 500, color: "#1890ff" }}>
+            Đang áp dụng {getActiveFilterCount()} bộ lọc
+          </span>
+          {keyword && (
+            <span style={{ marginLeft: 16, color: "#666" }}>
+              Từ khóa: <strong>"{keyword}"</strong>
+            </span>
+          )}
+          {startDateFilter && (
+            <span style={{ marginLeft: 16, color: "#666" }}>
+              Ngày bắt đầu:{" "}
+              <strong>{startDateFilter.format("DD/MM/YYYY")}</strong>
+            </span>
+          )}
+          {endDateFilter && (
+            <span style={{ marginLeft: 16, color: "#666" }}>
+              Ngày kết thúc:{" "}
+              <strong>{endDateFilter.format("DD/MM/YYYY")}</strong>
+            </span>
+          )}
+          {progressFilter && (
+            <span style={{ marginLeft: 16, color: "#666" }}>
+              Tiến độ: <strong>{progressFilter}</strong>
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* ========== DATA DISPLAY ========== */}
+      {viewMode === "table" ? (
+        <Table
+          rowKey="_id"
+          columns={columns}
+          dataSource={filteredTasks}
+          loading={loading}
+          pagination={{
+            current: page,
+            total: filteredTasks.length,
+            pageSize: 10,
+            onChange: setPage,
+            showSizeChanger: false,
+          }}
+          bordered
+          size="middle"
+          scroll={{ x: true }}
+          style={{ background: "#fff" }}
+          components={{
+            header: {
+              cell: (props) => (
+                <th {...props} style={{ ...props.style, ...tableHeaderStyle }}>
+                  {props.children}
+                </th>
+              ),
+            },
+          }}
+        />
+      ) : (
+        <div style={{ marginTop: 16 }}>
+          {ganttData && ganttData.length > 0 ? (
+            <div style={{
+              ...(ganttView === ViewMode.Day && {
+                overflowX: 'auto',
+                border: '1px solid #e8eaed',
+                borderRadius: '8px',
+                background: '#fff'
+              })
+            }}>
+              <Gantt
+                tasks={ganttData}
+                viewMode={ganttView}
+                onDateChange={handleTaskChange}
+                onDelete={handleTaskDelete}
+                onProgressChange={handleProgressChange}
+                onDoubleClick={handleDblClick}
+                // onSelect={handleSelect}
+                // onExpanderClick={handleExpanderClick}
+                listCellWidth={ganttView === ViewMode.Day ? "250px" : "200px"}
+                columnWidth={
+                  ganttView === ViewMode.Month
+                    ? 300
+                    : ganttView === ViewMode.Week
+                    ? 250
+                    : 80
+                }
+                rowHeight={ganttView === ViewMode.Day ? 35 : 40}
+                fontSize={ganttView === ViewMode.Day ? 10 : 12}
+                locale="vi-VN"
+                preStepsCount={ganttView === ViewMode.Day ? 2 : 1}
+                postStepsCount={ganttView === ViewMode.Day ? 2 : 1}
+                todayColor={ganttView === ViewMode.Day ? "#ff7875" : "#52c41a"}
+                rtl={false}
+                gridLineStartWidth={ganttView === ViewMode.Day ? 1 : 0}
+                gridLineEndWidth={ganttView === ViewMode.Day ? 1 : 0}
+                gridLineColor={ganttView === ViewMode.Day ? "#e8eaed" : "#f0f0f0"}
+                gridLineStartColor={ganttView === ViewMode.Day ? "#e8eaed" : "#f0f0f0"}
+                gridLineEndColor={ganttView === ViewMode.Day ? "#e8eaed" : "#f0f0f0"}
+                gridLineStartDasharray={ganttView === ViewMode.Day ? "5,5" : "0"}
+                gridLineEndDasharray={ganttView === ViewMode.Day ? "5,5" : "0"}
+                gridLineStartOpacity={ganttView === ViewMode.Day ? 0.5 : 0}
+                gridLineEndOpacity={ganttView === ViewMode.Day ? 0.5 : 0}
+                headerHeight={ganttView === ViewMode.Day ? 60 : 50}
+                barCornerRadius={ganttView === ViewMode.Day ? 2 : 4}
+                arrowColor={ganttView === ViewMode.Day ? "#1e4d2b" : "#23643A"}
+                fontFamily={ganttView === ViewMode.Day ? "Inter, Arial, sans-serif" : "Arial, sans-serif"}
+              />
+            </div>
+          ) : (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "40px",
+                color: "#666",
+                background: "#f8fafb",
+                borderRadius: "8px",
+                border: "1px solid #e8eaed",
+              }}
+            >
+              <p>Không có dữ liệu để hiển thị Gantt Chart</p>
+              <p style={{ fontSize: "14px", marginTop: "8px" }}>
+                {filteredTasks.length === 0
+                  ? "Không tìm thấy công việc nào phù hợp với bộ lọc"
+                  : "Các công việc hiện tại không có ngày bắt đầu hợp lệ"}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
