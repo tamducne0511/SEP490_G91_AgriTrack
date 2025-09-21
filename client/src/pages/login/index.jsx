@@ -48,7 +48,7 @@ export default function Login() {
           level={2}
           style={{ textAlign: "center", marginBottom: 32 }}
         >
-          Đăng nhập
+          ĐĂNG NHẬP
         </Typography.Title>
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item
