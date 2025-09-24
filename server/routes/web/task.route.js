@@ -30,4 +30,12 @@ router.post(
 router.get("/:id/daily-note", isLogin, taskController.getDailyNote);
 router.get("/daily-note/:id", isLogin, taskController.getDetailDailyNote);
 
+// Cập nhật tiến độ công việc (farmer)
+router.post(
+  "/:id/progress",
+  isFarmer,
+  taskValidation.updateProgress,
+  taskController.updateProgress
+);
+
 module.exports = router;

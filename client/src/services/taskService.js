@@ -75,6 +75,11 @@ export const changeTaskStatusApi = async (taskId, status) => {
   return res.data;
 };
 
+export const updateTaskProgressApi = async (taskId, progress) => {
+  const res = await client.post(`/web/tasks/${taskId}/progress`, { progress });
+  return res.data;
+};
+
 export const fetchDailyNoteDetailApi = async (id) => {
   const res = await client.get(`/web/tasks/daily-note/${id}`);
   return res.data;

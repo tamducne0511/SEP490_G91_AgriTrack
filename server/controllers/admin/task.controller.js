@@ -159,7 +159,9 @@ const assignFarmer = async (req, res, next) => {
 };
 const exportExcel = async (req, res, next) => {
   try {
-    const { farmId, gardenId, keyword } = req.query;
+    const { farmId, gardenId, keyword, status, startDate, endDate, minProgress, maxProgress } = req.query;
+    // Hỗ trợ cả ids và ids[] do client có thể serialize array theo 2 dạng
+    const idsRaw = req.query.ids || req.query["ids[]"];
     
     // Validate farm access permissions
     let allowedFarmId = farmId;
@@ -174,7 +176,18 @@ const exportExcel = async (req, res, next) => {
       allowedFarmId = req.user.farmId;
     }
     
-    const tasks = await taskService.exportTask(allowedFarmId, gardenId, keyword || "");
+    const tasks = await taskService.exportTask(
+      allowedFarmId,
+      gardenId,
+      keyword || "",
+      status,
+      startDate,
+      endDate,
+      minProgress,
+      maxProgress,
+      // ids có thể là chuỗi hoặc mảng chuỗi
+      idsRaw ? (Array.isArray(idsRaw) ? idsRaw : String(idsRaw).split(",")) : undefined
+    );
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Tasks');
     worksheet.columns = [
@@ -185,6 +198,7 @@ const exportExcel = async (req, res, next) => {
       { header: "Ngày kết thúc", key: "endDate", width: 15 },
       { header: "Người tạo", key: "createdBy", width: 20 },
       { header: "Ưu tiên", key: "priority", width: 15 },
+      { header: "Tiến độ", key: "progress", width: 15 },
       { header: "Trạng thái", key: "status", width: 15 },
     ]
     tasks.forEach((t, i) => {
@@ -196,6 +210,7 @@ const exportExcel = async (req, res, next) => {
         endDate: t.endDate ? t.endDate.toISOString().split("T")[0] : "",
         createdBy: t.createdBy ? t.createdBy.fullName : "",
         priority: t.priority,
+        progress: typeof t.progress === "number" ? `${t.progress}%` : "0%",
         status: t.status,
       });
     });

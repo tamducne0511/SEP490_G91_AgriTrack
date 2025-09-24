@@ -134,7 +134,11 @@ const update = async (id, data) => {
 
 const find = async (id) => {
   try {
-    const task = await Task.findById(id).populate("farmerId", "-password").populate("createdBy", "fullName");
+    const task = await Task.findById(id)
+      .populate("farmerId", "-password")
+      .populate("createdBy", "fullName")
+      .populate("farmId", "name")
+      .populate("gardenId", "name");
     return task;
   } catch (error) {
     return null;
@@ -287,24 +291,99 @@ const changeStatusAssigned = async (taskId, farmerId, status) => {
   await taskHistory.save();
   return task;
 };
-const exportTask = async (farmId, gardenId, keyword = "") => {
-const filter = {
-    name: { $regex: keyword, $options: "i" },
+
+const updateProgressByFarmer = async (taskId, farmerId, progress) => {
+  const task = await Task.findOne({ _id: taskId, farmerId: farmerId });
+  if (!task) {
+    throw new NotFoundException("Not found task with id: " + taskId);
+  }
+
+  // Không cho cập nhật khi đã hoàn thành hoặc bị xóa
+  if (task.status === TASK_ASSIGN_STATUS.completed || task.status === false) {
+    throw new BadRequestException("Không thể cập nhật tiến độ cho công việc này");
+  }
+
+  task.progress = progress;
+  if (progress > 0 && task.status === TASK_ASSIGN_STATUS.assigned) {
+    task.status = TASK_ASSIGN_STATUS.inprogress;
+  }
+  if (progress === 100) {
+    task.status = TASK_ASSIGN_STATUS.completed;
+  }
+  await task.save();
+
+  const taskHistory = new TaskHistory({
+    taskId: taskId,
+    farmerId: farmerId,
+    comment: `Cập nhật tiến độ: ${progress}%`,
+    status: task.status,
+  });
+  await taskHistory.save();
+  return task;
+};
+const exportTask = async (
+  farmId,
+  gardenId,
+  keyword = "",
+  status,
+  startDate,
+  endDate,
+  minProgress,
+  maxProgress,
+  ids
+) => {
+  const filter = {
+    name: { $regex: keyword || "", $options: "i" },
   };
+
+  if (ids && Array.isArray(ids) && ids.length > 0) {
+    filter._id = { $in: ids };
+  }
+
   if (farmId) {
     if (Array.isArray(farmId)) {
       filter.farmId = { $in: farmId };
-    } else{
+    } else {
       filter.farmId = farmId;
     }
   }
+
   if (gardenId) {
     filter.gardenId = gardenId;
   }
-  const tasks = await Task.find(filter).
-  populate("farmId", "name").
-  populate("gardenId", "name").
-  populate("createdBy", "fullName");
+
+  if (!filter._id && status) {
+    const statuses = Array.isArray(status) ? status : [status];
+    if (statuses.length > 0) {
+      filter.status = { $in: statuses };
+    }
+  }
+
+  if (!filter._id && startDate) {
+    const sd = new Date(startDate);
+    if (!isNaN(sd.getTime())) {
+      filter.startDate = { ...(filter.startDate || {}), $gte: sd };
+    }
+  }
+
+  if (!filter._id && endDate) {
+    const ed = new Date(endDate);
+    if (!isNaN(ed.getTime())) {
+      ed.setHours(23, 59, 59, 999);
+      filter.endDate = { ...(filter.endDate || {}), $lte: ed };
+    }
+  }
+
+  if (!filter._id && (minProgress !== undefined || maxProgress !== undefined)) {
+    filter.progress = {};
+    if (minProgress !== undefined) filter.progress.$gte = Number(minProgress);
+    if (maxProgress !== undefined) filter.progress.$lte = Number(maxProgress);
+  }
+
+  const tasks = await Task.find(filter)
+    .populate("farmId", "name")
+    .populate("gardenId", "name")
+    .populate("createdBy", "fullName");
   return tasks;
 }
 
@@ -320,5 +399,6 @@ module.exports = {
   getTotalAssigned,
   getDetail,
   changeStatusAssigned,
+  updateProgressByFarmer,
   exportTask,
 };

@@ -94,13 +94,16 @@ export default function TaskList() {
 
   // Hàm kiểm tra có filter nào đang được áp dụng không
   const hasActiveFilters = () => {
+    const hasStatus = Array.isArray(statusFilter)
+      ? statusFilter.length > 0
+      : !!statusFilter;
     return (
       startDateFilter ||
       endDateFilter ||
       keyword ||
       selectedFarmId ||
       selectedGardenId ||
-      statusFilter ||
+      hasStatus ||
       progressFilter
     );
   };
@@ -113,7 +116,7 @@ export default function TaskList() {
     if (keyword) count++;
     if (selectedFarmId) count++;
     if (selectedGardenId) count++;
-    if (statusFilter) count++;
+    if ((Array.isArray(statusFilter) ? statusFilter.length > 0 : !!statusFilter)) count++;
     if (progressFilter) count++;
     return count;
   };
@@ -226,15 +229,23 @@ export default function TaskList() {
     }
 
     // Filter theo trạng thái
-    if (statusFilter) {
-      filtered = filtered.filter((task) => task.status === statusFilter);
+    const hasStatus = Array.isArray(statusFilter)
+      ? statusFilter.length > 0
+      : !!statusFilter;
+    if (hasStatus) {
+      const statuses = Array.isArray(statusFilter) ? statusFilter : [statusFilter];
+      filtered = filtered.filter((task) => statuses.includes(task.status));
     }
 
-    // Filter theo tiến độ
+    // Filter theo tiến độ (dựa vào số % từ BE)
     if (progressFilter) {
       filtered = filtered.filter((task) => {
-        const progressText = getProgressState(task);
-        return progressText.includes(progressFilter);
+        const p = Number.isFinite(task.progress) ? task.progress : 0;
+        if (progressFilter === "0%") return p === 0;
+        if (progressFilter === "1-49%") return p >= 1 && p <= 49;
+        if (progressFilter === "50-99%") return p >= 50 && p <= 99;
+        if (progressFilter === "100%") return p === 100;
+        return true;
       });
     }
 
@@ -242,72 +253,12 @@ export default function TaskList() {
   }, [allTasks, keyword, selectedGardenId, startDateFilter, endDateFilter, statusFilter, progressFilter]);
 
   // console.log("Filtered Tasks:", filteredTasks);
-  // Hàm return tiến độ của task
-  function getProgressState(task) {
-    const now = new Date();
-    const start = new Date(task.startDate || task.start);
-    const end = new Date(task.endDate || task.end);
-  
-    // Kiểm tra trạng thái trước
-    if (task.status === "canceled") return "Đã huỷ";
-    if (task.status === false) return "Đã xoá";
-    if (task.status === "completed") {
-      return now <= end
-        ? "Hoàn thành đúng hạn"
-        : `Hoàn thành trễ ${Math.floor((now - end) / 86400000)} ngày`;
-    }
-    if (task.status === "un-assign") return "Chưa giao";
-  
-    // Xử lý các trạng thái active
-    if (task.status === "assigned" || task.status === "in-progress") {
-      // Kiểm tra ngày bắt đầu
-      if (now < start) return "Chưa tới ngày bắt đầu";
-      
-      // Kiểm tra quá hạn
-      if (now > end) return `Quá hạn ${Math.floor((now - end) / 86400000)} ngày`;
-      
-      // Xử lý theo trạng thái
-      if (task.status === "in-progress") {
-        const daysLeft = Math.floor((end - now) / 86400000);
-        if (daysLeft <= 2) return `Sắp tới hạn (còn ${daysLeft} ngày)`;
-        return `Đang thực hiện (còn ${daysLeft} ngày)`;
-      } else if (task.status === "assigned") {
-        const daysLeft = Math.floor((end - now) / 86400000);
-        if (daysLeft <= 2) return `Sắp tới hạn (còn ${daysLeft} ngày)`;
-        return `Chờ thực hiện (còn ${daysLeft} ngày)`;
-      }
-    }
-    
-    // Fallback cho các trạng thái khác
-    console.log("Unknown task status:", task.status, "for task:", task.name);
-    return "Chưa xác định";
-  }
-
-  // Hàm lấy màu sắc cho task theo tiến độ
+  // Màu theo tiến độ số từ backend
   const getTaskColor = (task) => {
-    const progressText = getProgressState(task);
-    
-    if (progressText.includes("Hoàn thành")) {
-      return "#52c41a"; // Xanh lá - Hoàn thành
-    } else if (progressText.includes("Sắp tới hạn")) {
-      return "#fa8c16"; // Cam - Sắp tới hạn
-    } else if (progressText.includes("Quá hạn")) {
-      return "#ff4d4f"; // Đỏ - Quá hạn
-    } else if (progressText.includes("Đang thực hiện")) {
-      return "#1890ff"; // Xanh dương - Đang thực hiện
-    } else if (progressText.includes("Chờ thực hiện")) {
-      return "#13c2c2"; // Xanh ngọc - Chờ thực hiện
-    } else if (progressText.includes("Chưa tới ngày bắt đầu")) {
-      return "#722ed1"; // Tím - Chưa tới ngày bắt đầu
-    } else if (progressText.includes("Chưa giao")) {
-      return "#d9d9d9"; // Xám nhạt - Chưa giao
-    } else if (progressText.includes("Đã huỷ")) {
-      return "#8c8c8c"; // Xám - Đã huỷ
-    } else if (progressText.includes("Đã xoá")) {
-      return "#595959"; // Xám đậm - Đã xoá
-    } else {
-      return "#d9d9d9"; // Xám nhạt - Mặc định
-    }
+    const p = Number.isFinite(task?.progress) ? task.progress : 0;
+    if (p >= 100) return "#52c41a"; // hoàn thành
+    if (p > 0) return "#1890ff"; // đang thực hiện
+    return "#d9d9d9"; // chưa bắt đầu
   };
   // format dữ liệu của gantt-task-react
   const getGanttData = () => {
@@ -360,13 +311,8 @@ export default function TaskList() {
           type: "task",
           createdBy: task.createdBy,
           status: task.status,
-          progressFilter: getProgressState(task),
-          progress:
-            task.status === "completed"
-              ? 100
-              : task.status === "in-progress"
-              ? 50
-              : 0,
+          progressFilter: Number.isFinite(task.progress) ? `${task.progress}%` : "0%",
+          progress: Number.isFinite(task.progress) ? task.progress : 0,
           styles: {
             progressColor: getTaskColor(task),
             progressSelectedColor: getTaskColor(task),
@@ -543,16 +489,9 @@ export default function TaskList() {
       key: "progress",
       align: "center",
       render: (_, record) => {
-        const progressText = getProgressState(record);
-    
-        // bạn có thể gán màu riêng cho progress
-        let color = "default";
-        if (progressText.includes("Sắp tới hạn")) color = "orange";
-        else if (progressText.includes("Quá hạn")) color = "red";
-        else if (progressText.includes("Hoàn thành")) color = "green";
-        else if (progressText.includes("Chưa")) color = "blue";
-    
-        return <Tag color={color}>{progressText}</Tag>;
+        const p = Number.isFinite(record.progress) ? record.progress : 0;
+        let color = p >= 100 ? "green" : p > 0 ? "blue" : "default";
+        return <Tag color={color}>{p}%</Tag>;
       },
     },
     {
@@ -735,15 +674,10 @@ export default function TaskList() {
           placeholder="Chọn tiến độ"
           value={progressFilter}
           options={[
-            { value: "Chưa tới ngày bắt đầu", label: "Chưa tới ngày bắt đầu" },
-            { value: "Sắp tới hạn", label: "Sắp tới hạn" },
-            { value: "Đang thực hiện", label: "Đang thực hiện" },
-            { value: "Chờ thực hiện", label: "Chờ thực hiện" },
-            { value: "Quá hạn", label: "Quá hạn" },
-            { value: "Hoàn thành", label: "Hoàn thành" },
-            { value: "Chưa giao", label: "Chưa giao" },
-            { value: "Đã huỷ", label: "Đã huỷ" },
-            { value: "Đã xoá", label: "Đã xoá" },
+            { value: "0%", label: "0%" },
+            { value: "1-49%", label: "1-49%" },
+            { value: "50-99%", label: "50-99%" },
+            { value: "100%", label: "100%" },
           ]}
           onChange={(value) => {
             setProgressFilter(value);
@@ -785,19 +719,42 @@ export default function TaskList() {
             let exportFarmId = selectedFarmId;
             if (user?.role === "expert" && !selectedFarmId) {
               // Expert không chọn farm thì gửi tất cả farm của họ
-              exportFarmId = farmIds?.map(f => f.farm._id);
+              exportFarmId = farmIds?.map((f) => f.farm._id);
             } else if (user?.role === "farmAdmin") {
               // Farm admin chỉ có thể export farm của mình
               exportFarmId = user.farmId;
             }
-            
+
+            // Map status (multiple)
+            const statusParam = Array.isArray(statusFilter) && statusFilter.length > 0 ? statusFilter : undefined;
+
+            // Map progress ranges
+            let minProgress;
+            let maxProgress;
+            if (progressFilter === "0%") {
+              minProgress = 0; maxProgress = 0;
+            } else if (progressFilter === "1-49%") {
+              minProgress = 1; maxProgress = 49;
+            } else if (progressFilter === "50-99%") {
+              minProgress = 50; maxProgress = 99;
+            } else if (progressFilter === "100%") {
+              minProgress = 100; maxProgress = 100;
+            }
+
+            // Lấy danh sách ID đang hiển thị trên bảng (filteredTasks)
+            const ids = (filteredTasks || []).map((t) => t._id);
+
             exportExcel({
               farmId: exportFarmId,
               gardenId: selectedGardenId,
               keyword,
-              // startDate: startDateFilter ? startDateFilter.format('YYYY-MM-DD') : undefined,
-              // endDate: endDateFilter ? endDateFilter.format('YYYY-MM-DD') : undefined,
-            })
+              status: statusParam,
+              startDate: startDateFilter ? startDateFilter.format("YYYY-MM-DD") : undefined,
+              endDate: endDateFilter ? endDateFilter.format("YYYY-MM-DD") : undefined,
+              minProgress,
+              maxProgress,
+              ids: ids && ids.length > 0 ? ids : undefined,
+            });
           }} >
           Xuất Excel
         </Button>
@@ -856,7 +813,7 @@ export default function TaskList() {
             </Button>
           </div>
 
-          {/* Legend cho màu sắc tiến độ */}
+          {/* Legend cho màu sắc tiến độ (theo %) */}
           <div
             style={{
               display: "flex",
@@ -874,31 +831,15 @@ export default function TaskList() {
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <div style={{ width: 12, height: 12, backgroundColor: "#52c41a", borderRadius: 2 }}></div>
-              <span style={{ fontSize: "12px" }}>Hoàn thành</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <div style={{ width: 12, height: 12, backgroundColor: "#fa8c16", borderRadius: 2 }}></div>
-              <span style={{ fontSize: "12px" }}>Sắp tới hạn</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <div style={{ width: 12, height: 12, backgroundColor: "#ff4d4f", borderRadius: 2 }}></div>
-              <span style={{ fontSize: "12px" }}>Quá hạn</span>
+              <span style={{ fontSize: "12px" }}>100% (Hoàn thành)</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <div style={{ width: 12, height: 12, backgroundColor: "#1890ff", borderRadius: 2 }}></div>
-              <span style={{ fontSize: "12px" }}>Đang thực hiện</span>
+              <span style={{ fontSize: "12px" }}>1–99% (Đang thực hiện)</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <div style={{ width: 12, height: 12, backgroundColor: "#13c2c2", borderRadius: 2 }}></div>
-              <span style={{ fontSize: "12px" }}>Chờ thực hiện</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <div style={{ width: 12, height: 12, backgroundColor: "#722ed1", borderRadius: 2 }}></div>
-              <span style={{ fontSize: "12px" }}>Chưa tới ngày bắt đầu</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <div style={{ width: 12, height: 12, backgroundColor: "#8c8c8c", borderRadius: 2 }}></div>
-              <span style={{ fontSize: "12px" }}>Đã huỷ</span>
+              <div style={{ width: 12, height: 12, backgroundColor: "#d9d9d9", borderRadius: 2 }}></div>
+              <span style={{ fontSize: "12px" }}>0% (Chưa bắt đầu)</span>
             </div>
           </div>
         </>

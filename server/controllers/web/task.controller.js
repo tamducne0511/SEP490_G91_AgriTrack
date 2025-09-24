@@ -106,6 +106,25 @@ const getDetailDailyNote = async (req, res, next) => {
   });
 };
 
+const updateProgress = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const id = req.params.id;
+    const { progress } = req.body;
+    const task = await taskService.updateProgressByFarmer(id, req.user.id, parseInt(progress, 10));
+    res.json({
+      message: "Cập nhật tiến độ thành công",
+      data: task,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
   getList,
   find,
@@ -113,4 +132,5 @@ module.exports = {
   createDailyNote,
   getDailyNote,
   getDetailDailyNote,
+  updateProgress,
 };

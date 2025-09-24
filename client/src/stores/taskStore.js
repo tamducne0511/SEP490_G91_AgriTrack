@@ -6,6 +6,7 @@ import {
   createQuestionApi,
   createTaskApi,
   deleteTaskApi,
+  updateTaskProgressApi,
   fetchDailyNoteDetailApi,
   fetchDailyNotesByTaskIdApi,
   fetchFarmEquipmentApi,
@@ -207,6 +208,18 @@ export const useTaskStore = create((set, get) => ({
       fetchAssignedTaskDetail(taskId);
     } catch (err) {
       set({ error: err?.message || "Lỗi đổi trạng thái task", loading: false });
+      throw err;
+    }
+  },
+  updateTaskProgress: async (taskId, progress) => {
+    set({ loading: true, error: null });
+    try {
+      await updateTaskProgressApi(taskId, progress);
+      set({ loading: false });
+      const { fetchAssignedTaskDetail } = get();
+      fetchAssignedTaskDetail(taskId);
+    } catch (err) {
+      set({ error: err?.message || "Lỗi cập nhật tiến độ", loading: false });
       throw err;
     }
   },
