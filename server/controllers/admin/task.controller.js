@@ -4,6 +4,7 @@ const taskService = require("../../services/task.service");
 const notificationService = require("../../services/notification.service");
 const userService = require("../../services/user.service");
 const NotFoundException = require("../../middlewares/exceptions/notfound");
+const ExcelJS = require('exceljs');
 
 // Get list task with pagination and keyword search
 const getList = async (req, res) => {
@@ -19,7 +20,7 @@ const getList = async (req, res) => {
     keyword,
     pageSize
   );
-  
+
   if (pageSize >= 1000) {
     res.json({
       data: list,
@@ -156,6 +157,79 @@ const assignFarmer = async (req, res, next) => {
     data: result,
   });
 };
+const exportExcel = async (req, res, next) => {
+  try {
+    const { farmId, gardenId, keyword, status, startDate, endDate, minProgress, maxProgress } = req.query;
+    // Hỗ trợ cả ids và ids[] do client có thể serialize array theo 2 dạng
+    const idsRaw = req.query.ids || req.query["ids[]"];
+    
+    // Validate farm access permissions
+    let allowedFarmId = farmId;
+    if (req.user.role === "expert") {
+      // Expert có thể chọn farm từ danh sách farm được phép truy cập
+      if (farmId && !req.user.farmId.includes(farmId)) {
+        return res.status(403).json({ message: "Bạn không có quyền truy cập farm này" });
+      }
+      allowedFarmId = farmId || req.user.farmId; // Nếu không chọn farm thì lấy tất cả farm của expert
+    } else {
+      // Farm-admin chỉ có thể export farm của mình
+      allowedFarmId = req.user.farmId;
+    }
+    
+    const tasks = await taskService.exportTask(
+      allowedFarmId,
+      gardenId,
+      keyword || "",
+      status,
+      startDate,
+      endDate,
+      minProgress,
+      maxProgress,
+      // ids có thể là chuỗi hoặc mảng chuỗi
+      idsRaw ? (Array.isArray(idsRaw) ? idsRaw : String(idsRaw).split(",")) : undefined
+    );
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Tasks');
+    worksheet.columns = [
+      { header: "STT", key: "stt", width: 5 },
+      { header: "Tên công việc", key: "name", width: 25 },
+      { header: "Loại", key: "type", width: 15 },
+      { header: "Ngày bắt đầu", key: "startDate", width: 15 },
+      { header: "Ngày kết thúc", key: "endDate", width: 15 },
+      { header: "Người tạo", key: "createdBy", width: 20 },
+      { header: "Ưu tiên", key: "priority", width: 15 },
+      { header: "Tiến độ", key: "progress", width: 15 },
+      { header: "Trạng thái", key: "status", width: 15 },
+    ]
+    tasks.forEach((t, i) => {
+      worksheet.addRow({
+        stt: i + 1,
+        name: t.name,
+        type: t.type,
+        startDate: t.startDate ? t.startDate.toISOString().split("T")[0] : "",
+        endDate: t.endDate ? t.endDate.toISOString().split("T")[0] : "",
+        createdBy: t.createdBy ? t.createdBy.fullName : "",
+        priority: t.priority,
+        progress: typeof t.progress === "number" ? `${t.progress}%` : "0%",
+        status: t.status,
+      });
+    });
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=" + "tasks.xlsx"
+    );
+    await workbook.xlsx.write(res);
+    res.status(200).end();
+  }
+  catch (e) { 
+    console.log(e);
+    res.status(500).json({ message: "Lỗi xuất excel" });
+   }
+}
 
 module.exports = {
   getList,
@@ -164,4 +238,5 @@ module.exports = {
   remove,
   find,
   assignFarmer,
+  exportExcel,
 };

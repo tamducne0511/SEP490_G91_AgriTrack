@@ -69,10 +69,19 @@ const deleteTask = [
     .withMessage("Lý do xóa phải có từ 10 đến 500 ký tự"),
 ];
 
+const updateProgress = [
+  body("progress")
+    .notEmpty()
+    .withMessage("Progress is required")
+    .isInt({ min: 0, max: 100 })
+    .withMessage("Progress must be an integer between 0 and 100"),
+];
+
 module.exports = {
   create,
   update,
   createDailyNote,
   changeStatus,
   deleteTask,
+  updateProgress,
 };

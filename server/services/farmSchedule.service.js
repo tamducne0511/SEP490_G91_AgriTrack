@@ -87,10 +87,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const generateTasksFromSchedule = async (farmSchedule) => {
+  const date = new Date();
   const prompt = `Bạn là chuyên gia nông nghiệp.
 Hãy phân tích lịch trình công việc sau và chia thành các công việc chi tiết cho công nhân nông trại.
 
-- Thời gian bắt đầu từ ngày **18/09/2025**.
+- Thời gian bắt đầu từ ngày *${date}*.
 - Ngày bắt đầu và kết thúc của các công việc phải **liên tiếp nhau, không được trùng hoặc bỏ trống**.
 
 Lịch trình: "${farmSchedule.description}"

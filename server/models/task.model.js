@@ -77,6 +77,14 @@ const taskSchema = new mongoose.Schema({
     required: true,
   },
 
+  // Tiến độ hoàn thành (%)
+  progress: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100,
+  },
+
   // Thêm các trường cho việc xóa task
   deleteReason: {
     type: String,

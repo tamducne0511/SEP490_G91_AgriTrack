@@ -68,6 +68,7 @@ export default function FarmerTaskDetail() {
     fetchFarmEquipment,
     changeTaskStatus,
     fetchDailyNoteDetail,
+    updateTaskProgress,
   } = useTaskStore();
 
   const [form] = Form.useForm();
@@ -79,6 +80,7 @@ export default function FarmerTaskDetail() {
   const [noteType, setNoteType] = useState("harvest");
 
   const [notesDetail, setNotesDetail] = useState([]);
+  const [progressInput, setProgressInput] = useState(undefined);
 
   useEffect(() => {
     const fetchAllNotes = async () => {
@@ -178,6 +180,25 @@ export default function FarmerTaskDetail() {
     }
   };
 
+  const handleSubmitProgress = async () => {
+    if (progressInput === undefined || progressInput === null) {
+      message.error("Vui lòng nhập tiến độ");
+      return;
+    }
+    const value = Number(progressInput);
+    if (!Number.isInteger(value) || value < 0 || value > 100) {
+      message.error("Tiến độ phải là số nguyên từ 0 đến 100");
+      return;
+    }
+    try {
+      await updateTaskProgress(id, value);
+      message.success("Cập nhật tiến độ thành công");
+      setProgressInput(undefined);
+    } catch (e) {
+      message.error(e?.message || "Không thể cập nhật tiến độ");
+    }
+  };
+
   if (loading || !myTask?.task) return <Spin style={{ margin: 80 }} />;
 
   const task = myTask.task;
@@ -210,6 +231,25 @@ export default function FarmerTaskDetail() {
           <Descriptions column={1} labelStyle={{ fontWeight: 600 }}>
             <Descriptions.Item label="Tên công việc">
               {task.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Tiến độ hiện tại">
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Tag color="blue">{Number.isFinite(task.progress) ? `${task.progress}%` : "0%"}</Tag>
+                {task.status !== "false" && (
+                  <>
+                    <InputNumber
+                      min={0}
+                      max={100}
+                      value={progressInput}
+                      onChange={setProgressInput}
+                      placeholder="Nhập %"
+                    />
+                    <Button type="primary" onClick={handleSubmitProgress}>
+                      Cập nhật tiến độ
+                    </Button>
+                  </>
+                )}
+              </div>
             </Descriptions.Item>
             <Descriptions.Item label="Mô tả">
               {task.description}

@@ -12,6 +12,7 @@ const login = async (email, password) => {
     email,
     status: true,
   });
+  console.log("login info", user);
 
   if (!user) {
     throw new BadRequestException("Invalid email or password");
