@@ -36,7 +36,7 @@ const { Text } = Typography;
 const NewsList = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { news, loading, pagination, fetchNews, deleteNews, useMockData, toggleMockData, error } = useNewsStore();
+  const { news, loading, pagination, fetchNews, deleteNews, error } = useNewsStore();
   
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -86,13 +86,7 @@ const NewsList = () => {
     loadNews();
   };
 
-  const handleMockDataToggle = (checked) => {
-    toggleMockData(checked);
-    // Reload data with new mode
-    setTimeout(() => {
-      loadNews();
-    }, 100);
-  };
+  
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -224,21 +218,7 @@ const NewsList = () => {
             
             <Col>
               <Space>
-                <Space>
-                  <Text strong>Dữ liệu mẫu:</Text>
-                  <Switch
-                    checked={useMockData}
-                    onChange={handleMockDataToggle}
-                    checkedChildren="Bật"
-                    unCheckedChildren="Tắt"
-                    style={{
-                      backgroundColor: useMockData ? "#23643A" : undefined,
-                    }}
-                  />
-                  <Tag color={useMockData ? "green" : "blue"}>
-                    {useMockData ? "Dữ liệu mẫu" : "API thực"}
-                  </Tag>
-                </Space>
+                
                 
                 {isExpert && (
                   <Button
