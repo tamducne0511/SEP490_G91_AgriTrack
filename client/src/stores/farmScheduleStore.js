@@ -69,10 +69,10 @@ export const useFarmScheduleStore = create((set) => ({
       throw err;
     }
   },
-  generateTasksByAI: async (scheduleId) => {
+  generateTasksByAI: async (scheduleId, userId) => {
     set({ loading: true, error: null });
     try {
-      const res = await generateTasksFromScheduleApi(scheduleId);
+      const res = await generateTasksFromScheduleApi(scheduleId, userId);
       set({ loading: false });
       return res.data; // danh sách task đã tạo
     } catch (err) {

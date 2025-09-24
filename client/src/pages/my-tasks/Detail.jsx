@@ -97,7 +97,7 @@ export default function FarmerTaskDetail() {
           })
         );
         setNotesDetail(arr.filter(Boolean));
-      } catch {}
+      } catch { }
     };
     fetchAllNotes();
   }, [myTask?.notes]);
@@ -140,22 +140,21 @@ export default function FarmerTaskDetail() {
       formData.append("comment", values.comment);
 
       if (noteType === "harvest") {
-        if (harvestYield === undefined || harvestYield < 0) {
-          message.error("Vui lòng nhập sản lượng thu hoạch hợp lệ");
-          return;
+        // không bắt buộc harvestYield
+        if (harvestYield !== undefined && harvestYield >= 0) {
+          formData.append("quantity", harvestYield);
         }
-        formData.append("quantity", harvestYield);
         formData.append("type", "harvest");
       } else if (noteType === "equipment") {
         const equipmentData = selectedEquipment.map((equipment) => ({
           id: equipment._id,
           quantity: equipment.quantity || 0,
         }));
-        if (equipmentData.length === 0) {
-          message.error("Vui lòng chọn ít nhất một thiết bị và nhập số lượng");
-          return;
-        }
+
+        // bỏ validate bắt buộc
         if (values.image?.file) formData.append("image", values.image.file);
+
+        // Cho phép mảng rỗng, vẫn append
         formData.append("equipments", JSON.stringify(equipmentData));
         formData.append("type", "consumption");
       }
@@ -305,7 +304,7 @@ export default function FarmerTaskDetail() {
               {new Date(task.createdAt).toLocaleString("vi-VN")}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày bắt đầu">
-               {new Date(task.startDate).toLocaleString("vi-VN")}
+              {new Date(task.startDate).toLocaleString("vi-VN")}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày kết thúc">
               {new Date(task.endDate).toLocaleString("vi-VN")}
@@ -315,10 +314,10 @@ export default function FarmerTaskDetail() {
               <>
                 {task.deleteReason && (
                   <Descriptions.Item label="Lý do bị xóa">
-                    <div style={{ 
-                      padding: "8px 12px", 
-                      background: "#fff2f0", 
-                      border: "1px solid #ffccc7", 
+                    <div style={{
+                      padding: "8px 12px",
+                      background: "#fff2f0",
+                      border: "1px solid #ffccc7",
                       borderRadius: "6px",
                       color: "#cf1322"
                     }}>
@@ -326,7 +325,7 @@ export default function FarmerTaskDetail() {
                     </div>
                   </Descriptions.Item>
                 )}
-                
+
                 {task.deletedAt && (
                   <Descriptions.Item label="Thời gian xóa">
                     {new Date(task.deletedAt).toLocaleString("vi-VN")}
