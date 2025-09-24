@@ -149,11 +149,13 @@ const NewsForm = () => {
   };
 
   const handleImageChange = (info) => {
-    if (info.file.status === "done") {
-      setImageFile(info.file.originFileObj);
-      message.success("Tải ảnh thành công");
-    } else if (info.file.status === "error") {
-      message.error("Tải ảnh thất bại");
+    const { file } = info;
+    
+    // Since we're using beforeUpload={() => false}, the file won't be uploaded
+    // We just store the file object for later use
+    if (file) {
+      setImageFile(file);
+      message.success("Ảnh đã được chọn");
     }
   };
 
@@ -293,7 +295,7 @@ const NewsForm = () => {
                 <Upload
                   name="image"
                   listType="picture-card"
-                  showUploadList={true}
+                  showUploadList={false}
                   beforeUpload={() => false}
                   onChange={handleImageChange}
                   accept="image/*"
@@ -306,10 +308,23 @@ const NewsForm = () => {
                   )}
                 </Upload>
                 
+                {imageFile && (
+                  <div style={{ marginTop: 8 }}>
+                    <img
+                      src={URL.createObjectURL(imageFile)}
+                      alt="Preview"
+                      style={{ width: "100%", maxWidth: 200, borderRadius: 6 }}
+                    />
+                    <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+                      Ảnh mới
+                    </div>
+                  </div>
+                )}
+                
                 {currentNews?.image && !imageFile && (
                   <div style={{ marginTop: 8 }}>
                     <img
-                      src={`${process.env.REACT_APP_API_BASE_URL}${currentNews.image}`}
+                      src={`${process.env.REACT_APP_API_BASE_URL || ''}${currentNews.image}`}
                       alt="Current"
                       style={{ width: "100%", maxWidth: 200, borderRadius: 6 }}
                     />

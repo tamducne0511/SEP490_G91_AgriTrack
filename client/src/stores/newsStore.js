@@ -176,76 +176,109 @@ export const useNewsStore = create((set, get) => ({
     pages: 0,
   },
 
-  // Get all news with filters (using mock data for demonstration)
+  // Get all news with filters
   fetchNews: async (filters = {}) => {
     set({ loading: true, error: null });
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { useMockData } = get();
       
-      let filteredNews = [...mockNewsData];
-      
-      // Apply filters
-      if (filters.status) {
-        filteredNews = filteredNews.filter(news => news.status === filters.status);
+      if (useMockData) {
+        // Use mock data for demonstration
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        let filteredNews = [...mockNewsData];
+        
+        // Apply filters
+        if (filters.status) {
+          filteredNews = filteredNews.filter(news => news.status === filters.status);
+        }
+        
+        if (filters.search) {
+          const searchTerm = filters.search.toLowerCase();
+          filteredNews = filteredNews.filter(news => 
+            news.title.toLowerCase().includes(searchTerm) ||
+            news.content.toLowerCase().includes(searchTerm)
+          );
+        }
+        
+        if (filters.authorId) {
+          filteredNews = filteredNews.filter(news => news.authorId._id === filters.authorId);
+        }
+        
+        // Apply pagination
+        const page = parseInt(filters.page) || 1;
+        const limit = parseInt(filters.limit) || 10;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedNews = filteredNews.slice(startIndex, endIndex);
+        
+        const pagination = {
+          page,
+          limit,
+          total: filteredNews.length,
+          pages: Math.ceil(filteredNews.length / limit)
+        };
+        
+        set({ 
+          news: Array.isArray(paginatedNews) ? paginatedNews : [], 
+          pagination,
+          loading: false 
+        });
+      } else {
+        // Use real API
+        const response = await getAllNewsApi(filters);
+        const { data, pagination } = response.data;
+        
+        set({ 
+          news: Array.isArray(data) ? data : [], 
+          pagination,
+          loading: false 
+        });
       }
-      
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
-        filteredNews = filteredNews.filter(news => 
-          news.title.toLowerCase().includes(searchTerm) ||
-          news.content.toLowerCase().includes(searchTerm)
-        );
-      }
-      
-      if (filters.authorId) {
-        filteredNews = filteredNews.filter(news => news.authorId._id === filters.authorId);
-      }
-      
-      // Apply pagination
-      const page = parseInt(filters.page) || 1;
-      const limit = parseInt(filters.limit) || 10;
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedNews = filteredNews.slice(startIndex, endIndex);
-      
-      const pagination = {
-        page,
-        limit,
-        total: filteredNews.length,
-        pages: Math.ceil(filteredNews.length / limit)
-      };
-      
-      set({ 
-        news: paginatedNews, 
-        pagination,
-        loading: false 
-      });
     } catch (err) {
       set({ 
         error: err?.message || "Failed to fetch news", 
-        loading: false 
+        loading: false,
+        news: [],
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          pages: 0,
+        }
       });
     }
   },
 
-  // Get news by ID (using mock data for demonstration)
+  // Get news by ID
   fetchNewsById: async (id) => {
     set({ loading: true, error: null });
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const { useMockData } = get();
       
-      const news = mockNewsData.find(item => item._id === id);
-      if (!news) {
-        throw new Error("News not found");
+      if (useMockData) {
+        // Use mock data for demonstration
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const news = mockNewsData.find(item => item._id === id);
+        if (!news) {
+          throw new Error("News not found");
+        }
+        
+        set({ 
+          currentNews: news, 
+          loading: false 
+        });
+        return news;
+      } else {
+        // Use real API
+        const response = await getNewsByIdApi(id);
+        set({ 
+          currentNews: response.data.data, 
+          loading: false 
+        });
+        return response.data.data;
       }
-      
-      set({ 
-        currentNews: news, 
-        loading: false 
-      });
-      return news;
     } catch (err) {
       set({ 
         error: err?.message || "Failed to fetch news details", 
@@ -255,39 +288,56 @@ export const useNewsStore = create((set, get) => ({
     }
   },
 
-  // Create new news (using mock data for demonstration)
+  // Create new news
   createNews: async (newsData) => {
     set({ loading: true, error: null });
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const { useMockData } = get();
       
-      const newNews = {
-        _id: Date.now().toString(),
-        title: newsData.title,
-        content: newsData.content,
-        image: newsData.image ? `/uploads/news/${newsData.image.name}` : null,
-        status: newsData.status || "draft",
-        authorId: {
-          _id: "current-user",
-          fullName: "Nguyễn Văn Chuyên",
-          email: "chuyen.nguyen@agritrack.com"
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Add to mock data
-      mockNewsData.unshift(newNews);
-      
-      // Add to news list
-      const { news } = get();
-      set({ 
-        news: [newNews, ...news],
-        loading: false 
-      });
-      
-      return newNews;
+      if (useMockData) {
+        // Use mock data for demonstration
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        const newNews = {
+          _id: Date.now().toString(),
+          title: newsData.title,
+          content: newsData.content,
+          image: newsData.image ? `/uploads/news/${newsData.image.name || 'uploaded-image.jpg'}` : null,
+          status: newsData.status || "draft",
+          authorId: {
+            _id: "current-user",
+            fullName: "Nguyễn Văn Chuyên",
+            email: "chuyen.nguyen@agritrack.com"
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Add to mock data
+        mockNewsData.unshift(newNews);
+        
+        // Add to news list
+        const { news } = get();
+        set({ 
+          news: [newNews, ...(news || [])],
+          loading: false 
+        });
+        
+        return newNews;
+      } else {
+        // Use real API
+        const response = await createNewsApi(newsData);
+        const newNews = response.data.data;
+        
+        // Add to news list
+        const { news } = get();
+        set({ 
+          news: [newNews, ...(news || [])],
+          loading: false 
+        });
+        
+        return newNews;
+      }
     } catch (err) {
       set({ 
         error: err?.message || "Failed to create news", 
@@ -306,7 +356,7 @@ export const useNewsStore = create((set, get) => ({
       
       // Update in news list
       const { news } = get();
-      const updatedNewsList = news.map(item => 
+      const updatedNewsList = (news || []).map(item => 
         item._id === id ? updatedNews : item
       );
       
@@ -334,7 +384,7 @@ export const useNewsStore = create((set, get) => ({
       
       // Remove from news list
       const { news } = get();
-      const filteredNews = news.filter(item => item._id !== id);
+      const filteredNews = (news || []).filter(item => item._id !== id);
       
       set({ 
         news: filteredNews,
@@ -412,4 +462,25 @@ export const useNewsStore = create((set, get) => ({
       },
     });
   },
+
+  // Toggle mock data mode
+  toggleMockData: (useMock = null) => {
+    const { useMockData } = get();
+    const newMockMode = useMock !== null ? useMock : !useMockData;
+    
+    set({ 
+      useMockData: newMockMode,
+      news: [],
+      currentNews: null,
+      myNews: [],
+      publishedNews: [],
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        pages: 0,
+      },
+    });
+  },
+
 }));

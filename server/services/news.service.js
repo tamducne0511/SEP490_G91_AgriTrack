@@ -3,8 +3,13 @@ const User = require("../models/user.model");
 const NotFoundException = require("../middlewares/exceptions/notfound");
 
 const create = async (data) => {
-  const news = new News(data);
-  return await news.save();
+  try {
+    const news = new News(data);
+    const savedNews = await news.save();
+    return savedNews;
+  } catch (error) {
+    throw error;
+  }
 };
 
 const findAll = async (filters = {}) => {

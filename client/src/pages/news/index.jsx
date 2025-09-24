@@ -16,6 +16,8 @@ import {
   Row,
   Col,
   Spin,
+  Switch,
+  Typography,
 } from "antd";
 import {
   PlusOutlined,
@@ -29,11 +31,12 @@ import dayjs from "dayjs";
 
 const { Search } = Input;
 const { Option } = Select;
+const { Text } = Typography;
 
 const NewsList = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { news, loading, pagination, fetchNews, deleteNews } = useNewsStore();
+  const { news, loading, pagination, fetchNews, deleteNews, useMockData, toggleMockData, error } = useNewsStore();
   
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -81,6 +84,14 @@ const NewsList = () => {
     setStatusFilter("");
     setCurrentPage(1);
     loadNews();
+  };
+
+  const handleMockDataToggle = (checked) => {
+    toggleMockData(checked);
+    // Reload data with new mode
+    setTimeout(() => {
+      loadNews();
+    }, 100);
   };
 
   const getStatusColor = (status) => {
@@ -211,23 +222,42 @@ const NewsList = () => {
               </h2>
             </Col>
             
-            {isExpert && (
-              <Col>
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => navigate(RoutePaths.NEWS_CREATE)}
-                  style={{
-                    backgroundColor: "#23643A",
-                    borderColor: "#23643A",
-                  }}
-                >
-                  Tạo tin tức mới
-                </Button>
-              </Col>
-            )}
+            <Col>
+              <Space>
+                <Space>
+                  <Text strong>Dữ liệu mẫu:</Text>
+                  <Switch
+                    checked={useMockData}
+                    onChange={handleMockDataToggle}
+                    checkedChildren="Bật"
+                    unCheckedChildren="Tắt"
+                    style={{
+                      backgroundColor: useMockData ? "#23643A" : undefined,
+                    }}
+                  />
+                  <Tag color={useMockData ? "green" : "blue"}>
+                    {useMockData ? "Dữ liệu mẫu" : "API thực"}
+                  </Tag>
+                </Space>
+                
+                {isExpert && (
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => navigate(RoutePaths.NEWS_CREATE)}
+                    style={{
+                      backgroundColor: "#23643A",
+                      borderColor: "#23643A",
+                    }}
+                  >
+                    Tạo tin tức mới
+                  </Button>
+                )}
+              </Space>
+            </Col>
           </Row>
         </div>
+
 
         <div style={{ marginBottom: 24 }}>
           <Row gutter={16} align="middle">
@@ -271,31 +301,36 @@ const NewsList = () => {
         </div>
 
         <Spin spinning={loading}>
-          {pagination ? (
-            <Table
-              columns={columns}
-              dataSource={news || []}
-              rowKey="_id"
-              pagination={{
-                current: pagination.page || 1,
-                pageSize: pagination.limit || 10,
-                total: pagination.total || 0,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} của ${total} tin tức`,
-                onChange: (page, size) => {
-                  setCurrentPage(page);
-                  setPageSize(size);
-                },
-              }}
-              scroll={{ x: 800 }}
-            />
-          ) : (
-            <div style={{ textAlign: "center", padding: "40px" }}>
-              <p>Đang tải dữ liệu...</p>
-            </div>
-          )}
+          {(() => {
+            // Always render table if we have data or pagination
+            const shouldRenderTable = pagination || (news && news.length > 0);
+            
+            return shouldRenderTable ? (
+              <Table
+                columns={columns}
+                dataSource={news || []}
+                rowKey="_id"
+                pagination={pagination ? {
+                  current: pagination.page || 1,
+                  pageSize: pagination.limit || 10,
+                  total: pagination.total || 0,
+                  showSizeChanger: true,
+                  showQuickJumper: true,
+                  showTotal: (total, range) =>
+                    `${range[0]}-${range[1]} của ${total} tin tức`,
+                  onChange: (page, size) => {
+                    setCurrentPage(page);
+                    setPageSize(size);
+                  },
+                } : false}
+                scroll={{ x: 800 }}
+              />
+            ) : (
+              <div style={{ textAlign: "center", padding: "40px" }}>
+                <p>Đang tải dữ liệu...</p>
+              </div>
+            );
+          })()}
         </Spin>
       </Card>
     </div>

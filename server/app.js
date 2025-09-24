@@ -12,14 +12,36 @@ DbConfig.connectDB();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] }
+  cors: { 
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001", 
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001",
+      "https://api-agritrack.ungdunghay.info.vn",
+      "*"
+    ], 
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true
+  }
 });
 
 // Gắn socket.io vào export global
 module.exports.io = io;
 
 // Middleware cơ bản
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001", 
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "https://api-agritrack.ungdunghay.info.vn"
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+}));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
