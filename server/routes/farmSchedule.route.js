@@ -42,5 +42,5 @@ router.get(
   farmScheduleController.find
 );
 router.post(
-  "/generate", farmScheduleController.generateTasks);
+  "/generate",isLogin ,farmScheduleController.generateTasks);
 module.exports = router;
