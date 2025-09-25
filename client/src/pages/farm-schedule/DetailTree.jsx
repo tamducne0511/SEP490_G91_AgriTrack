@@ -155,6 +155,7 @@ export default function FarmScheduleTreeDetail() {
 
   // Xử lý tạo công việc bằng AI
   const handleGenerate = async () => {
+    console.log("Selected garden:", selectedGarden);
     try {
       if (!selectedGarden) {
         message.error("Vui lòng chọn vườn trước khi tạo");
