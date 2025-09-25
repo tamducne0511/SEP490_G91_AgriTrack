@@ -167,7 +167,8 @@ export default function TaskDetail() {
       .join("")
       .toUpperCase();
 
-  const garden = gardens.find((g) => g._id === taskDetail.gardenId);
+  const garden = gardens.find((g) => g._id === taskDetail?.gardenId?._id);
+  console.log("Associated Garden:", garden);
 
   return (
     <div
@@ -451,7 +452,7 @@ export default function TaskDetail() {
                 </div>
                 <div style={{ marginBottom: 16 }}>
                   <Text strong>Vườn: </Text>
-                  <Text>{garden?.name || "Không xác định"}</Text>
+                  <Text>{garden?.name|| "Không xác định"}</Text>
                 </div>
                 <Button
                   type="primary"

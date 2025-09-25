@@ -117,15 +117,18 @@ const find = async (req, res, next) => {
 };
 const generateTasks = async (req, res, next) => {
   try {
-    const { scheduleId } = req.body;
-    const  userId  = req.user.id;
-    console.log(userId);
+    const { scheduleId, gardenId } = req.body;
+    const userId = req.user.id;
+    
+    console.log("ScheduleId:", scheduleId);
+    console.log("GardenId:", gardenId);
+    console.log("UserId:", userId);
     const farmSchedule = await farmScheduleService.find(scheduleId);
     if (!farmSchedule) {
       return res.status(404).json({ message: "FarmSchedule not found" });
     }
 
-    const tasks = await farmScheduleService.generateTasksFromSchedule(farmSchedule, userId);
+    const tasks = await farmScheduleService.generateTasksFromSchedule(farmSchedule, userId, gardenId);
 
     res.status(201).json({
       message: "Tasks generated successfully from FarmSchedule description",
