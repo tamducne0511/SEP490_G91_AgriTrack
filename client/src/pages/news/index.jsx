@@ -66,6 +66,12 @@ const NewsList = () => {
     setCurrentPage(1);
   };
 
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchText(value);
+    setCurrentPage(1);
+  };
+
   const handleStatusFilter = (value) => {
     setStatusFilter(value);
     setCurrentPage(1);
@@ -180,7 +186,7 @@ const NewsList = () => {
                 enterButton={<SearchOutlined />}
                 size="large"
                 onSearch={handleSearch}
-                onChange={(e) => !e.target.value && setSearchText("")}
+                onChange={handleSearchChange}
               />
             </Col>
             
