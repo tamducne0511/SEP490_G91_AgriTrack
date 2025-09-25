@@ -67,10 +67,10 @@ export default function FarmScheduleTreeDetail() {
     if (id) fetchScheduleDetail(id);
   }, [id, fetchScheduleDetail]);
 
-  // Fetch gardens khi có scheduleDetail
+  // Fetch tất cả gardens của trang trại (không phân trang)
   useEffect(() => {
     if (scheduleDetail?.farmId) {
-      fetchGardensByFarmId(scheduleDetail.farmId);
+      fetchGardensByFarmId(scheduleDetail.farmId, { pageSize: 1000 }); // Lấy tất cả không phân trang
     }
   }, [scheduleDetail?.farmId, fetchGardensByFarmId]);
 
@@ -211,11 +211,13 @@ export default function FarmScheduleTreeDetail() {
             onChange={(value) => setSelectedGarden(value)}
             loading={loadingGardensByFarm}
           >
-            {gardensByFarm.map((garden) => (
-              <Select.Option key={garden._id} value={garden._id}>
-                {garden.name}
-              </Select.Option>
-            ))}
+            {gardensByFarm
+              .filter((garden) => garden.status !== false)
+              .map((garden) => (
+                <Select.Option key={garden._id} value={garden._id}>
+                  {garden.name}
+                </Select.Option>
+              ))}
           </Select>
         </Modal>
         {loading ? (
@@ -389,11 +391,13 @@ export default function FarmScheduleTreeDetail() {
                   onChange={(value) => setSelectedGarden(value)}
                   loading={loadingGardensByFarm}
                 >
-                  {gardensByFarm.map((garden) => (
-                    <Select.Option key={garden._id} value={garden._id}>
-                      {garden.name}
-                    </Select.Option>
-                  ))}
+                  {gardensByFarm
+                    .filter((garden) => garden.status !== false)
+                    .map((garden) => (
+                      <Select.Option key={garden._id} value={garden._id}>
+                        {garden.name}
+                      </Select.Option>
+                    ))}
                 </Select>
               </Modal>
             </>
