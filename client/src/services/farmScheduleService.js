@@ -37,7 +37,7 @@ export const deleteFarmScheduleApi = async (scheduleId) => {
 };
 
 // Gợi ý tên: farmScheduleService.js
-export const generateTasksFromScheduleApi = async (scheduleId, userId) => {
-  const res = await client.post("/farm-schedules/generate", { scheduleId, userId });
+export const generateTasksFromScheduleApi = async (scheduleId, userId, gardenId) => {
+  const res = await client.post("/farm-schedules/generate", { scheduleId, userId, gardenId });
   return res.data; // { message, data: Task[] }
 };

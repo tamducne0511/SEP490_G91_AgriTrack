@@ -451,7 +451,7 @@ export default function TaskDetail() {
                 </div>
                 <div style={{ marginBottom: 16 }}>
                   <Text strong>Vườn: </Text>
-                  <Text>{garden?.name || "Không xác định"}</Text>
+                  <Text>{taskDetail.gardenId?.name || "Không xác định"}</Text>
                 </div>
                 <Button
                   type="primary"
@@ -497,7 +497,7 @@ export default function TaskDetail() {
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Vườn">
-                {garden?.name || <Text type="secondary">Không xác định</Text>}
+                {taskDetail.gardenId?.name || <Text type="secondary">Không xác định</Text>}
               </Descriptions.Item>
               <Descriptions.Item label="Ngày tạo">
                 {new Date(taskDetail.createdAt).toLocaleString("vi-VN")}
