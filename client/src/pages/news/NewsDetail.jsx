@@ -13,6 +13,7 @@ import {
   Typography,
   Divider,
   message,
+  Avatar,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -39,7 +40,11 @@ const NewsDetail = () => {
   const [loadingNews, setLoadingNews] = useState(false);
 
   const isExpert = user?.role === "expert";
-  const isOwner = currentNews && currentNews.authorId?._id === user?.id;
+  const currentUserId = user?.id || user?._id;
+  const authorId = typeof currentNews?.authorId === "string"
+    ? currentNews?.authorId
+    : (currentNews?.authorId?._id || currentNews?.authorId?.id);
+  const isOwner = !!(currentNews && currentUserId && authorId && String(authorId) === String(currentUserId));
 
   useEffect(() => {
     if (id) {
@@ -115,170 +120,221 @@ const NewsDetail = () => {
     );
   }
 
+  // Check if non-expert user is trying to view non-published news
+  if (!isExpert && currentNews.status !== "published") {
+    return (
+      <div style={{ padding: 32, textAlign: "center" }}>
+        <Card>
+          <h3>Tin tức này chưa được xuất bản</h3>
+          <p>Bạn không có quyền xem tin tức này.</p>
+          <Button onClick={() => navigate(RoutePaths.NEWS_LIST)}>
+            Quay lại danh sách
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: 32, minHeight: "100vh", background: "#f6f6f6" }}>
-      <Card
-        style={{
-          marginBottom: 32,
-          boxShadow: "0 2px 8px #0001",
-          borderRadius: 13,
-          width: "100%",
-          maxWidth: 1000,
-          margin: "0 auto",
-        }}
-        bodyStyle={{ padding: 32 }}
-      >
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <Row justify="space-between" align="middle">
-            <Col>
-              <Button
-                icon={<ArrowLeftOutlined />}
-                onClick={() => navigate(RoutePaths.NEWS_LIST)}
-                style={{ marginRight: 16 }}
-              >
-                Quay lại
-              </Button>
-            </Col>
-            
-            {isExpert && isOwner && (
-              <Col>
-                <Space>
-                  <Button
-                    type="primary"
-                    icon={<EditOutlined />}
-                    onClick={() => navigate(RoutePaths.NEWS_EDIT(currentNews._id))}
-                    style={{
-                      backgroundColor: "#23643A",
-                      borderColor: "#23643A",
-                    }}
-                  >
-                    Chỉnh sửa
-                  </Button>
-                </Space>
-              </Col>
-            )}
-          </Row>
+    <div style={{ minHeight: "100vh", background: "#f6f6f6" }}>
+      {/* Header with back button */}
+      <div style={{ 
+        background: "white", 
+        borderBottom: "1px solid #f0f0f0",
+        padding: "16px 32px",
+        position: "sticky",
+        top: 0,
+        zIndex: 10
+      }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate(RoutePaths.NEWS_LIST)}
+            style={{ border: "none", boxShadow: "none" }}
+          >
+            Quay lại danh sách
+          </Button>
+          
+          {isExpert && isOwner && (
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => navigate(RoutePaths.NEWS_EDIT(currentNews._id))}
+              style={{
+                backgroundColor: "#23643A",
+                borderColor: "#23643A",
+              }}
+            >
+              Chỉnh sửa
+            </Button>
+          )}
         </div>
+      </div>
 
-        {/* News Content */}
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          {/* Title */}
-          <Title level={1} style={{ 
-            color: "#23643A", 
-            marginBottom: 16,
-            textAlign: "center",
-            fontSize: "2.5rem"
-          }}>
-            {currentNews.title}
-          </Title>
-
-          {/* Meta Information */}
-          <div style={{ 
-            textAlign: "center", 
-            marginBottom: 32,
-            color: "#666"
-          }}>
-            <Space size="large" split={<Divider type="vertical" />}>
-              <Space>
-                <UserOutlined />
-                <span>Tác giả: {currentNews.authorId?.fullName}</span>
-              </Space>
-              
-              <Space>
-                <CalendarOutlined />
-                <span>
-                  Ngày tạo: {dayjs(currentNews.createdAt).format("DD/MM/YYYY HH:mm")}
-                </span>
-              </Space>
-              
-              <Tag color={getStatusColor(currentNews.status)}>
-                {getStatusText(currentNews.status)}
-              </Tag>
-            </Space>
-          </div>
-
+      {/* Main content */}
+      <div style={{ padding: "32px", maxWidth: 1200, margin: "0 auto" }}>
+        <Card
+          style={{
+            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            borderRadius: 16,
+            overflow: "hidden",
+            border: "none",
+          }}
+          bodyStyle={{ padding: 0 }}
+        >
           {/* Featured Image */}
           {currentNews.image && (
             <div style={{ 
-              marginBottom: 32, 
-              textAlign: "center" 
+              height: 400, 
+              overflow: "hidden",
+              position: "relative"
             }}>
               <img
                 src={`${process.env.REACT_APP_API_BASE_URL}${currentNews.image}`}
                 alt={currentNews.title}
                 style={{
-                  maxWidth: "100%",
-                  height: "auto",
-                  borderRadius: 8,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
                 }}
               />
+              {/* Gradient overlay */}
+              <div style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 100,
+                background: "linear-gradient(transparent, rgba(0,0,0,0.3))"
+              }} />
             </div>
           )}
 
-          {/* Content */}
-          <div style={{
-            lineHeight: 1.8,
-            fontSize: "16px",
-            color: "#333",
-          }}>
-            <div 
-              dangerouslySetInnerHTML={{ __html: currentNews.content }}
-              style={{
-                "& h1, & h2, & h3, & h4, & h5, & h6": {
-                  color: "#23643A",
-                  marginTop: "24px",
-                  marginBottom: "16px",
-                },
-                "& p": {
-                  marginBottom: "16px",
-                },
-                "& ul, & ol": {
-                  paddingLeft: "24px",
-                  marginBottom: "16px",
-                },
-                "& blockquote": {
-                  borderLeft: "4px solid #23643A",
-                  paddingLeft: "16px",
-                  margin: "16px 0",
-                  fontStyle: "italic",
-                  color: "#666",
-                },
-                "& table": {
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  margin: "16px 0",
-                },
-                "& th, & td": {
-                  border: "1px solid #ddd",
-                  padding: "8px",
-                  textAlign: "left",
-                },
-                "& th": {
-                  backgroundColor: "#f5f5f5",
-                  fontWeight: "bold",
-                },
-              }}
-            />
-          </div>
+          {/* Article Content */}
+          <div style={{ padding: "48px" }}>
+            {/* Title */}
+            <Title level={1} style={{ 
+              color: "#23643A", 
+              marginBottom: 24,
+              textAlign: "center",
+              fontSize: "2.8rem",
+              fontWeight: 700,
+              lineHeight: 1.2
+            }}>
+              {currentNews.title}
+            </Title>
 
-          {/* Footer */}
-          <Divider />
-          <div style={{ 
-            textAlign: "center", 
-            color: "#666",
-            fontSize: "14px"
-          }}>
-            <Space>
-              <CalendarOutlined />
-              <span>
-                Cập nhật lần cuối: {dayjs(currentNews.updatedAt).format("DD/MM/YYYY HH:mm")}
-              </span>
-            </Space>
+            {/* Meta Information */}
+            <div style={{ 
+              textAlign: "center", 
+              marginBottom: 48,
+              paddingBottom: 24,
+              borderBottom: "1px solid #f0f0f0"
+            }}>
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 32, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Avatar size="small" icon={<UserOutlined />} />
+                  <span style={{ color: "#666", fontSize: 16 }}>
+                    {currentNews.authorId?.fullName}
+                  </span>
+                </div>
+                
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CalendarOutlined style={{ color: "#666" }} />
+                  <span style={{ color: "#666", fontSize: 16 }}>
+                    {dayjs(currentNews.createdAt).format("DD/MM/YYYY HH:mm")}
+                  </span>
+                </div>
+                
+                <Tag color={getStatusColor(currentNews.status)} style={{ fontSize: 14, padding: "4px 12px" }}>
+                  {getStatusText(currentNews.status)}
+                </Tag>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div style={{
+              lineHeight: 1.8,
+              fontSize: "18px",
+              color: "#333",
+              maxWidth: "800px",
+              margin: "0 auto"
+            }}>
+              <div 
+                dangerouslySetInnerHTML={{ __html: currentNews.content }}
+                style={{
+                  "& h1, & h2, & h3, & h4, & h5, & h6": {
+                    color: "#23643A",
+                    marginTop: "32px",
+                    marginBottom: "16px",
+                    fontWeight: 600,
+                  },
+                  "& p": {
+                    marginBottom: "20px",
+                    textAlign: "justify",
+                  },
+                  "& ul, & ol": {
+                    paddingLeft: "24px",
+                    marginBottom: "20px",
+                  },
+                  "& blockquote": {
+                    borderLeft: "4px solid #23643A",
+                    paddingLeft: "20px",
+                    margin: "24px 0",
+                    fontStyle: "italic",
+                    color: "#666",
+                    backgroundColor: "#f9f9f9",
+                    padding: "16px 20px",
+                    borderRadius: "4px",
+                  },
+                  "& table": {
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    margin: "24px 0",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  },
+                  "& th, & td": {
+                    border: "1px solid #e8e8e8",
+                    padding: "12px",
+                    textAlign: "left",
+                  },
+                  "& th": {
+                    backgroundColor: "#f5f5f5",
+                    fontWeight: "600",
+                    color: "#23643A",
+                  },
+                  "& img": {
+                    maxWidth: "100%",
+                    height: "auto",
+                    borderRadius: "8px",
+                    margin: "16px 0",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  }
+                }}
+              />
+            </div>
+
+            {/* Footer */}
+            <div style={{ 
+              textAlign: "center", 
+              color: "#999",
+              fontSize: "14px",
+              marginTop: 48,
+              paddingTop: 24,
+              borderTop: "1px solid #f0f0f0"
+            }}>
+              <Space>
+                <CalendarOutlined />
+                <span>
+                  Cập nhật lần cuối: {dayjs(currentNews.updatedAt).format("DD/MM/YYYY HH:mm")}
+                </span>
+              </Space>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };
