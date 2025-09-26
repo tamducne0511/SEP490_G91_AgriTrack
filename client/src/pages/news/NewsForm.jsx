@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuthStore, useNewsStore } from "@/stores";
 import { RoutePaths } from "@/routes";
@@ -20,6 +20,7 @@ import {
   EyeOutlined,
   ArrowLeftOutlined,
   UploadOutlined,
+  CloseCircleOutlined,
 } from "@ant-design/icons";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
@@ -43,6 +44,8 @@ const NewsForm = () => {
   const [form] = Form.useForm();
   const [editorContent, setEditorContent] = useState("");
   const [imageFile, setImageFile] = useState(null);
+  const [removeExistingImage, setRemoveExistingImage] = useState(false);
+  const fileInputRef = useRef(null);
   const [submitting, setSubmitting] = useState(false);
   const [loadingNews, setLoadingNews] = useState(false);
 
@@ -71,6 +74,7 @@ const NewsForm = () => {
         status: currentNews.status,
       });
       setEditorContent(currentNews.content || "");
+      setRemoveExistingImage(false);
     }
   }, [currentNews, form, isEdit]);
 
@@ -99,6 +103,7 @@ const NewsForm = () => {
         content: editorContent,
         status: values.status,
         image: imageFile,
+        removeImage: isEdit ? removeExistingImage : false,
       };
 
       if (isEdit) {
@@ -155,7 +160,19 @@ const NewsForm = () => {
     // We just store the file object for later use
     if (file) {
       setImageFile(file);
+      setRemoveExistingImage(false);
       message.success("Ảnh đã được chọn");
+    }
+  };
+
+  const handleManualFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setRemoveExistingImage(false);
+      message.success("Ảnh đã được chọn");
+      // reset input to allow re-choosing same file later
+      e.target.value = "";
     }
   };
 
@@ -300,20 +317,41 @@ const NewsForm = () => {
                   onChange={handleImageChange}
                   accept="image/*"
                 >
-                  {!imageFile && !currentNews?.image && (
+                  {!imageFile && (!currentNews?.image || removeExistingImage) && (
                     <div>
                       <UploadOutlined />
                       <div style={{ marginTop: 8 }}>Tải ảnh lên</div>
                     </div>
                   )}
                 </Upload>
+                {/* Hidden input kept in case needed later */}
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleManualFileChange} style={{ display: "none" }} />
                 
                 {imageFile && (
-                  <div style={{ marginTop: 8 }}>
+                  <div style={{ marginTop: 8, position: "relative", display: "inline-block" }}>
                     <img
                       src={URL.createObjectURL(imageFile)}
                       alt="Preview"
                       style={{ width: "100%", maxWidth: 200, borderRadius: 6 }}
+                    />
+                    <Button
+                      type="text"
+                      size="small"
+                      onClick={() => {
+                        setImageFile(null);
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: -8,
+                        right: -8,
+                        background: "#fff",
+                        borderRadius: "50%",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                        padding: 0,
+                        height: 24,
+                        width: 24,
+                      }}
+                      icon={<CloseCircleOutlined style={{ color: "#ff4d4f" }} />}
                     />
                     <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
                       Ảnh mới
@@ -321,16 +359,40 @@ const NewsForm = () => {
                   </div>
                 )}
                 
-                {currentNews?.image && !imageFile && (
-                  <div style={{ marginTop: 8 }}>
+                {currentNews?.image && !imageFile && !removeExistingImage && (
+                  <div style={{ marginTop: 8, position: "relative", display: "inline-block" }}>
                     <img
                       src={`${process.env.REACT_APP_API_BASE_URL || ''}${currentNews.image}`}
                       alt="Current"
                       style={{ width: "100%", maxWidth: 200, borderRadius: 6 }}
                     />
+                    <Button
+                      type="text"
+                      size="small"
+                      onClick={() => {
+                        setRemoveExistingImage(true);
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: -8,
+                        right: -8,
+                        background: "#fff",
+                        borderRadius: "50%",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                        padding: 0,
+                        height: 24,
+                        width: 24,
+                      }}
+                      icon={<CloseCircleOutlined style={{ color: "#ff4d4f" }} />}
+                    />
                     <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
                       Ảnh hiện tại
                     </div>
+                  </div>
+                )}
+                {removeExistingImage && !imageFile && (
+                  <div style={{ marginTop: 8, color: "#ff4d4f", fontSize: 12 }}>
+                    Ảnh hiện tại sẽ được gỡ bỏ khi lưu.
                   </div>
                 )}
               </Form.Item>

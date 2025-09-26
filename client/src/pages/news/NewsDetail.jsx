@@ -253,67 +253,8 @@ const NewsDetail = () => {
             </div>
 
             {/* Content */}
-            <div style={{
-              lineHeight: 1.8,
-              fontSize: "18px",
-              color: "#333",
-              maxWidth: "800px",
-              margin: "0 auto"
-            }}>
-              <div 
-                dangerouslySetInnerHTML={{ __html: currentNews.content }}
-                style={{
-                  "& h1, & h2, & h3, & h4, & h5, & h6": {
-                    color: "#23643A",
-                    marginTop: "32px",
-                    marginBottom: "16px",
-                    fontWeight: 600,
-                  },
-                  "& p": {
-                    marginBottom: "20px",
-                    textAlign: "justify",
-                  },
-                  "& ul, & ol": {
-                    paddingLeft: "24px",
-                    marginBottom: "20px",
-                  },
-                  "& blockquote": {
-                    borderLeft: "4px solid #23643A",
-                    paddingLeft: "20px",
-                    margin: "24px 0",
-                    fontStyle: "italic",
-                    color: "#666",
-                    backgroundColor: "#f9f9f9",
-                    padding: "16px 20px",
-                    borderRadius: "4px",
-                  },
-                  "& table": {
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    margin: "24px 0",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  },
-                  "& th, & td": {
-                    border: "1px solid #e8e8e8",
-                    padding: "12px",
-                    textAlign: "left",
-                  },
-                  "& th": {
-                    backgroundColor: "#f5f5f5",
-                    fontWeight: "600",
-                    color: "#23643A",
-                  },
-                  "& img": {
-                    maxWidth: "100%",
-                    height: "auto",
-                    borderRadius: "8px",
-                    margin: "16px 0",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                  }
-                }}
-              />
+            <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+              <div className="ckeditor-content" dangerouslySetInnerHTML={{ __html: currentNews.content }} />
             </div>
 
             {/* Footer */}

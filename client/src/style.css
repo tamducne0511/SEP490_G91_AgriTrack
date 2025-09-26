@@ -142,3 +142,90 @@ table {
   background-color: #3a7a4a !important;
   color: #fff !important;
 }
+
+/* CKEditor-rendered content styles */
+.ckeditor-content {
+  line-height: 1.8;
+  font-size: 16px;
+  color: #333;
+}
+
+.ckeditor-content h1,
+.ckeditor-content h2,
+.ckeditor-content h3,
+.ckeditor-content h4,
+.ckeditor-content h5,
+.ckeditor-content h6 {
+  color: #23643A;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ckeditor-content p {
+  margin-bottom: 16px;
+}
+
+.ckeditor-content ul,
+.ckeditor-content ol {
+  padding-left: 24px;
+  margin-bottom: 16px;
+}
+
+.ckeditor-content blockquote {
+  border-left: 4px solid #23643A;
+  padding-left: 16px;
+  margin: 16px 0;
+  font-style: italic;
+  color: #666;
+  background-color: #f9f9f9;
+}
+
+.ckeditor-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ckeditor-content th,
+.ckeditor-content td {
+  border: 1px solid #e8e8e8;
+  padding: 12px;
+  text-align: left;
+}
+
+.ckeditor-content th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+  color: #23643A;
+}
+
+.ckeditor-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.ckeditor-content a {
+  color: #23643A;
+  text-decoration: underline;
+}
+
+/* Ensure inline formatting from CKEditor is respected */
+.ckeditor-content strong,
+.ckeditor-content b {
+  font-weight: 700;
+}
+
+.ckeditor-content em,
+.ckeditor-content i {
+  font-style: italic;
+}
+
+.ckeditor-content u {
+  text-decoration: underline;
+}

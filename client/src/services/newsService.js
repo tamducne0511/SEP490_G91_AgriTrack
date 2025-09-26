@@ -56,6 +56,7 @@ export const updateNewsApi = async (id, newsData) => {
   if (newsData.title) formData.append('title', newsData.title);
   if (newsData.content) formData.append('content', newsData.content);
   if (newsData.status) formData.append('status', newsData.status);
+  if (typeof newsData.removeImage === 'boolean') formData.append('removeImage', String(newsData.removeImage));
   
   // Add image if provided
   if (newsData.image && newsData.image instanceof File) {

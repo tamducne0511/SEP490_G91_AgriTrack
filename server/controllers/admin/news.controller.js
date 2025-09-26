@@ -73,7 +73,7 @@ const updateNews = async (req, res, next) => {
     }
 
     const { id } = req.params;
-    const { title, content, status } = req.body;
+    const { title, content, status, removeImage } = req.body;
     const authorId = req.user.id;
 
     // First check if news exists and belongs to the expert
@@ -90,9 +90,14 @@ const updateNews = async (req, res, next) => {
       status,
     };
 
-    // Add image if uploaded
+    // Add image if uploaded, or remove if requested
     if (req.file?.filename) {
       updateData.image = `/uploads/news/${req.file.filename}`;
+    } else if (typeof removeImage !== "undefined") {
+      const shouldRemove = removeImage === true || removeImage === "true";
+      if (shouldRemove) {
+        updateData.image = null;
+      }
     }
 
     const news = await newsService.update(id, updateData);
