@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useFarmScheduleStore } from "@/stores/farmScheduleStore";
+import { useGardenStore } from "@/stores/gardenStore";
 import { useAuthStore } from "@/stores";
 import { useEffect, useState } from "react";
 import {
@@ -18,6 +19,7 @@ import {
   Typography,
   Drawer,
   List,
+  Select,
 } from "antd";
 import {
   DeleteOutlined,
@@ -48,20 +50,29 @@ export default function FarmScheduleTreeDetail() {
     generateTasksByAI,
   } = useFarmScheduleStore();
 
+  const { gardensByFarm, loadingGardensByFarm, fetchGardensByFarmId } = useGardenStore();
   const [isEditMode, setIsEditMode] = useState(false);
   const [form] = Form.useForm();
   const [desc, setDesc] = useState(""); // TinyMCE HTML string
   const [treeDesc, setTreeDesc] = useState(""); // TinyMCE HTML string
   const [fileList, setFileList] = useState([]);
   const [isEditorLoaded, setIsEditorLoaded] = useState(false);
-  const [genOpen, setGenOpen] = useState(false);
+  const [showGardenModal, setShowGardenModal] = useState(false); // Modal chọn vườn
+  const [genOpen, setGenOpen] = useState(false); // Drawer hiển thị kết quả
   const [genLoading, setGenLoading] = useState(false);
   const [genResult, setGenResult] = useState([]);
-
+  const [selectedGarden, setSelectedGarden] = useState(null);
   // Fetch schedule detail khi trang được load
   useEffect(() => {
     if (id) fetchScheduleDetail(id);
   }, [id, fetchScheduleDetail]);
+
+  // Fetch tất cả gardens của trang trại (không phân trang)
+  useEffect(() => {
+    if (scheduleDetail?.farmId) {
+      fetchGardensByFarmId(scheduleDetail.farmId, { pageSize: 1000 }); // Lấy tất cả không phân trang
+    }
+  }, [scheduleDetail?.farmId, fetchGardensByFarmId]);
 
   // Khi có dữ liệu chi tiết lịch, điền vào form
   useEffect(() => {
@@ -142,6 +153,29 @@ export default function FarmScheduleTreeDetail() {
   const handleFileChange = ({ fileList: newFileList }) =>
     setFileList(newFileList);
 
+  // Xử lý tạo công việc bằng AI
+  const handleGenerate = async () => {
+    console.log("Selected garden:", selectedGarden);
+    try {
+      if (!selectedGarden) {
+        message.error("Vui lòng chọn vườn trước khi tạo");
+        return;
+      }
+      setGenLoading(true);
+      const tasks = await generateTasksByAI(id, selectedGarden);
+      setGenResult(tasks || []);
+      
+      // Đóng modal chọn vườn, mở drawer kết quả
+      setShowGardenModal(false);
+      setGenOpen(true);
+      
+      message.success("Đã tạo công việc bằng AI!");
+    } catch (err) {
+      message.error(err?.message || "Không thể tạo công việc bằng AI");
+    } finally {
+      setGenLoading(false);
+    }
+  };
   // ----- READ ONLY VIEW (Farm Admin) -----
   if (isFarmAdmin) {
     return (
@@ -156,31 +190,36 @@ export default function FarmScheduleTreeDetail() {
         <Button
           type="primary"
           style={{ marginLeft: 16, background: "#23643A" }}
-          onClick={() => {
-            Modal.confirm({
-              title: "Tạo công việc bằng AI?",
-              content:
-                "AI sẽ phân tích mô tả lịch và tạo các công việc liên tiếp trong khoảng thời gian.",
-              okText: "Tạo ngay",
-              cancelText: "Hủy",
-              onOk: async () => {
-                try {
-                  setGenLoading(true);
-                  const tasks = await generateTasksByAI(id);
-                  setGenResult(tasks || []);
-                  setGenOpen(true);
-                  message.success("Đã tạo công việc bằng AI!");
-                } catch (err) {
-                  message.error(err?.message || "Không thể tạo công việc bằng AI");
-                } finally {
-                  setGenLoading(false);
-                }
-              },
-            });
-          }}
+          onClick={() => setShowGardenModal(true)}
         >
-          Tạo việc bằng AI
+          Tạo công việc bằng AI
         </Button>
+        <Modal
+          title="Tạo công việc bằng AI"
+          open={showGardenModal}
+          onCancel={() => setShowGardenModal(false)}
+          onOk={handleGenerate}
+          okText="Tạo ngay"
+          cancelText="Hủy"
+          confirmLoading={genLoading}
+        >
+          <p>AI sẽ phân tích mô tả lịch và tạo các công việc liên tiếp trong khoảng thời gian.</p>
+          <Select
+            placeholder="Chọn vườn"
+            style={{ width: '100%' }}
+            value={selectedGarden}
+            onChange={(value) => setSelectedGarden(value)}
+            loading={loadingGardensByFarm}
+          >
+            {gardensByFarm
+              .filter((garden) => garden.status !== false)
+              .map((garden) => (
+                <Select.Option key={garden._id} value={garden._id}>
+                  {garden.name}
+                </Select.Option>
+              ))}
+          </Select>
+        </Modal>
         {loading ? (
           <Spin style={{ margin: 40 }} />
         ) : error ? (
@@ -326,34 +365,43 @@ export default function FarmScheduleTreeDetail() {
 
           {/* Tạo việc bằng AI */}
           {!isEditMode && (
-            <Button
-              type="primary"
-              style={{ marginLeft: 16, background: "#23643A" }}
-              onClick={() => {
-                Modal.confirm({
-                  title: "Tạo công việc bằng AI?",
-                  content:
-                    "AI sẽ phân tích mô tả lịch và tạo các công việc liên tiếp trong khoảng thời gian.",
-                  okText: "Tạo ngay",
-                  cancelText: "Hủy",
-                  onOk: async () => {
-                    try {
-                      setGenLoading(true);
-                      const tasks = await generateTasksByAI(id);
-                      setGenResult(tasks || []);
-                      setGenOpen(true);
-                      message.success("Đã tạo công việc bằng AI!");
-                    } catch (err) {
-                      message.error(err?.message || "Không thể tạo công việc bằng AI");
-                    } finally {
-                      setGenLoading(false);
-                    }
-                  },
-                });
-              }}
-            >
-              Tạo việc bằng AI
-            </Button>
+            <>
+              <Button
+                type="primary"
+                style={{ marginLeft: 16, background: "#23643A" }}
+                onClick={() => setShowGardenModal(true)}
+              >
+                Tạo công việc bằng AI
+              </Button>
+
+              <Modal
+                title="Tạo công việc bằng AI"
+                open={showGardenModal}
+                onCancel={() => setShowGardenModal(false)}
+                onOk={handleGenerate}
+                okText="Tạo ngay"
+                cancelText="Hủy"
+                confirmLoading={genLoading}
+              >
+                <p>AI sẽ phân tích mô tả lịch và tạo các công việc liên tiếp trong khoảng thời gian.</p>
+                <Select
+                  placeholder="Chọn vườn"
+                  style={{ width: '100%' }}
+                  value={selectedGarden}
+                  onChange={(value) => setSelectedGarden(value)}
+                  loading={loadingGardensByFarm}
+                >
+                  {gardensByFarm
+                    .filter((garden) => garden.status !== false)
+                    .map((garden) => (
+                      <Select.Option key={garden._id} value={garden._id}>
+                        {garden.name}
+                      </Select.Option>
+                    ))}
+                </Select>
+              </Modal>
+            </>
+
           )}
 
           {genLoading && <Spin style={{ marginLeft: 12 }} />}

@@ -86,7 +86,8 @@ const remove = async (id) => {
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const generateTasksFromSchedule = async (farmSchedule, userId) => {
+const generateTasksFromSchedule = async (farmSchedule, userId, gardenId) => {
+  console.log(gardenId);
   const date = new Date();
   const prompt = `Bạn là chuyên gia nông nghiệp.
 Hãy phân tích lịch trình công việc sau và chia thành các công việc chi tiết cho công nhân nông trại.
@@ -142,7 +143,7 @@ Mỗi object trong "tasks" có cấu trúc:
   for (const t of tasks) {
     const task = new Task({
       farmId: farmSchedule.farmId,
-      gardenId: farmSchedule.gardenId || null,
+      gardenId: gardenId || farmSchedule.gardenId || null, // Sử dụng gardenId được chọn
       name: t.name,
       description: t.description,
       priority: t.priority || "low",
@@ -150,6 +151,7 @@ Mỗi object trong "tasks" có cấu trúc:
       endDate: t.endDate ? new Date(t.endDate) : undefined,
       createdBy: userId,
     });
+    console.log("Saving task:", task);
     await task.save();
     savedTasks.push(task);
   }
