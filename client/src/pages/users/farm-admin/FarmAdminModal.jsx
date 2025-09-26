@@ -20,7 +20,12 @@ const FarmAdminModal = ({
     <Modal
       title={isEdit ? "Sửa chủ trang trại" : "Thêm chủ trang trại"}
       open={open}
-      onOk={() => form.validateFields().then(onOk)}
+      onOk={() => 
+        form
+          .validateFields()
+          .then(onOk)
+          .catch(() => {})
+      }
       onCancel={onCancel}
       okText="Xác nhận"
       cancelText="Quay lại"
