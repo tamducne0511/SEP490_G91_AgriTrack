@@ -18,6 +18,8 @@ const io = new Server(server, {
       "http://localhost:3001", 
       "http://127.0.0.1:3000",
       "http://127.0.0.1:3001",
+      "http://3.106.202.106:3000",
+    "http://3.106.202.106:3001",
       "https://api-agritrack.ungdunghay.info.vn",
       "*"
     ], 
@@ -36,6 +38,8 @@ app.use(cors({
     "http://localhost:3001", 
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
+    "http://3.106.202.106:3000",
+    "http://3.106.202.106:3001",
     "https://api-agritrack.ungdunghay.info.vn"
   ],
   credentials: true,
@@ -84,5 +88,5 @@ app.use(errorHandler);
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
 });
