@@ -26,7 +26,12 @@ const FarmerModal = ({
     <Modal
       title={isEdit ? "Sửa nông dân" : "Thêm nông dân"}
       open={open}
-      onOk={() => form.validateFields().then(onOk)}
+      onOk={() =>
+        form
+          .validateFields()
+          .then(onOk)
+          .catch(() => {})
+      }
       onCancel={onCancel}
       okText="Xác nhận"
       cancelText="Quay lại"

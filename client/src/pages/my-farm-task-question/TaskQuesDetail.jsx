@@ -535,6 +535,7 @@ export default function TreeQuestionDetail() {
                         : "Nông dân"}
                     </Tag>
                     {/* Button xem thời tiết */}
+                    {!isFarmer && (
                     <Button
                       size="small"
                       icon={<SunOutlined />}
@@ -544,6 +545,7 @@ export default function TreeQuestionDetail() {
                     >
                       Xem thời tiết ngày mai
                     </Button>
+                    )}
                   </div>
                   <div style={{ margin: "4px 0", color: "#4e4e4e" }}>
                     {q.content}
